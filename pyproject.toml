@@ -1,0 +1,21 @@
+[project]
+name = "farmes-journey"
+version = "0.1.0"
+description = "Diário e Assessor para jogadores de Sunflower Land, com snapshots automáticos de progresso."
+authors = [
+    {name = "DoctrinaLudum",email = "46344592+DoctrinaLudum@users.noreply.github.com"}
+]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "flask (>=3.1.1,<4.0.0)",
+    "google-cloud-firestore (>=2.21.0,<3.0.0)",
+    "google-auth (>=2.40.3,<3.0.0)",
+    "requests (>=2.32.4,<3.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

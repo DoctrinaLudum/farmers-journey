@@ -1,0 +1,1 @@
+console.log("TypeScript e Flask estão funcionando juntos!");
