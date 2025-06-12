@@ -1,26 +1,31 @@
 # Ambiente Virtual Python
 .venv/
+
+# Arquivos de cache e compilados do Python
 __pycache__/
 *.pyc
-*.py[cod]
-*$py.class
 
 # Dependências do Node.js
 node_modules/
 
 # Arquivos compilados do TypeScript
-# Ignora a pasta inteira onde os .js são gerados
+# Ignora a pasta inteira onde o .js é gerado
 app/static/js/
 
-# Pasta de instância do Flask
+# Pasta de instância do Flask (para segredos e DB local no futuro)
 instance/
 
 # Arquivos de ambiente (nunca comitar segredos)
 .env*
 
+# Logs
+*.log
+
 # Arquivos do sistema operacional
 .DS_Store
 Thumbs.db
 
-# Logs
-*.log
+# Arquivos de cache do VS Code (exceto configurações de debug e tarefas)
+.vscode/*
+!.vscode/launch.json
+!.vscode/tasks.json
