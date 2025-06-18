@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3><i class="bi bi-person-badge-fill me-2"></i>Painel de {{ username }} (#{{ farm_id }})</h3>
+        <a href="{{ url_for('main.index') }}" class="btn btn-secondary btn-sm">Buscar outra fazenda</a>
+    </div>
+
+    {% if error %}
+    <div class="alert alert-danger" role="alert">
+        <strong>Erro:</strong> {{ error }}
+    </div>
+    {% endif %}
+
+    <ul class="nav nav-tabs" id="dashboardTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview-pane" type="button" role="tab" aria-controls="overview-pane" aria-selected="true">
+                <i class="bi bi-grid-1x2-fill me-1"></i> Visão Geral
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="expansion-tab" data-bs-toggle="tab" data-bs-target="#expansion-pane" type="button" role="tab" aria-controls="expansion-pane" aria-selected="false">
+                <i class="bi bi-arrows-fullscreen me-1"></i> Assessor de Expansão
+            </button>
+        </li>
+        </ul>
+
+    <div class="tab-content" id="dashboardTabsContent">
+        <div class="tab-pane fade show active p-3 border border-top-0 rounded-bottom" id="overview-pane" role="tabpanel" aria-labelledby="overview-tab">
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4">
+                    <div class="card dashboard-card">
+                        <div class="card-header"><i class="bi bi-info-circle-fill me-1"></i> Informações Gerais</div>
+                        <ul class="list-group list-group-flush">
+                           <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span><img src="https://sunflower-land.com/play/assets/sfl.239552b3.png" alt="SFL" height="20" class="me-2">SFL</span>
+                                <strong>{{ "%.4f"|format(sfl|float) }}</strong>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span><img src="https://sunflower-land.com/play/assets/coins.d7fde244.png" alt="Coins" height="20" class="me-2">Moedas</span>
+                                <strong>{{ "{:,}".format(coins).replace(",", ".") }}</strong>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                </div>
+        </div>
+
+        <div class="tab-pane fade p-3 border border-top-0 rounded-bottom" id="expansion-pane" role="tabpanel" aria-labelledby="expansion-tab">
+            <div class="card dashboard-card mb-4">
+                <div class="card-body text-center">
+                    <form method="GET" action="{{ url_for('main.farm_dashboard', farm_id=farm_id) }}" class="row g-3 justify-content-center align-items-center">
+                        <div class="col-auto">
+                            <label for="goal_level" class="form-label fw-bold">Meu Objetivo de Expansão:</label>
+                        </div>
+                        <div class="col-auto">
+                            <select class="form-select" name="goal_level" id="goal_level">
+                                <option value="">Selecione um nível...</option>
+                                {% for island, levels in expansion_goals.items() %}
+                                    <optgroup label="{{ island|title }}">
+                                        {% for level in levels %}
+                                            <option value="{{ island }}-{{ level }}" {% if selected_goal == (island, level) %}selected{% endif %}>
+                                                Nível {{ level }}
+                                            </option>
+                                        {% endfor %}
+                                    </optgroup>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-info">Definir Meta</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="row g-4">
+
+                <div class="col-lg-3 col-md-6"> {# Ocupa 3 de 12 colunas em telas grandes #}
+                    <div class="card dashboard-card">
+                        <div class="card-header"><i class="bi bi-pin-map-fill me-1"></i> Você está aqui</div>
+                        <div class="card-body text-center d-flex flex-column justify-content-center">
+                            <h5 class="card-title">Ilha {{ expansion_progress.land_type|title if expansion_progress else 'N/A' }}</h5>
+                            <p class="lead mb-0">Nível de Expansão</p>
+                            <p class="display-2 fw-bold text-success">{{ current_land_level or 'N/A' }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-5 col-md-6"> {# Ocupa 5 de 12 colunas em telas grandes #}
+                    <div class="card dashboard-card">
+                        <div class="card-header"><i class="bi bi-arrows-fullscreen me-1"></i> Próxima Jornada</div>
+                        <div class="card-body">
+                            {% if expansion_progress and not expansion_progress.get('requirements_met') %}
+                                <h6 class="card-title">Próxima Expansão: Nível {{ expansion_progress.next_level }}</h6>
+                                <p class="text-muted small mb-2">Req. Bumpkin: Nv.{{ expansion_progress.bumpkin_level_req }} | Tempo: {{ expansion_progress.time_req }}</p>
+                                <ul class="list-group list-group-flush">
+                                    {% for resource in expansion_progress.resources|sort(attribute='name') %}
+                                        <li class="list-group-item px-0 py-1"> {# Padding vertical reduzido #}
+                                            {% set have = resource.have %}
+                                            {% set required = resource.required %}
+                                            {% set percentage = resource.percentage %}
+                                            <div class="d-flex w-100 justify-content-between small">
+                                                <span class="fw-bold">{{ resource.name }}</span>
+                                                <span class="{% if have >= required %}text-success fw-bold{% else %}text-muted{% endif %}">
+                                                    {{ "{:,.2f}".format(have|float) }} / {{ "{:,}".format(required).replace(",",".") }}
+                                                </span>
+                                            </div>
+                                            <div class="progress mt-1" style="height: 8px;"> {# Barra mais fina #}
+                                                <div class="progress-bar bg-success" role="progressbar" style="width: {{ percentage }}%"></div>
+                                            </div>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p class="text-muted mt-3 text-center">Você já atingiu o nível máximo conhecido!</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-md-12"> {# Ocupa 4 de 12 em telas grandes, 12 em médias #}
+                    <div class="card dashboard-card">
+                        <div class="card-header bg-info text-white"><i class="bi bi-bullseye me-1"></i> Meta Final</div>
+                        <div class="card-body">
+                            {% if goal_requirements %}
+                                <h6 class="card-title">Para chegar ao Nível {{ selected_goal[1] }}</h6>
+                                <p class="card-text small text-muted">Total de recursos necessários a partir de agora:</p>
+                                <div style="max-height: 200px; overflow-y: auto;">
+                                    <ul class="list-group list-group-flush">
+                                        {% for item, data in goal_requirements.items()|sort %}
+                                            <li class="list-group-item d-flex justify-content-between align-items-center py-1">
+                                                {{ item }}
+                                                <span class="badge bg-primary rounded-pill">{{ "{:,.0f}".format(data.needed).replace(",",".") }}</span>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% else %}
+                                <p class="text-muted text-center small mt-3">Selecione um objetivo no menu acima para ver o total de recursos necessários.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

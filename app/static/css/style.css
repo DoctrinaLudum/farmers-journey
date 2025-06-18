@@ -1,0 +1,62 @@
+/* Estilo para a barra de progresso, para que não precise ser inline */
+.progress-bar-dynamic {
+    /* A largura será definida pela variável --progress-width no HTML */
+    width: var(--progress-width, 0%);
+    transition: width 0.6s ease; /* Adiciona uma transição suave */
+}
+
+/* =================================
+   ESTILOS DOS CARDS DO PAINEL
+   ================================= */
+
+/* Classe base para todos os cards do nosso painel */
+.dashboard-card {
+    border: 1px solid #e9ecef; /* Borda sutil */
+    border-radius: 0.5rem;     /* Cantos um pouco mais arredondados */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Estilo para o cabeçalho dos cards */
+.dashboard-card .card-header {
+    background-color: #f8f9fa; /* Fundo cinza bem claro */
+    padding: 0.75rem 1rem;
+    font-weight: 500;
+    border-bottom: 1px solid #e9ecef;
+}
+
+/* Estilo para o corpo dos cards */
+.dashboard-card .card-body {
+    padding: 1rem;
+    flex-grow: 1; /* Faz o corpo do card ocupar o espaço disponível */
+}
+
+/* Estilos para listas dentro dos cards, para um visual mais compacto */
+.dashboard-card .list-group-item {
+    padding: 0.6rem 1rem; /* Padding vertical menor */
+    font-size: 0.9rem;    /* Fonte um pouco menor */
+}
+
+/* =================================
+   PALETA DE CORES E VARIÁVEIS
+   ================================= */
+:root {
+    --cor-primaria: #0d6efd;   /* Azul padrão do Bootstrap */
+    --cor-sucesso: #198754;    /* Verde padrão do Bootstrap */
+    --cor-aviso: #ffc107;      /* Amarelo padrão do Bootstrap */
+    --cor-perigo: #dc3545;     /* Vermelho padrão do Bootstrap */
+    --cor-texto: #212529;      /* Cor de texto principal */
+    --cor-fundo-claro: #f8f9fa; /* Cinza bem claro para fundos */
+    --cor-borda: #e9ecef;       /* Cor de borda sutil */
+}
+
+/* Exemplo de como usar as variáveis */
+.dashboard-card {
+    border-color: var(--cor-borda);
+}
+
+.dashboard-card .card-header {
+    background-color: var(--cor-fundo-claro);
+}
