@@ -4,7 +4,11 @@
     "module": "ES6",
     "strict": true,
     "outDir": "./app/static/js",
-    "rootDir": "./typescript"
+    "rootDir": "./typescript",
+    "lib": [
+      "ES2017",
+      "DOM"
+    ]
   },
   "include": [
     "./typescript/**/*"

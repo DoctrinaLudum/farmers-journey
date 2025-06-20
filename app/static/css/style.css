@@ -60,3 +60,168 @@
 .dashboard-card .card-header {
     background-color: var(--cor-fundo-claro);
 }
+
+/* =================================
+   ESTILOS DOS COMPONENTES DO PAINEL
+   ================================= */
+
+/* Define uma altura menor para as barras de progresso */
+.progress-thin {
+    height: 8px;
+}
+
+/* Estilos para a lista de recursos em "Próxima Jornada" */
+.resource-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem; /* Espaço entre o ícone e o resto */
+    padding: 0.5rem 0; /* Espaçamento vertical */
+}
+
+.resource-item .resource-icon {
+    font-size: 1.5rem; /* Tamanho do ícone */
+    color: #6c757d; /* Cor cinza para o ícone */
+}
+
+.resource-item .resource-details {
+    flex-grow: 1; /* Faz esta div ocupar todo o espaço restante */
+}
+
+.resource-item .resource-progress-numbers {
+    font-size: 0.8rem;
+    color: #6c757d;
+    text-align: right;
+    min-width: 80px; /* Garante que os números não quebrem a linha facilmente */
+}
+
+/* --- NOVAS CLASSES E AJUSTES --- */
+
+/* Garante que a classe para barras finas tenha a altura desejada */
+.progress-thin {
+    height: 6px;
+}
+
+/* Classe para padronizar o tamanho dos ícones de recursos nas listas */
+.resource-icon-list {
+    width: 20px;
+    height: 20px;
+    object-fit: contain; /* Garante que a imagem não fique distorcida */
+}
+
+/* Classe para os badges de excedente, para dar uma cor diferente */
+.badge-surplus {
+    background-color: #0dcaf0; /* Cor ciano (info) do Bootstrap */
+    color: #000;
+}
+
+/* Classe para os badges de défice, para dar uma cor de alerta */
+.badge-shortfall {
+    background-color: #ffc107; /* Cor amarela (warning) do Bootstrap */
+    color: #000;
+}
+
+/* --- NOVAS CLASSES E AJUSTES PARA LAYOUT COMPACTO --- */
+
+/* Itens da lista no card "Meta Final" com menos espaçamento vertical */
+.compact-list-item {
+    padding-top: 0.4rem;
+    padding-bottom: 0.4rem;
+    font-size: 0.85rem; /* Fonte ligeiramente menor */
+}
+
+/* Garante que o ícone na lista compacta fique bem alinhado */
+.compact-list-item .resource-icon-list {
+    width: 18px;
+    height: 18px;
+}
+
+/* Ajusta o posicionamento do badge na lista da "Próxima Jornada" */
+.journey-item-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.25rem;
+}
+
+/* --- ESTILOS PARA O LAYOUT COMPACTO DA PRÓXIMA JORNADA --- */
+
+.journey-list-item {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+/* Primeira linha do item: Nome e Status */
+.journey-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.25rem; /* Pequeno espaço antes da barra de progresso */
+}
+
+/* Segunda linha: Barra de progresso e números */
+.journey-item-progress {
+    position: relative; /* Permite posicionar os números sobre a barra */
+    display: flex;
+    align-items: center;
+}
+
+/* Números sobre a barra de progresso */
+.progress-values {
+    position: absolute;
+    right: 0.5rem; /* Posição a partir da direita */
+    font-size: 0.7em;
+    font-weight: bold;
+    color: white;
+
+    /* --- NOVAS PROPRIEDADES PARA A "PÍLULA" --- */
+    background-color: rgba(0, 0, 0, 0.45); /* Fundo preto com 45% de opacidade */
+    padding: 0.1rem 0.4rem;                /* Espaçamento interno para criar a pílula */
+    border-radius: 0.25rem;               /* Cantos arredondados */
+    line-height: 1;                       /* Altura da linha justa para um visual compacto */
+
+    /* A sombra não é mais necessária */
+    /* text-shadow: 1px 1px 2px rgba(0,0,0,0.7); */
+}
+
+/* --- ESTILOS PARA O LAYOUT FINAL DA PRÓXIMA JORNADA --- */
+
+.journey-list-item {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+/* Primeira linha do item: Nome e Status */
+.journey-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.25rem; /* Pequeno espaço antes da barra de progresso */
+}
+
+/* Segunda linha: Barra de progresso e números */
+.journey-item-progress {
+    position: relative; /* Permite posicionar os números sobre a barra */
+    display: flex;
+    align-items: center;
+}
+
+/* Números sobre a barra de progresso com fundo "pílula" */
+.progress-values {
+    position: absolute;
+    right: 0.5rem;
+    font-size: 0.7em;
+    font-weight: bold;
+    color: white;
+    background-color: rgba(0, 0, 0, 0.45);
+    padding: 0.1rem 0.4rem;
+    border-radius: 0.25rem;
+    line-height: 1;
+}
+
+/* --- ESTILO PARA O DISPLAY DA IMAGEM DE EXPANSÃO --- */
+.expansion-image-display {
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    min-height: 220px; /* Altura mínima para garantir que o card não colapse */
+}

@@ -1,58 +1,39 @@
 # app/analysis.py
 import logging
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal, InvalidOperation
 import config
 from collections import defaultdict
+from datetime import timedelta
+
 
 
 log = logging.getLogger(__name__)
 
-def compare_snapshots(new_snapshot_data: dict, old_snapshot_data: dict):
-    """
-    Compara dois snapshots da fazenda e retorna um resumo das diferenças.
-    """
-    if not new_snapshot_data or not old_snapshot_data:
-        return None, "Dados de snapshot inválidos para comparação."
+def parse_time_to_seconds(time_str: str) -> int:
+    """Converte uma string de tempo HH:MM:SS para segundos."""
+    if not isinstance(time_str, str):
+        return 0
+    parts = list(map(int, time_str.split(':')))
+    return parts[0] * 3600 + parts[1] * 60 + parts[2]
 
-    summary = {
-        'sfl_change': 0.0,
-        'items_added': {},
-        'items_removed': {}
-    }
-
-    # 1. Comparar SFL (balance)
-    try:
-        new_balance = Decimal(new_snapshot_data.get('balance', '0'))
-        old_balance = Decimal(old_snapshot_data.get('balance', '0'))
-        sfl_diff = new_balance - old_balance
-        # Arredonda para 4 casas decimais para exibição
-        summary['sfl_change'] = float(sfl_diff.quantize(Decimal('0.0001'), rounding=ROUND_HALF_UP))
-    except Exception as e:
-        log.error(f"Erro ao calcular diferença de SFL: {e}")
-
-    # 2. Comparar Inventário
-    new_inventory = new_snapshot_data.get('inventory', {})
-    old_inventory = old_snapshot_data.get('inventory', {})
+def format_seconds_to_str(seconds: int) -> str:
+    """Formata um total de segundos para uma string legível (ex: 2d 5h 10m)."""
+    if seconds == 0:
+        return "N/A"
+    td = timedelta(seconds=seconds)
+    days = td.days
+    hours, remainder = divmod(td.seconds, 3600)
+    minutes, _ = divmod(remainder, 60)
     
-    # Combina todas as chaves de ambos os inventários para não perder nenhum item
-    all_item_keys = set(new_inventory.keys()) | set(old_inventory.keys())
-
-    for item in all_item_keys:
-        try:
-            new_amount = Decimal(new_inventory.get(item, '0'))
-            old_amount = Decimal(old_inventory.get(item, '0'))
-            diff = new_amount - old_amount
-
-            if diff > 0:
-                summary['items_added'][item] = float(diff)
-            elif diff < 0:
-                summary['items_removed'][item] = float(abs(diff))
-        except Exception as e:
-            log.warning(f"Não foi possível calcular a diferença para o item '{item}': {e}")
-            continue
-
-    log.info("Comparação de snapshots concluída.")
-    return summary, None
+    parts = []
+    if days > 0:
+        parts.append(f"{days}d")
+    if hours > 0:
+        parts.append(f"{hours}h")
+    if minutes > 0:
+        parts.append(f"{minutes}m")
+    
+    return " ".join(parts) if parts else "0m"
 
 # ---> FUNÇÃO PARA ANÁLISE DE EXPANSÃO ---
 def analyze_expansion_progress(farm_data: dict):
@@ -83,6 +64,7 @@ def analyze_expansion_progress(farm_data: dict):
 
         # ---> Lógica de Comparação <---
         progress = {
+            "land_type": land_type,
             "next_level": next_level,
             "bumpkin_level_req": requirements.get("Bumpkin Level", 0),
             "time_req": requirements.get("Time", "N/A"),
@@ -126,29 +108,61 @@ def analyze_expansion_progress(farm_data: dict):
 # ---> NOVA FUNÇÃO PARA CÁLCULO DE META TOTAL <---
 def calculate_total_requirements(current_land_type, current_level, goal_land_type, goal_level, all_reqs):
     """
-    Calcula o total de recursos necessários para ir do nível atual até um nível objetivo.
+    Calcula o total de recursos, o tempo acumulado e o nível máximo de Bumpkin
+    necessários para ir do nível atual até um nível objetivo.
     """
-    total_needed = defaultdict(lambda: {'needed': 0})
+    total_needed = defaultdict(Decimal)
+    total_seconds = 0
+    max_bumpkin_level = 0
     
-    # Validação simples
-    if not current_land_type or not goal_land_type or goal_level <= current_level:
+    island_order = ["basic", "petal", "desert", "volcano"]
+
+    try:
+        current_island_index = island_order.index(current_land_type)
+        goal_island_index = island_order.index(goal_land_type)
+    except ValueError:
         return {}
 
-    # Por enquanto, vamos assumir que a progressão é na mesma ilha
-    if current_land_type != goal_land_type:
-        # Lógica para múltiplas ilhas pode ser adicionada aqui no futuro
+    is_invalid_goal = goal_island_index < current_island_index or \
+                      (goal_island_index == current_island_index and goal_level <= current_level)
+    
+    if is_invalid_goal:
         return {}
+
+    # Itera sobre as ilhas desde a atual até a do objetivo
+    for i in range(current_island_index, goal_island_index + 1):
+        island_name = island_order[i]
+        island_reqs = all_reqs.get(island_name, {})
         
-    island_reqs = all_reqs.get(current_land_type, {})
+        start_range = current_level + 1 if i == current_island_index else min(island_reqs.keys())
+        end_range = goal_level if i == goal_island_index else max(island_reqs.keys())
+
+        # Soma os requisitos para cada nível no intervalo definido
+        for level in range(start_range, end_range + 1):
+            level_reqs = island_reqs.get(level)
+            if not level_reqs:
+                continue
+
+            max_bumpkin_level = max(max_bumpkin_level, level_reqs.get("Bumpkin Level", 0))
+            total_seconds += parse_time_to_seconds(level_reqs.get("Time", "00:00:00"))
+
+            for item, amount in level_reqs.items():
+                if item not in ["Bumpkin Level", "Time"]:
+                    try:
+                        total_needed[item] += Decimal(str(amount))
+                    except InvalidOperation:
+                        log.warning(f"Valor inválido para o item {item}: {amount}")
+
+    final_requirements = {
+        item: int(val) if val % 1 == 0 else float(val)
+        for item, val in total_needed.items()
+    }
     
-    for level in range(current_level + 1, goal_level + 1):
-        level_reqs = island_reqs.get(level)
-        if not level_reqs:
-            continue
+    result = {
+        "requirements": dict(sorted(final_requirements.items())),
+        "max_bumpkin_level": max_bumpkin_level,
+        "total_time_str": format_seconds_to_str(total_seconds)
+    }
 
-        for item, amount in level_reqs.items():
-            if item not in ["Bumpkin Level", "Time"]:
-                total_needed[item]['needed'] += amount
-
-    return dict(sorted(total_needed.items()))
+    return result
 # ---> FIM DA FUNÇÃO DE CÁLCULO DE META TOTAL <---

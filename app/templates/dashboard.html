@@ -12,7 +12,6 @@
         <strong>Erro:</strong> {{ error }}
     </div>
     {% endif %}
-
     <ul class="nav nav-tabs" id="dashboardTabs" role="tablist">
         <li class="nav-item" role="presentation">
             <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview-pane" type="button" role="tab" aria-controls="overview-pane" aria-selected="true">
@@ -24,7 +23,12 @@
                 <i class="bi bi-arrows-fullscreen me-1"></i> Assessor de Expansão
             </button>
         </li>
-        </ul>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="test-tab" data-bs-toggle="tab" data-bs-target="#test-pane" type="button" role="tab" aria-controls="test-pane" aria-selected="false">
+                <i class="bi bi-bug-fill me-1"></i> Teste do Mapa
+            </button>
+        </li>
+    </ul>
 
     <div class="tab-content" id="dashboardTabsContent">
         <div class="tab-pane fade show active p-3 border border-top-0 rounded-bottom" id="overview-pane" role="tabpanel" aria-labelledby="overview-tab">
@@ -34,118 +38,150 @@
                         <div class="card-header"><i class="bi bi-info-circle-fill me-1"></i> Informações Gerais</div>
                         <ul class="list-group list-group-flush">
                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <span><img src="https://sunflower-land.com/play/assets/sfl.239552b3.png" alt="SFL" height="20" class="me-2">SFL</span>
+                                <span><img src="https://sunflower-land.com/play/assets/sfl.239552b3.png" alt="SFL" class="me-2 resource-icon-list">SFL</span>
                                 <strong>{{ "%.4f"|format(sfl|float) }}</strong>
                             </li>
                             <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <span><img src="https://sunflower-land.com/play/assets/coins.d7fde244.png" alt="Coins" height="20" class="me-2">Moedas</span>
+                                <span><img src="https://sunflower-land.com/play/assets/coins.d7fde244.png" alt="Coins" class="me-2 resource-icon-list">Moedas</span>
                                 <strong>{{ "{:,}".format(coins).replace(",", ".") }}</strong>
                             </li>
                         </ul>
                     </div>
                 </div>
-                </div>
+            </div>
         </div>
 
         <div class="tab-pane fade p-3 border border-top-0 rounded-bottom" id="expansion-pane" role="tabpanel" aria-labelledby="expansion-tab">
-            <div class="card dashboard-card mb-4">
-                <div class="card-body text-center">
-                    <form method="GET" action="{{ url_for('main.farm_dashboard', farm_id=farm_id) }}" class="row g-3 justify-content-center align-items-center">
-                        <div class="col-auto">
-                            <label for="goal_level" class="form-label fw-bold">Meu Objetivo de Expansão:</label>
-                        </div>
-                        <div class="col-auto">
-                            <select class="form-select" name="goal_level" id="goal_level">
-                                <option value="">Selecione um nível...</option>
-                                {% for island, levels in expansion_goals.items() %}
-                                    <optgroup label="{{ island|title }}">
-                                        {% for level in levels %}
-                                            <option value="{{ island }}-{{ level }}" {% if selected_goal == (island, level) %}selected{% endif %}>
-                                                Nível {{ level }}
-                                            </option>
-                                        {% endfor %}
-                                    </optgroup>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-auto">
-                            <button type="submit" class="btn btn-info">Definir Meta</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
             <div class="row g-4">
-
-                <div class="col-lg-3 col-md-6"> {# Ocupa 3 de 12 colunas em telas grandes #}
+                <div class="col-lg-3 col-md-6">
                     <div class="card dashboard-card">
                         <div class="card-header"><i class="bi bi-pin-map-fill me-1"></i> Você está aqui</div>
-                        <div class="card-body text-center d-flex flex-column justify-content-center">
-                            <h5 class="card-title">Ilha {{ expansion_progress.land_type|title if expansion_progress else 'N/A' }}</h5>
-                            <p class="lead mb-0">Nível de Expansão</p>
-                            <p class="display-2 fw-bold text-success">{{ current_land_level or 'N/A' }}</p>
+                        <div class="card-body d-flex align-items-center">
+                            <div class="display-4 fw-bold text-success me-3">{{ current_land_level or 'N/A' }}</div>
+                            <div class="text-start">
+                                <h6 class="card-title mb-0">Ilha {{ expansion_progress.land_type|title if expansion_progress else 'N/A' }}</h6>
+                                <small class="text-muted">Nível de Expansão</small>
+                                <div class="border-top mt-2 pt-2">
+                                    <small class="text-muted"><i class="bi bi-person-walking me-1"></i>Nv: <strong>{{ bumpkin_level or 'N/A' }}</strong></small>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-lg-5 col-md-6"> {# Ocupa 5 de 12 colunas em telas grandes #}
+                <div class="col-lg-5 col-md-6">
                     <div class="card dashboard-card">
-                        <div class="card-header"><i class="bi bi-arrows-fullscreen me-1"></i> Próxima Jornada</div>
+                        <div class="card-header"><i class="bi bi-signpost-split-fill me-1"></i> Próxima Jornada</div>
                         <div class="card-body">
                             {% if expansion_progress and not expansion_progress.get('requirements_met') %}
                                 <h6 class="card-title">Próxima Expansão: Nível {{ expansion_progress.next_level }}</h6>
                                 <p class="text-muted small mb-2">Req. Bumpkin: Nv.{{ expansion_progress.bumpkin_level_req }} | Tempo: {{ expansion_progress.time_req }}</p>
-                                <ul class="list-group list-group-flush">
+                                
+                                <ul class="list-unstyled mb-0">
                                     {% for resource in expansion_progress.resources|sort(attribute='name') %}
-                                        <li class="list-group-item px-0 py-1"> {# Padding vertical reduzido #}
-                                            {% set have = resource.have %}
-                                            {% set required = resource.required %}
-                                            {% set percentage = resource.percentage %}
-                                            <div class="d-flex w-100 justify-content-between small">
+                                    <li class="journey-list-item border-bottom">
+                                        <div class="journey-item-header small">
+                                            <div class="d-flex align-items-center">
+                                                <img src="{{ resource.icon }}" alt="{{ resource.name }}" class="me-2 resource-icon-list">
                                                 <span class="fw-bold">{{ resource.name }}</span>
-                                                <span class="{% if have >= required %}text-success fw-bold{% else %}text-muted{% endif %}">
-                                                    {{ "{:,.2f}".format(have|float) }} / {{ "{:,}".format(required).replace(",",".") }}
-                                                </span>
                                             </div>
-                                            <div class="progress mt-1" style="height: 8px;"> {# Barra mais fina #}
-                                                <div class="progress-bar bg-success" role="progressbar" style="width: {{ percentage }}%"></div>
+                                            <div>
+                                                {% if resource.shortfall > 0 %}
+                                                    <span class="badge badge-shortfall">Faltam {{ "{:,.2f}".format(resource.shortfall|float) }}</span>
+                                                {% elif resource.surplus > 0 %}
+                                                    <span class="badge badge-surplus">Excedente {{ "{:,.2f}".format(resource.surplus|float) }}</span>
+                                                {% else %}
+                                                     <span class="badge bg-success">Completo</span>
+                                                {% endif %}
                                             </div>
-                                        </li>
+                                        </div>
+                                        <div class="journey-item-progress">
+                                            <div class="progress progress-thin flex-grow-1">
+                                                <div class="progress-bar progress-bar-dynamic {% if resource.percentage == 100 %}bg-success{% else %}bg-primary{% endif %}" role="progressbar" style="--progress-width: {{ resource.percentage }}%;"></div>
+                                            </div>
+                                            <div class="progress-values">
+                                                <span>{{ "{:,.2f}".format(resource.have|float) }} / {{ "{:,}".format(resource.required|int) }}</span>
+                                            </div>
+                                        </div>
+                                    </li>
                                     {% endfor %}
                                 </ul>
                             {% else %}
-                                <p class="text-muted mt-3 text-center">Você já atingiu o nível máximo conhecido!</p>
+                                <p class="text-muted mt-3 text-center">Você já atingiu o nível máximo conhecido.</p>
                             {% endif %}
                         </div>
                     </div>
                 </div>
-
-                <div class="col-lg-4 col-md-12"> {# Ocupa 4 de 12 em telas grandes, 12 em médias #}
-                    <div class="card dashboard-card">
-                        <div class="card-header bg-info text-white"><i class="bi bi-bullseye me-1"></i> Meta Final</div>
+                <div class="col-lg-4 col-md-12">
+                     <div class="card dashboard-card">
+                        <div class="card-header"><i class="bi bi-bullseye me-1"></i> Meta Final</div>
                         <div class="card-body">
-                            {% if goal_requirements %}
-                                <h6 class="card-title">Para chegar ao Nível {{ selected_goal[1] }}</h6>
-                                <p class="card-text small text-muted">Total de recursos necessários a partir de agora:</p>
-                                <div style="max-height: 200px; overflow-y: auto;">
-                                    <ul class="list-group list-group-flush">
-                                        {% for item, data in goal_requirements.items()|sort %}
-                                            <li class="list-group-item d-flex justify-content-between align-items-center py-1">
-                                                {{ item }}
-                                                <span class="badge bg-primary rounded-pill">{{ "{:,.0f}".format(data.needed).replace(",",".") }}</span>
-                                            </li>
+                            <form id="goal-form" data-farm-id="{{ farm_id }}" data-current-land-type="{{ expansion_progress.land_type if expansion_progress else '' }}" data-current-level="{{ current_land_level or '0' }}" class="d-flex gap-2 mb-3">
+                                <select class="form-select form-select-sm" name="goal_level" id="goal_level" aria-label="Meu Objetivo de Expansão">
+                                    <option value="">Selecione um nível...</option>
+                                    {% for island, levels in expansion_goals.items() %}
+                                    <optgroup label="{{ island|title }}">
+                                        {% for level in levels %}
+                                        <option value="{{ island }}-{{ level }}">{{ level }}</option>
                                         {% endfor %}
-                                    </ul>
-                                </div>
-                            {% else %}
-                                <p class="text-muted text-center small mt-3">Selecione um objetivo no menu acima para ver o total de recursos necessários.</p>
-                            {% endif %}
+                                    </optgroup>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-info btn-sm flex-shrink-0">Definir</button>
+                            </form>
+                            <div id="goal-results-container">
+                                <p class="text-muted text-center small mt-3">Selecione um objetivo acima para ver o plano de projeto.</p>
+                            </div>
                         </div>
                     </div>
                 </div>
-
             </div>
+        </div>
+        <div class="tab-pane fade p-3 border border-top-0 rounded-bottom" id="test-pane" role="tabpanel" aria-labelledby="test-tab">
+            <h4>Teste de Geração de Mapa</h4>
+            <p>Esta área é para depurar a imagem da ilha gerada dinamicamente.</p>
+            <hr>
+            
+            {% if expansion_image_url %}
+                <p>A carregar imagem para: <strong>{{ expansion_progress.land_type|title }} - Nível {{ current_land_level }}</strong></p>
+                <div class="border p-2" style="background-color: #f0f0f0;">
+                    <img src="{{ expansion_image_url }}" alt="Imagem da Ilha Gerada" style="image-rendering: pixelated; width: 480px;"/>
+                </div>
+            {% else %}
+                <div class="alert alert-warning" role="alert">
+                  Não foi possível gerar a URL da imagem. Verifique os logs e as configurações.
+                </div>
+            {% endif %}
         </div>
     </div>
 </div>
+
+<template id="goal-list-template">
+    <p class="card-text small text-muted mb-2">Plano de projeto para o Nível <strong data-template="goal-level"></strong>:</p>
+    <div class="d-flex justify-content-around small text-muted border-bottom pb-2 mb-2">
+        <span><i class="bi bi-person-check-fill me-1"></i>Nv. Bumpkin: <strong data-template="bumpkin-level"></strong></span>
+        <span><i class="bi bi-clock-history me-1"></i>Tempo: <strong data-template="total-time"></strong></span>
+    </div>
+    <div class="row">
+        <div class="col-6 pe-2"><ul class="list-group list-group-flush" data-column="1"></ul></div>
+        <div class="col-6 ps-2"><ul class="list-group list-group-flush" data-column="2"></ul></div>
+    </div>
+</template>
+
+<template id="goal-list-item-template">
+     <li class="list-group-item d-flex justify-content-between align-items-center compact-list-item px-0">
+        <span class="d-flex align-items-center">
+            <img src="" alt="" class="me-2 resource-icon-list" data-template="icon">
+            <span data-template="name"></span>
+        </span>
+        <div class="text-end">
+            <span class="badge badge-shortfall" data-template="shortfall"></span>
+            <small class="text-muted d-block" style="font-size: 0.75em;" data-template="needed"></small>
+        </div>
+    </li>
+</template>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 {% endblock %}

@@ -80,3 +80,22 @@ LAND_EXPANSION_REQUIREMENTS = {
     }
 }
 # ---> FIM REQUISITOS DE EXPANSÃO ---
+
+# ---> INÍCIO: CONFIGURAÇÃO DO GERADOR DE MAPAS DE ILHAS <---
+
+TILE_SIZE = (16, 16)
+
+# Define a configuração inicial para cada ilha.
+# Para a Ilha Volcano, sabemos que ela começa no nível 5.
+# O tamanho da grelha (width, height) precisa ser ajustado para corresponder à imagem inicial.
+# Vamos começar com uma estimativa de 6x5 para o nível 5.
+ISLAND_START_CONFIG = {
+    "volcano": {"start_level": 5, "start_size": (6, 5)}
+    # Quando tivermos as informações das outras ilhas, adicionaremos aqui.
+}
+
+# Define o nome do ficheiro do tile especial que mostra o "+" da expansão.
+# Você precisará ter um ficheiro com este nome na sua pasta de tiles.
+EXPANSION_TILE_NAME = "expand_plot"
+
+# ---> FIM: CONFIGURAÇÃO DO GERADOR DE MAPAS <---
