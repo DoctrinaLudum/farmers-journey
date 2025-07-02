@@ -31,7 +31,13 @@ def get_sfl_world_data(farm_id: int, endpoint: str):
         response = requests.get(full_api_url, timeout=10)
         response.raise_for_status()
         data = response.json()
-        
+
+        # Validação: Garante que a resposta contém os dados esperados.
+        # O endpoint 'land' agora deve conter tanto 'land' quanto 'bumpkin'.
+        if endpoint == 'land' and (not data or 'land' not in data or 'bumpkin' not in data):
+            log.warning(f"Resposta da API sfl.world para '{endpoint}' não continha 'land' e 'bumpkin'. Farm: {farm_id}")
+            return {}, f"Dados de expansão e bumpkin ('{endpoint}') incompletos recebidos de sfl.world."
+
         api_cache[cache_key] = (data, current_time)
         
         return data, None
@@ -67,14 +73,19 @@ def get_farm_data(farm_id: int):
         data = response.json()
         farm_data = data.get('farm')
 
-        # 2. Busca os dados da expansão usando a função genérica auxiliar
+        # 2. Busca os dados da expansão e do bumpkin em uma única chamada
         if farm_data:
-            sfl_world_land_data, expansion_error = get_sfl_world_data(farm_id, 'land')
-            if expansion_error:
-                log.warning(expansion_error)
+            sfl_world_data, world_api_error = get_sfl_world_data(farm_id, 'land')
+            if world_api_error:
+                log.warning(world_api_error)
             
-            # Adiciona os dados da expansão ao nosso objeto principal
-            farm_data['expansion_data'] = sfl_world_land_data
+            # A resposta completa de sfl.world é armazenada em 'expansion_data'
+            # para manter a compatibilidade com o código que espera `expansion_data.land`
+            farm_data['expansion_data'] = sfl_world_data
+            
+            # Mescla os dados do bumpkin. A API sfl.world tem dados mais detalhados.
+            if sfl_world_data and 'bumpkin' in sfl_world_data:
+                farm_data['bumpkin'] = sfl_world_data['bumpkin']
         
         if farm_data:
             api_cache[cache_key] = (farm_data, current_time)

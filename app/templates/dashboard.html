@@ -137,22 +137,6 @@
                 </div>
             </div>
         </div>
-        <div class="tab-pane fade p-3 border border-top-0 rounded-bottom" id="test-pane" role="tabpanel" aria-labelledby="test-tab">
-            <h4>Teste de Geração de Mapa</h4>
-            <p>Esta área é para depurar a imagem da ilha gerada dinamicamente.</p>
-            <hr>
-            
-            {% if expansion_image_url %}
-                <p>A carregar imagem para: <strong>{{ expansion_progress.land_type|title }} - Nível {{ current_land_level }}</strong></p>
-                <div class="border p-2" style="background-color: #f0f0f0;">
-                    <img src="{{ expansion_image_url }}" alt="Imagem da Ilha Gerada" style="image-rendering: pixelated; width: 480px;"/>
-                </div>
-            {% else %}
-                <div class="alert alert-warning" role="alert">
-                  Não foi possível gerar a URL da imagem. Verifique os logs e as configurações.
-                </div>
-            {% endif %}
-        </div>
     </div>
 </div>
 
