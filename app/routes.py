@@ -70,7 +70,8 @@ def farm_dashboard(farm_id):
                 required = Decimal(str(resource.get('required', 0)))
                 resource['shortfall'] = float(max(required - have, Decimal('0')))
                 resource['surplus'] = float(max(have - required, Decimal('0')))
-                resource['icon'] = url_for('static', filename=f'images/{resource["name"]}.png')
+                icon_name = "Flower" if resource['name'] == "SFL" else resource['name']
+                resource['icon'] = url_for('static', filename=f'images/{icon_name}.png')
         context['expansion_progress'] = expansion_progress_data
         
         item_prices = prices_data.get("data", {}).get("p2p", {})
@@ -96,7 +97,6 @@ def farm_dashboard(farm_id):
         context['inventory_list'] = inventory_list
         context['total_inventory_value'] = total_inventory_value
 
-        # --- BLOCO DE CÓDIGO RESTAURADO ---
         # Esta lógica calcula quais as metas de expansão válidas para mostrar no dropdown.
         expansion_goals = {}
         if current_land_type and current_land_level:
@@ -115,7 +115,6 @@ def farm_dashboard(farm_id):
                         if valid_levels:
                             expansion_goals[island_name] = valid_levels
         context['expansion_goals'] = expansion_goals
-        # --- FIM DO BLOCO RESTAURADO ---
 
     except Exception:
         log.error("Erro CRÍTICO ao processar dados do painel para a fazenda %s", farm_id, exc_info=True)
@@ -126,7 +125,10 @@ def farm_dashboard(farm_id):
 
 @bp.route('/api/goal_requirements/<int:farm_id>/<string:current_land_type>/<int:current_level>')
 def api_goal_requirements(farm_id, current_land_type, current_level):
-    # (Esta função permanece sem alterações)
+    """
+    Endpoint da API para calcular os requisitos de uma meta de expansão,
+    incluindo o custo total em SFL.
+    """
     try:
         goal_str = request.args.get('goal_level')
         if not goal_str:
@@ -136,10 +138,13 @@ def api_goal_requirements(farm_id, current_land_type, current_level):
         goal_land_type = goal_parts[0]
         goal_level = int(goal_parts[1])
 
-        farm_data, error = sunflower_api.get_farm_data(farm_id)
-        if error:
-            return jsonify({"error": f"Não foi possível buscar dados da fazenda: {error}"}), 500
-        
+        # Busca os dados da fazenda e os preços dos itens
+        farm_data, farm_error = sunflower_api.get_farm_data(farm_id)
+        prices_data, prices_error = sunflower_api.get_prices_data()
+
+        if farm_error or prices_error:
+            return jsonify({"error": f"Não foi possível buscar dados: {farm_error or prices_error}"}), 500
+
         goal_data = analysis.calculate_total_requirements(
             current_land_type=current_land_type,
             current_level=current_level,
@@ -149,36 +154,49 @@ def api_goal_requirements(farm_id, current_land_type, current_level):
         )
 
         if not goal_data or "requirements" not in goal_data:
-             return jsonify({
-                 "requirements": None,
-                 "goal_level_display": goal_level
-             })
+             return jsonify({"requirements": None, "goal_level_display": goal_level})
 
         inventory = farm_data.get('inventory', {})
         sfl_balance = Decimal(farm_data.get('balance', '0'))
-        coins_balance = int(farm_data.get('coins', 0))
+        coins_balance = Decimal(farm_data.get('coins', 0))
+        item_prices = prices_data.get("data", {}).get("p2p", {})
         
         processed_reqs = []
-        for item, needed_total in goal_data["requirements"].items():
+        total_sfl_cost = Decimal('0')
+
+        for item, needed_total_dec in goal_data["requirements"].items():
+            needed_total = Decimal(str(needed_total_dec))
             have = sfl_balance if item == "SFL" else (coins_balance if item == "Coins" else Decimal(inventory.get(item, '0')))
-            shortfall = max(Decimal(str(needed_total)) - have, Decimal('0'))
+            shortfall = max(needed_total - have, Decimal('0'))
+            
+            # Calcula o custo em SFL para a quantidade total necessária
+            price = Decimal(str(item_prices.get(item, '0')))
+            value_of_needed = needed_total * price
+            total_sfl_cost += value_of_needed
+            icon_name = "Flower" if item == "SFL" else item
+
             processed_reqs.append({
                 "name": item,
-                "shortfall": int(shortfall) if shortfall % 1 == 0 else float(shortfall),
-                "needed": needed_total,
-                "icon": url_for('static', filename=f'images/{item}.png')
+                # Formata com 2 casas decimais para o frontend
+                "shortfall": f"{shortfall:.2f}",
+                "needed": f"{needed_total:.2f}",
+                "value_of_needed": f"{value_of_needed:.2f}",
+                "icon": url_for('static', filename=f'images/{icon_name}.png')
+
             })
 
         response_data = {
             "goal_level_display": goal_level,
+            "goal_land_type": goal_land_type,  # Nome da ilha
             "max_bumpkin_level": goal_data["max_bumpkin_level"],
             "total_time_str": goal_data["total_time_str"],
+            "total_sfl_cost": f"{total_sfl_cost:.2f}", # Custo total
             "requirements": processed_reqs
         }
         return jsonify(response_data)
 
     except (IndexError, ValueError):
         return jsonify({"error": "Formato de 'goal_level' inválido."}), 400
-    except Exception:
-        log.error("Erro inesperado no endpoint da API de metas para a fazenda %s", farm_id, exc_info=True)
+    except Exception as e:
+        log.error("Erro inesperado no endpoint da API de metas para a fazenda %s: %s", farm_id, e, exc_info=True)
         return jsonify({"error": "Um erro inesperado ocorreu."}), 500

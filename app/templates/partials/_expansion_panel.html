@@ -1,0 +1,85 @@
+<div class="row g-4">
+    <div class="col-lg-3 col-md-6">
+        <div class="card dashboard-card">
+            <div class="card-header"><i class="bi bi-pin-map-fill me-1"></i> Você está aqui</div>
+            <div class="card-body d-flex align-items-center">
+                <div class="display-4 fw-bold text-success me-3">{{ current_land_level or 'N/A' }}</div>
+                <div class="text-start">
+                    <h6 class="card-title mb-0">Ilha {{ expansion_progress.land_type|title if expansion_progress else 'N/A' }}</h6>
+                    <small class="text-muted">Nível de Expansão</small>
+                    <div class="border-top mt-2 pt-2">
+                        <small class="text-muted"><i class="bi bi-person-walking me-1"></i>Nv: <strong>{{ bumpkin_level or 'N/A' }}</strong></small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5 col-md-6">
+        <div class="card dashboard-card">
+            <div class="card-header"><i class="bi bi-signpost-split-fill me-1"></i> Próxima Jornada</div>
+            <div class="card-body">
+                {% if expansion_progress and not expansion_progress.get('requirements_met') %}
+                    <h6 class="card-title">Próxima Expansão: Nível {{ expansion_progress.next_level }}</h6>
+                    <p class="text-muted small mb-2">Req. Bumpkin: Nv.{{ expansion_progress.bumpkin_level_req }} | Tempo: {{ expansion_progress.time_req }}</p>
+                    
+                    <ul class="list-unstyled mb-0">
+                        {% for resource in expansion_progress.resources|sort(attribute='name') %}
+                        <li class="journey-list-item border-bottom">
+                            <div class="journey-item-header small">
+                                <div class="d-flex align-items-center">
+                                    <img src="{{ resource.icon }}" alt="{{ resource.name }}" class="me-2 resource-icon-list">
+                                    <span class="fw-bold">{{ resource.name }}</span>
+                                </div>
+                                <div>
+                                    {% if resource.shortfall > 0 %}
+                                        <span class="badge badge-shortfall">Faltam {{ "{:,.2f}".format(resource.shortfall|float) }}</span>
+                                    {% elif resource.surplus > 0 %}
+                                        <span class="badge badge-surplus">Excedente {{ "{:,.2f}".format(resource.surplus|float) }}</span>
+                                    {% else %}
+                                         <span class="badge bg-success">Completo</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="journey-item-progress">
+                                <div class="progress progress-thin flex-grow-1">
+                                    <div class="progress-bar progress-bar-dynamic {% if resource.percentage == 100 %}bg-success{% else %}bg-primary{% endif %}" role="progressbar" style="--progress-width: {{ resource.percentage }}%;"></div>
+                                </div>
+                                <div class="progress-values">
+                                    <span>{{ "{:,.2f}".format(resource.have|float) }} / {{ "{:,}".format(resource.required|int) }}</span>
+                                </div>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted mt-3 text-center">Você já atingiu o nível máximo conhecido.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4 col-md-12">
+        <div class="card dashboard-card">
+           <div class="card-header"><i class="bi bi-bullseye me-1"></i> Meta Final</div>
+           <div class="card-body">
+               <form id="goal-form" data-farm-id="{{ farm_id }}" data-current-land-type="{{ expansion_progress.land_type if expansion_progress else '' }}" data-current-level="{{ current_land_level or '0' }}" class="d-flex gap-2 mb-3">
+                   <select class="form-select form-select-sm" name="goal_level" id="goal_level" aria-label="Meu Objetivo de Expansão">
+                       <option value="">Selecione um nível...</option>
+                       {% for island, levels in expansion_goals.items() %}
+                       <optgroup label="{{ island|title }}">
+                           {% for level in levels %}
+                           <option value="{{ island }}-{{ level }}">{{ level }}</option>
+                           {% endfor %}
+                       </optgroup>
+                       {% endfor %}
+                   </select>
+                   <button type="submit" class="btn btn-info btn-sm flex-shrink-0">Definir</button>
+               </form>
+               <div id="goal-results-container">
+                   <p class="text-muted text-center small mt-3">Selecione um objetivo acima para ver o plano de projeto.</p>
+               </div>
+           </div>
+       </div>
+   </div>
+</div>

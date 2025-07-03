@@ -1,7 +1,7 @@
 import logging
 import requests
 from requests.exceptions import JSONDecodeError
-from . import cache
+from .cache import cache 
 
 log = logging.getLogger(__name__)
 
@@ -99,8 +99,15 @@ def get_farm_data(farm_id: int):
         return None, "Não foi possível obter os dados da fazenda."
 
     except requests.exceptions.HTTPError as http_err:
-        log.warning("Erro HTTP na API principal para a fazenda %s. Status: %s", farm_id, http_err.response.status_code)
-        return None, f"Erro na API do Sunflower Land (Status {http_err.response.status_code}). A fazenda existe?"
+        status_code = http_err.response.status_code if http_err.response else "N/A"
+        log.warning("Erro HTTP na API principal para a fazenda %s. Status: %s", farm_id, status_code)
+        return None, f"Erro na API do Sunflower Land (Status {status_code}). A fazenda existe?"
+    except requests.exceptions.RequestException:
+        log.error("Erro de conexão na API principal para a fazenda %s.", farm_id, exc_info=True)
+        return None, "Erro de conexão. Verifique sua internet."
+    except JSONDecodeError:
+        log.error("Erro ao decodificar JSON da API principal para a fazenda %s.", farm_id, exc_info=True)
+        return None, "Não foi possível ler os dados da fazenda (resposta inválida da API principal)."
     except Exception:
         log.error("Erro genérico em get_farm_data para a fazenda %s.", farm_id, exc_info=True)
         return None, "Um erro inesperado ocorreu ao buscar os dados da fazenda."
