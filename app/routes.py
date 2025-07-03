@@ -27,47 +27,77 @@ def handle_farm_request():
 def farm_dashboard(farm_id):
     """Exibe o painel de bordo completo para uma fazenda específica."""
     log.info(f"Iniciando a montagem do painel para a fazenda #{farm_id}")
-    
+
     context = {
-        "farm_id": farm_id, "username": f"Fazenda #{farm_id}", "error": None, "expansion_progress": None
+        "farm_id": farm_id,
+        "username": f"Fazenda #{farm_id}",
+        "error": None,
+        "sfl": 0,
+        "coins": 0,
+        "bumpkin_level": 0,
+        "current_land_level": 0,
+        "expansion_progress": None,
+        "expansion_goals": {},
+        "inventory_list": [],
+        "total_inventory_value": 0,
+        "chores_list": []
     }
 
-    farm_data, error = sunflower_api.get_farm_data(farm_id)
-    if error:
-        context['error'] = error
-        return render_template('dashboard.html', title=f"Erro na Fazenda #{farm_id}", **context)
-    if not farm_data:
-        context['error'] = "Não foi possível obter os dados da fazenda."
+    farm_data, farm_error = sunflower_api.get_farm_data(farm_id)
+    prices_data, prices_error = sunflower_api.get_prices_data()
+
+    if farm_error or prices_error:
+        context['error'] = farm_error or prices_error
         return render_template('dashboard.html', title=f"Erro na Fazenda #{farm_id}", **context)
 
     try:
-        # Extrai os dicionários principais para simplificar o acesso e melhorar a legibilidade
+        context['username'] = farm_data.get('username', 'N/A')
+        context['sfl'] = Decimal(farm_data.get('balance', '0'))
+        context['coins'] = int(farm_data.get('coins', 0))
+        
         land_info = farm_data.get('expansion_data', {}).get('land', {})
         bumpkin_info = farm_data.get('bumpkin', {})
+        context['bumpkin_level'] = bumpkin_info.get('level', 0)
         
         current_land_type = land_info.get('type')
         current_land_level = land_info.get('level')
+        context['current_land_level'] = current_land_level
 
         expansion_progress_data = analysis.analyze_expansion_progress(farm_data)
-
-        context.update({
-            'username': farm_data.get('username', 'N/A'),
-            'sfl': Decimal(farm_data.get('balance', '0')),
-            'coins': int(farm_data.get('coins', 0)),
-            'bumpkin_level': bumpkin_info.get('level', 0),
-            'current_land_level': current_land_level,
-            'expansion_progress': expansion_progress_data
-        })
-
         if expansion_progress_data and 'resources' in expansion_progress_data:
             for resource in expansion_progress_data['resources']:
                 have = Decimal(str(resource.get('have', 0)))
                 required = Decimal(str(resource.get('required', 0)))
                 resource['shortfall'] = float(max(required - have, Decimal('0')))
                 resource['surplus'] = float(max(have - required, Decimal('0')))
-                icon_filename = f"{resource['name']}.png"
-                resource['icon'] = url_for('static', filename=f'images/{icon_filename}')
+                resource['icon'] = url_for('static', filename=f'images/{resource["name"]}.png')
+        context['expansion_progress'] = expansion_progress_data
+        
+        item_prices = prices_data.get("data", {}).get("p2p", {})
+        raw_inventory = farm_data.get("inventory", {})
+        inventory_list = []
+        total_inventory_value = Decimal('0')
 
+        for item_name, quantity_str in raw_inventory.items():
+            if item_name in item_prices:
+                try:
+                    quantity = Decimal(quantity_str)
+                    price = Decimal(str(item_prices[item_name]))
+                    value = quantity * price
+                    total_inventory_value += value
+                    inventory_list.append({
+                        "name": item_name, "quantity": quantity, "value": value,
+                        "icon": url_for('static', filename=f'images/{item_name}.png')
+                    })
+                except (InvalidOperation, TypeError):
+                    log.warning("Ignorando item '%s' do inventário com quantidade inválida.", item_name)
+        
+        inventory_list.sort(key=lambda x: x['name'])
+        context['inventory_list'] = inventory_list
+        context['total_inventory_value'] = total_inventory_value
+
+        # --- BLOCO DE CÓDIGO RESTAURADO ---
+        # Esta lógica calcula quais as metas de expansão válidas para mostrar no dropdown.
         expansion_goals = {}
         if current_land_type and current_land_level:
             island_order = ["basic", "petal", "desert", "volcano"]
@@ -76,23 +106,27 @@ def farm_dashboard(farm_id):
                 for island_name, levels in config.LAND_EXPANSION_REQUIREMENTS.items():
                     if island_name in island_order:
                         island_index = island_order.index(island_name)
-                        if island_index < current_island_index: continue
+                        if island_index < current_island_index:
+                            continue
+                        
+                        # Se for a ilha atual, pega apenas os níveis futuros. Se for uma ilha futura, pega todos os níveis.
                         valid_levels = [lvl for lvl in sorted(levels.keys()) if lvl > current_land_level] if island_index == current_island_index else sorted(levels.keys())
-                        if valid_levels: expansion_goals[island_name] = valid_levels
+                        
+                        if valid_levels:
+                            expansion_goals[island_name] = valid_levels
         context['expansion_goals'] = expansion_goals
+        # --- FIM DO BLOCO RESTAURADO ---
 
-    except Exception as e:
-        log.error(f"Erro ao processar dados do painel: {e}")
-        context['error'] = "Ocorreu um erro ao preparar os dados do painel."
+    except Exception:
+        log.error("Erro CRÍTICO ao processar dados do painel para a fazenda %s", farm_id, exc_info=True)
+        context['error'] = "Ocorreu um erro inesperado ao processar os dados da fazenda."
 
     return render_template('dashboard.html', title=f"Painel de {context['username']}", **context)
 
 
 @bp.route('/api/goal_requirements/<int:farm_id>/<string:current_land_type>/<int:current_level>')
 def api_goal_requirements(farm_id, current_land_type, current_level):
-    """
-    Endpoint da API para calcular os requisitos de uma meta de expansão.
-    """
+    # (Esta função permanece sem alterações)
     try:
         goal_str = request.args.get('goal_level')
         if not goal_str:
@@ -145,6 +179,6 @@ def api_goal_requirements(farm_id, current_land_type, current_level):
 
     except (IndexError, ValueError):
         return jsonify({"error": "Formato de 'goal_level' inválido."}), 400
-    except Exception as e:
-        log.error(f"Erro inesperado no endpoint da API de metas: {e}")
+    except Exception:
+        log.error("Erro inesperado no endpoint da API de metas para a fazenda %s", farm_id, exc_info=True)
         return jsonify({"error": "Um erro inesperado ocorreu."}), 500

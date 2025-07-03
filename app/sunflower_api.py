@@ -1,71 +1,81 @@
 import logging
 import requests
-import time
+from requests.exceptions import JSONDecodeError
+from . import cache
 
 log = logging.getLogger(__name__)
 
 SFL_API_BASE_URL = "https://api.sunflower-land.com/community/farms/"
-SFL_WORLD_API_URL = "https://sfl.world/api/v1.1/"
-
-api_cache = {}
-CACHE_DURATION_SECONDS = 180
+SFL_WORLD_API_URL = "https://sfl.world/api/v1.1/" 
+SFL_PRICE_URL = "https://sfl.world/api/v1/prices"
 
 # ---> FUNÇÃO AUXILIAR DADOS LAND ---
+@cache.cached(make_cache_key=lambda farm_id, endpoint: f"sfl_world_{farm_id}_{endpoint}")
 def get_sfl_world_data(farm_id: int, endpoint: str):
     """
     Busca dados de um endpoint específico da API sfl.world.
+    O resultado desta função será guardado em cache.
     """
-    cache_key = f"sfl_world_{endpoint}_{farm_id}"
-    current_time = time.time()
-
-    if cache_key in api_cache:
-        cached_data, timestamp = api_cache[cache_key]
-        if current_time - timestamp < CACHE_DURATION_SECONDS:
-            log.info(f"Retornando dados para '{cache_key}' do cache.")
-            return cached_data, None
-
     try:
         full_api_url = f"{SFL_WORLD_API_URL}{endpoint}/{farm_id}"
         log.info(f"Buscando dados na API sfl.world: {full_api_url}")
         
         response = requests.get(full_api_url, timeout=10)
         response.raise_for_status()
-        data = response.json()
+        
+        try:
+            data = response.json()
+        except JSONDecodeError:
+            log.warning("A resposta da API sfl.world para '%s' (farm %s) não é um JSON válido.", endpoint, farm_id)
+            return {}, f"Resposta inválida da API sfl.world para o endpoint '{endpoint}'."
 
-        # Validação: Garante que a resposta contém os dados esperados.
-        # O endpoint 'land' agora deve conter tanto 'land' quanto 'bumpkin'.
         if endpoint == 'land' and (not data or 'land' not in data or 'bumpkin' not in data):
-            log.warning(f"Resposta da API sfl.world para '{endpoint}' não continha 'land' e 'bumpkin'. Farm: {farm_id}")
+            log.warning("Resposta da API sfl.world para '%s' (farm %s) não continha 'land' e 'bumpkin'.", endpoint, farm_id)
             return {}, f"Dados de expansão e bumpkin ('{endpoint}') incompletos recebidos de sfl.world."
 
-        api_cache[cache_key] = (data, current_time)
-        
         return data, None
-    except Exception as e:
-        log.error(f"Erro ao buscar dados do endpoint '{endpoint}' para a fazenda {farm_id}: {e}")
+        
+    except requests.exceptions.HTTPError as http_err:
+        log.error("Erro HTTP ao buscar dados de sfl.world para '%s' (farm %s). Status: %s", endpoint, farm_id, http_err.response.status_code, exc_info=True)
+        return {}, f"Erro na API sfl.world (Status {http_err.response.status_code}). A fazenda pode não ter dados de expansão."
+    except Exception:
+        log.error("Erro inesperado ao buscar dados do endpoint '%s' (farm %s).", endpoint, farm_id, exc_info=True)
         return {}, f"Não foi possível buscar os dados de '{endpoint}' em sfl.world."
-# ---> FIM FUNÇÃO AUXILIAR DADOS LAND ---
+
+# ---> FUNÇÃO AUXILIAR PREÇOS (sem alterações) ---
+@cache.cached(key_prefix='prices')
+def get_prices_data():
+    """
+    Busca os preços de todos os itens da API sfl.world.
+    """
+    try:
+        log.info(f"Buscando dados de preços na API: {SFL_PRICE_URL}")
+        response = requests.get(SFL_PRICE_URL, timeout=10)
+        response.raise_for_status()
+        try:
+            data = response.json()
+            return data, None
+        except JSONDecodeError:
+            log.error("Erro ao decodificar JSON da API de preços.", exc_info=True)
+            return None, "Não foi possível ler os dados de preços da API (resposta inválida)."
+    except requests.exceptions.HTTPError as http_err:
+        log.error("Erro HTTP ao buscar dados de preços. Status: %s", http_err.response.status_code, exc_info=True)
+        return None, f"Erro na API de preços (Status {http_err.response.status_code})."
+    except Exception:
+        log.error("Erro inesperado ao buscar dados de preços.", exc_info=True)
+        return None, "Um erro inesperado ocorreu ao buscar os dados de preços."
 
 
 # ---> FUNÇÃO PRINCIPAL ---
+@cache.cached(make_cache_key=lambda farm_id: f"farm_data_{farm_id}")
 def get_farm_data(farm_id: int):
     """
     Busca todos os dados da fazenda, consolidando a SFL API e a sfl.world API.
     """
-    cache_key = f"sfl_api_{farm_id}"
-    current_time = time.time()
-
-    if cache_key in api_cache:
-        cached_data, timestamp = api_cache[cache_key]
-        if current_time - timestamp < CACHE_DURATION_SECONDS:
-            log.info(f"Retornando dados para farm_id {farm_id} do cache principal.")
-            return cached_data, None
-
     if not isinstance(farm_id, int) or farm_id <= 0:
         return None, "Farm ID deve ser um número inteiro positivo."
 
     try:
-        # 1. Busca os dados principais da API do Sunflower Land
         sfl_api_url = f"{SFL_API_BASE_URL}{farm_id}"
         log.info(f"Buscando dados na URL (API SFL): {sfl_api_url}")
         response = requests.get(sfl_api_url, timeout=10)
@@ -73,31 +83,24 @@ def get_farm_data(farm_id: int):
         data = response.json()
         farm_data = data.get('farm')
 
-        # 2. Busca os dados da expansão e do bumpkin em uma única chamada
         if farm_data:
             sfl_world_data, world_api_error = get_sfl_world_data(farm_id, 'land')
             if world_api_error:
-                log.warning(world_api_error)
+                return None, world_api_error
             
-            # A resposta completa de sfl.world é armazenada em 'expansion_data'
-            # para manter a compatibilidade com o código que espera `expansion_data.land`
             farm_data['expansion_data'] = sfl_world_data
-            
-            # Mescla os dados do bumpkin. A API sfl.world tem dados mais detalhados.
             if sfl_world_data and 'bumpkin' in sfl_world_data:
                 farm_data['bumpkin'] = sfl_world_data['bumpkin']
         
         if farm_data:
-            api_cache[cache_key] = (farm_data, current_time)
+            log.info(f"Dados consolidados recebidos com sucesso para a fazenda: {farm_id}")
+            return farm_data, None
         
-        log.info(f"Dados consolidados recebidos com sucesso para a fazenda: {farm_id}")
-        return farm_data, None
+        return None, "Não foi possível obter os dados da fazenda."
 
     except requests.exceptions.HTTPError as http_err:
-        return None, f"Erro na API do Sunflower Land (Status {response.status_code}). A fazenda existe?"
-    except requests.exceptions.RequestException as req_err:
-        return None, "Erro de conexão. Verifique sua internet."
-    except Exception as e:
-        return None, "Um erro inesperado ocorreu."
-    
-# ---> FIM FUNÇÃO PRINCIPAL ---
+        log.warning("Erro HTTP na API principal para a fazenda %s. Status: %s", farm_id, http_err.response.status_code)
+        return None, f"Erro na API do Sunflower Land (Status {http_err.response.status_code}). A fazenda existe?"
+    except Exception:
+        log.error("Erro genérico em get_farm_data para a fazenda %s.", farm_id, exc_info=True)
+        return None, "Um erro inesperado ocorreu ao buscar os dados da fazenda."
