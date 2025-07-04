@@ -25,8 +25,13 @@
             </button>
         </li>
         <li class="nav-item" role="presentation">
+            <button class="nav-link" id="inventory-tab" data-bs-toggle="tab" data-bs-target="#inventory-pane" type="button" role="tab" aria-controls="inventory-pane" aria-selected="false">
+                <i class="bi bi-box-seam-fill me-1"></i> Inventário
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
             <button class="nav-link" id="test-tab" data-bs-toggle="tab" data-bs-target="#test-pane" type="button" role="tab" aria-controls="test-pane" aria-selected="false">
-                <i class="bi bi-bug-fill me-1"></i> Teste do Mapa
+                <i class="bi bi-bug-fill me-1"></i> Área de testes futuros
             </button>
         </li>
     </ul>
@@ -55,6 +60,10 @@
 
         <div class="tab-pane fade p-3 border border-top-0 rounded-bottom" id="expansion-pane" role="tabpanel" aria-labelledby="expansion-tab">
             {% include 'partials/_expansion_panel.html' %}
+        </div>
+
+        <div class="tab-pane fade" id="inventory-pane" role="tabpanel" aria-labelledby="inventory-tab">
+            {% include 'partials/_inventory_panel.html' %}
         </div>
 
         <div class="tab-pane fade" id="test-pane" role="tabpanel" aria-labelledby="test-tab">

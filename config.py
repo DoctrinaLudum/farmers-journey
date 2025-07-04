@@ -80,3 +80,133 @@ LAND_EXPANSION_REQUIREMENTS = {
     }
 }
 # ---> FIM REQUISITOS DE EXPANSÃO ---
+
+# ---> INÍCIO: CATEGORIAS DO INVENTÁRIO <---
+INVENTORY_CATEGORIES = {
+    "Sementes": [
+        "Apple Seed", "Banana Plant", "Barley Seed", "Beetroot Seed", "Bloom Seed",
+        "Blueberry Seed", "Broccoli Seed", "Cabbage Seed", "Carnation Seed", "Carrot Seed",
+        "Cauliflower Seed", "Celestine Seed", "Clover Seed", "Corn Seed", "Cosmos Seed",
+        "Daffodil Seed", "Duskberry Seed", "Edelweiss Seed", "Eggplant Seed", "Gladiolus Seed",
+        "Grape Seed", "Kale Seed", "Lavender Seed", "Lily Seed", "Lotus Seed",
+        "Lunara Seed", "Olive Seed", "Onion Seed", "Orange Seed", "Pansy Seed",
+        "Parsnip Seed", "Pepper Seed", "Potato Seed", "Pumpkin Seed", "Radish Seed",
+        "Rhubarb Seed", "Rice Seed", "Soybean Seed", "Sunflower Seed", "Tomato Seed",
+        "Turnip Seed", "Wheat Seed", "Yam Seed", "Zucchini Seed"
+    ],
+    "Colheitas": [
+        "Artichoke", "Barley", "Beetroot", "Broccoli", "Cabbage", "Carrot",
+        "Cauliflower", "Celestine", "Corn", "Eggplant", "Kale", "Magic Mushroom",
+        "Onion", "Parsnip", "Pepper", "Potato", "Pumpkin", "Radish", "Rhubarb",
+        "Soybean", "Sunflower", "Tomato", "Turnip", "Wheat", "Wild Mushroom", "Yam",
+        "Zucchini"
+    ],
+    "Frutas": [
+        "Apple", "Banana", "Blueberry", "Duskberry", "Immortal Pear", "Lemon",
+        "Orange"
+    ],
+    "Flores": [
+        "Blue Balloon Flower", "Blue Carnation", "Blue Clover", "Blue Daffodil",
+        "Blue Edelweiss", "Blue Lavender", "Blue Lotus", "Blue Pansy", "Chamomile",
+        "Chicory", "Cozy Fireplace", "Desert Rose", "Prism Petal", "Purple Carnation",
+        "Purple Cosmos", "Purple Edelweiss", "Purple Gladiolus", "Purple Pansy",
+        "Red Carnation", "Red Cosmos", "Red Daffodil", "Red Edelweiss",
+        "Red Gladiolus", "Red Lavender", "Red Lotus", "Red Pansy", "White Carnation",
+        "White Cosmos", "White Daffodil", "White Edelweiss", "White Lavender",
+        "White Lotus", "White Pansy", "Yellow Carnation", "Yellow Clover",
+        "Yellow Daffodil", "Yellow Edelweiss", "Yellow Gladiolus", "Yellow Lavender",
+        "Yellow Lotus", "Yellow Pansy"
+    ],
+    "Estufa": [
+        "Grape", "Olive", "Rice"
+    ],
+    "Recursos": [
+        "Crimstone", "Gem", "Gold", "Hardened Leather", "Iron", "Leather",
+        "Oil", "Sand", "Stone", "Sunstone", "Wood"
+    ],
+    "Produtos_Animais": [
+        "Egg", "Feather", "Honey", "Merino Wool", "Milk", "Wool"
+    ],
+    "Racao_Animal": [
+        "Hay", "Kernel Blend", "Mixed Grain", "NutriBarley", "Omnifeed"
+    ],
+    "Animais_e_Mascotes": [
+        "Autumn Duckling", "Baby Panda", "Badass Bear", "Basic Bear", "Brilliant Bear",
+        "Butterfly", "Chicken", "Classy Bear", "Construction Bear", "Farmer Bear",
+        "Fat Chicken", "Flower Fox", "Lunalist", "Macaw", "Mama Duck", "Mog",
+        "Morty", "Pirate Bear", "Rich Chicken", "Speed Chicken", "Spring Duckling",
+        "Squirrel", "Summer Duckling", "Ugly Duckling", "Vampire Bear", "Winter Duckling"
+    ],
+
+    "Peixes_e_Frutos_do_Mar": [
+        "Angelfish", "Blue Marlin", "Blowfish", "Clownfish", "Crab",
+        "Football fish", "Halibut", "Kraken Tentacle", "Moray Eel", "Napoleanfish",
+        "Oarfish", "Olive Flounder", "Porgy", "Ray", "Red Snapper",
+        "Rock Blackfish", "Sea Horse", "Squid", "Starlight Tuna", "Sunfish",
+        "Surgeonfish", "Tilapia", "Tuna", "Walleye", "Weakfish",
+        "Zebra Turkeyfish"
+    ],
+    "Tesouros_e_Achados": [
+        "Amber Fossil", "Broken Pillar", "Camel Bone", "Clam Shell", "Cockle Shell",
+        "Coral", "Cow Skull", "Hieroglyph", "Horseshoe", "Iron Compass",
+        "Old Bottle", "Pearl", "Pirate Bounty", "Scarab", "Sea Cucumber",
+        "Seaweed", "Starfish", "T-Rex Skull", "Treasure Key", "Treasure Map",
+        "Vase", "Wooden Compass"
+    ],
+    "Comida_e_Bebidas": [
+        "Apple Pie", "Banana Blast", "Beetroot Cake", "Blueberry Jam",
+        "Bumpkin Broth", "Bumpkin Detox", "Bumpkin Roast", "Bumpkin Salad",
+        "Cabbers n Mash", "Cabbage Cake", "Carrot Cake", "Carrot Juice",
+        "Cauliflower Burger", "Cauliflower Cake", "Chowder", "Club Sandwich",
+        "Cornbread", "Eggplant Cake", "Fermented Carrots", "Fermented Fish",
+        "Fish Burger", "Fish n Chips", "Fish Omelette", "Fried Tofu", "Fruit Salad",
+        "Goblin's Treat", "Gumbo", "Honey Cake", "Kale & Mushroom Pie",
+        "Kale Omelette", "Kale Stew", "Lemon Cheesecake", "Mashed Potato",
+
+        "Mushroom Jacket Potatoes", "Mushroom Soup", "Orange Cake", "Orange Juice",
+        "Parsnip Cake", "Pirate Cake", "Pizza Margherita", "Popcorn",
+        "Power Smoothie", "Pumpkin Cake", "Pumpkin Soup", "Purple Smoothie",
+        "Quick Juice", "Radish Cake", "Rapid Roast", "Reindeer Carrot",
+        "Roast Veggies", "Rhubarb Tart", "Sauerkraut", "Sour Shake",
+        "Sunflower Cake", "The Lot", "Wheat Cake"
+    ],
+    "Ferramentas": [
+        "Axe", "Brush", "Petting Hand", "Sand Drill", "Sand Shovel", "Shovel",
+        "Stone Pickaxe"
+    ],
+    "Edificios_e_Itens_de_Fazenda": [
+        "Bakery", "Bale", "Barn", "Basic Land", "Basic Scarecrow", "Beehive",
+        "Compost Bin", "Crafting Box", "Crop Plot", "Deli", "Fire Pit", "Flower Bed",
+        "Fruit Patch", "Greenhouse", "Hen House", "Kitchen", "Manor", "Market",
+        "Premium Composter", "Smoothie Shack", "Spinning Wheel", "Time Warp Totem",
+        "Toolshed", "Turbo Composter", "Water Well", "Workbench"
+    ],
+    "Decoração": [
+        "Acorn House", "Aurora Lantern", "Basic Bed", "Blossombeard", "Bonnie's Tombstone",
+        "Bumpkin Lantern", "Bumpkin Nutcracker", "Carrot House", "Christmas Stocking",
+        "Cluckapult", "Cozy Fireplace", "Cushion", "Desert Gnome", "Fairy Circle",
+        "Fence", "Festive Tree", "Fisher Bed", "Giant Potato", "Golden Maple",
+        "Grubnash's Tombstone", "Igloo", "Kite", "Lake Rug", "Laurie the Chuckle Crow",
+        "Luminous Lantern", "Mangrove", "Mini Floating Island", "Ocean Lantern",
+        "Orange Bunny Lantern", "Orange Tunnel Bunny", "Potted Potato", "Potted Pumpkin",
+        "Potted Sunflower", "Purple Trail", "Radiance Lantern", "Rug", "Scary Mike",
+        "Skill Shrimpy", "Snowman", "Solar Lantern", "Spring Guardian", "Town Sign",
+        "Tornado Pinwheel", "Twister Rug", "Wardrobe", "White Bunny Lantern",
+        "White Tunnel Bunny"
+    ],
+    "Fertilizantes_e_Iscas": [
+        "Earthworm", "Fishing Lure", "Fruitful Blend", "Grub", "Protective Pesticide",
+        "Rapid Root", "Red Wiggler", "Sprout Mix"
+    ],
+    "Recursos_Naturais": [
+        "Crimstone Rock", "Gold Beetle", "Gold Rock", "Iron Beetle", "Iron Rock",
+        "Oil Reserve", "Stone Beetle", "Stone Rock", "Sunstone Rock", "Tree"
+    ],
+    "Itens_Especiais_e_Banners": [
+        "Base Banner", "Easter Ticket 2025", "Gold Pass", "Great Bloom Banner",
+        "Horseshoe", "Love Charm", "Mark", "Music Box", "Nightshade Emblem",
+        "Nightshade Faction Banner", "Polygon Banner", "Potion Ticket", "Royal Bedding",
+        "Timeshard", "Trade Point", "Winds of Change Banner"
+    ]
+}
+# ---> FIM: CATEGORIAS DO INVENTÁRIO <---

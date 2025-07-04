@@ -74,6 +74,45 @@ def farm_dashboard(farm_id):
                 resource['icon'] = url_for('static', filename=f'images/{icon_name}.png')
         context['expansion_progress'] = expansion_progress_data
         
+        # ---> INÍCIO DA NOVA LÓGICA: CATEGORIZAR O INVENTÁRIO <---
+        categorized_inventory = {}
+        total_inventory_value = Decimal('0')
+        inventory_from_api = farm_data.get('inventory', {})
+        item_prices = prices_data.get("data", {}).get("p2p", {})
+
+        for category, item_list in config.INVENTORY_CATEGORIES.items():
+            owned_items_in_category = []
+            for item_name in item_list:
+                # Verifica se o jogador possui o item
+                if item_name in inventory_from_api:
+                    try:
+                        quantity = Decimal(inventory_from_api[item_name])
+                        if quantity > 0:
+                            # Tenta encontrar o preço do item
+                            price_info = item_prices.get(item_name)
+                            price = Decimal(str(price_info)) if price_info else Decimal('0')
+                            
+                            value = quantity * price
+                            total_inventory_value += value
+                            
+                            # Adiciona o item à lista, independentemente de ter valor ou não
+                            owned_items_in_category.append({
+                                "name": item_name,
+                                "amount": float(quantity),
+                                "value": float(value), # Será 0.00 se não houver preço
+                                "icon": url_for('static', filename=f'images/{item_name}.png')
+                            })
+                    except (InvalidOperation, TypeError):
+                        log.warning(f"Ignorando item '{item_name}' com quantidade inválida.")
+            
+            if owned_items_in_category:
+                owned_items_in_category.sort(key=lambda x: x['name']) # Ordena por nome
+                categorized_inventory[category] = owned_items_in_category
+        
+        context['categorized_inventory'] = categorized_inventory
+        context['total_inventory_value'] = float(total_inventory_value)
+        # ---> FIM DA NOVA LÓGICA ---
+
         item_prices = prices_data.get("data", {}).get("p2p", {})
         raw_inventory = farm_data.get("inventory", {})
         inventory_list = []

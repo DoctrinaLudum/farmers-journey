@@ -42,7 +42,7 @@ def get_sfl_world_data(farm_id: int, endpoint: str):
         log.error("Erro inesperado ao buscar dados do endpoint '%s' (farm %s).", endpoint, farm_id, exc_info=True)
         return {}, f"Não foi possível buscar os dados de '{endpoint}' em sfl.world."
 
-# ---> FUNÇÃO AUXILIAR PREÇOS (sem alterações) ---
+# ---> FUNÇÃO AUXILIAR PREÇOS ---
 @cache.cached(key_prefix='prices')
 def get_prices_data():
     """
@@ -64,6 +64,7 @@ def get_prices_data():
     except Exception:
         log.error("Erro inesperado ao buscar dados de preços.", exc_info=True)
         return None, "Um erro inesperado ocorreu ao buscar os dados de preços."
+# ---> FIM FUNÇÃO AUXILIAR PREÇOS ---
 
 
 # ---> FUNÇÃO PRINCIPAL ---
