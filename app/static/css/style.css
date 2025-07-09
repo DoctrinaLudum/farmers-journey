@@ -15,8 +15,7 @@
     border-radius: 0.5rem;     /* Cantos um pouco mais arredondados */
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     height: 100%;
-    display: flex;
-    flex-direction: column;
+    /* display: flex e flex-direction: column foram removidos para não conflitar com o Isotope. */
 }
 
 /* Estilo para o cabeçalho dos cards */
@@ -70,37 +69,6 @@
     height: 8px;
 }
 
-/* Estilos para a lista de recursos em "Próxima Jornada" */
-.resource-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem; /* Espaço entre o ícone e o resto */
-    padding: 0.5rem 0; /* Espaçamento vertical */
-}
-
-.resource-item .resource-icon {
-    font-size: 1.5rem; /* Tamanho do ícone */
-    color: #6c757d; /* Cor cinza para o ícone */
-}
-
-.resource-item .resource-details {
-    flex-grow: 1; /* Faz esta div ocupar todo o espaço restante */
-}
-
-.resource-item .resource-progress-numbers {
-    font-size: 0.8rem;
-    color: #6c757d;
-    text-align: right;
-    min-width: 80px; /* Garante que os números não quebrem a linha facilmente */
-}
-
-/* --- NOVAS CLASSES E AJUSTES --- */
-
-/* Garante que a classe para barras finas tenha a altura desejada */
-.progress-thin {
-    height: 6px;
-}
-
 /* Classe para padronizar o tamanho dos ícones de recursos nas listas */
 .resource-icon-list {
     width: 20px;
@@ -120,8 +88,6 @@
     color: #000;
 }
 
-/* --- NOVAS CLASSES E AJUSTES PARA LAYOUT COMPACTO --- */
-
 /* Itens da lista no card "Meta Final" com menos espaçamento vertical */
 .compact-list-item {
     padding-top: 0.4rem;
@@ -135,13 +101,6 @@
     height: 18px;
 }
 
-/* Ajusta o posicionamento do badge na lista da "Próxima Jornada" */
-.journey-item-details {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 0.25rem;
-}
 
 /* --- ESTILOS PARA O LAYOUT COMPACTO DA PRÓXIMA JORNADA --- */
 
@@ -150,7 +109,6 @@
     padding-bottom: 0.5rem;
 }
 
-/* Primeira linha do item: Nome e Status */
 .journey-item-header {
     display: flex;
     justify-content: space-between;
@@ -158,54 +116,12 @@
     margin-bottom: 0.25rem; /* Pequeno espaço antes da barra de progresso */
 }
 
-/* Segunda linha: Barra de progresso e números */
 .journey-item-progress {
-    position: relative; /* Permite posicionar os números sobre a barra */
+    position: relative;
     display: flex;
     align-items: center;
 }
 
-/* Números sobre a barra de progresso */
-.progress-values {
-    position: absolute;
-    right: 0.5rem; /* Posição a partir da direita */
-    font-size: 0.7em;
-    font-weight: bold;
-    color: white;
-
-    /* --- NOVAS PROPRIEDADES PARA A "PÍLULA" --- */
-    background-color: rgba(0, 0, 0, 0.45); /* Fundo preto com 45% de opacidade */
-    padding: 0.1rem 0.4rem;                /* Espaçamento interno para criar a pílula */
-    border-radius: 0.25rem;               /* Cantos arredondados */
-    line-height: 1;                       /* Altura da linha justa para um visual compacto */
-
-    /* A sombra não é mais necessária */
-    /* text-shadow: 1px 1px 2px rgba(0,0,0,0.7); */
-}
-
-/* --- ESTILOS PARA O LAYOUT FINAL DA PRÓXIMA JORNADA --- */
-
-.journey-list-item {
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
-}
-
-/* Primeira linha do item: Nome e Status */
-.journey-item-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.25rem; /* Pequeno espaço antes da barra de progresso */
-}
-
-/* Segunda linha: Barra de progresso e números */
-.journey-item-progress {
-    position: relative; /* Permite posicionar os números sobre a barra */
-    display: flex;
-    align-items: center;
-}
-
-/* Números sobre a barra de progresso com fundo "pílula" */
 .progress-values {
     position: absolute;
     right: 0.5rem;
@@ -223,8 +139,9 @@
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
-    min-height: 220px; /* Altura mínima para garantir que o card não colapse */
+    min-height: 220px;
 }
+
 /* Adiciona borda e melhora o espaçamento do conteúdo das abas */
 .tab-content {
     border: 1px solid #dee2e6;
@@ -235,11 +152,11 @@
 /* --- ESTILOS PARA AS TABELAS DE INVENTÁRIO --- */
 
 .accordion-item .table {
-    font-size: 0.85rem; /* Fonte um pouco menor para as tabelas */
+    font-size: 0.85rem;
 }
 
 .accordion-item .table thead th {
-    background-color: #f8f9fa; /* Fundo cinza claro para o cabeçalho */
+    background-color: #f8f9fa;
     font-weight: 600;
     border-bottom-width: 1px;
 }
@@ -248,9 +165,55 @@
     font-size: 0.9rem;
     font-weight: bold !important;
 }
-/* --- ESTILOS PARA O LAYOUT ORGÂNICO DE CARDS (MASONRY) --- */
 
-.inventory-card {
-    /* Impede que o conteúdo de um card seja quebrado (útil para impressão, etc.) */
-    break-inside: avoid;
+/* --- ESTILOS PARA O LAYOUT MASONRY (ABORDAGEM COM SIZER) --- */
+
+#inventory-grid {
+    margin: 0 -8px; /* Compensa o padding dos itens para alinhar com o container */
+}
+
+/* O "Sizer" define a largura da coluna. Ele é invisível. */
+.inventory-sizer {
+    width: 33.3333%;
+}
+
+/* O card ocupa a mesma largura do sizer. */
+#inventory-grid .inventory-card {
+    width: 33.3333%;
+    padding: 8px; /* Espaçamento entre os cards */
+    /* Remove a margem que usávamos antes */
+    margin-bottom: 0;
+}
+
+/* Media query para 2 colunas em telas menores */
+@media (max-width: 992px) {
+    .inventory-sizer,
+    #inventory-grid .inventory-card {
+        width: 50%;
+    }
+}
+
+/* Media query para 1 coluna em telas de celular */
+@media (max-width: 768px) {
+    .inventory-sizer,
+    #inventory-grid .inventory-card {
+        width: 100%;
+    }
+}
+
+
+/* --- ESTILOS PARA DRAG-AND-DROP (CONTINUAM OS MESMOS) --- */
+
+.inventory-card .accordion-header {
+    cursor: move;
+}
+
+.sortable-ghost {
+    background: #f0f8ff;
+    border: 2px dashed #add8e6;
+    opacity: 0.7;
+}
+
+.sortable-ghost > * {
+    visibility: hidden;
 }

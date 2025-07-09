@@ -1,3 +1,6 @@
+declare var Isotope: any;
+declare var Sortable: any;
+
 document.addEventListener('DOMContentLoaded', () => {
     const goalForm = document.getElementById('goal-form') as HTMLFormElement;
 
@@ -53,6 +56,79 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // ---> INÍCIO DA LÓGICA ATUALIZADA DO INVENTÁRIO <---
+
+    const inventoryTab = document.querySelector('#inventory-tab');
+    if (inventoryTab) {
+        // Função que inicializa todo o nosso layout dinâmico.
+        const initInventoryLayout = () => {
+            const gridElement = document.getElementById('inventory-grid');
+            if (!gridElement) return;
+
+            // 1. Inicializa o Isotope para o layout Masonry
+            const iso = new Isotope(gridElement, {
+                itemSelector: '.inventory-card',
+                layoutMode: 'masonry',
+                masonry: {
+                    gutter: 15
+                }
+            });
+
+            // Função para carregar a ordem salva do localStorage
+            const loadLayout = () => {
+                const savedOrderJSON = localStorage.getItem('inventoryOrder');
+                if (savedOrderJSON) {
+                    try {
+                        const savedOrder: string[] = JSON.parse(savedOrderJSON);
+                        const items = Array.from(gridElement.children) as HTMLElement[];
+                        const itemMap = new Map(items.map(item => {
+                            const accordion = item.querySelector('.accordion');
+                            return [accordion ? accordion.id : '', item];
+                        }));
+
+                        const sortedElements = savedOrder
+                            .map(id => itemMap.get(id))
+                            .filter((el): el is HTMLElement => !!el);
+                        
+                        items.forEach(item => {
+                            if (!sortedElements.includes(item)) {
+                                sortedElements.push(item);
+                            }
+                        });
+
+                        gridElement.append(...sortedElements);
+                        iso.reloadItems();
+                        iso.layout();
+                    } catch (e) {
+                        console.error("Falha ao carregar a ordem do inventário:", e);
+                    }
+                }
+            };
+
+            loadLayout();
+
+            // 2. Inicializa o SortableJS para o drag-and-drop
+            Sortable.create(gridElement, {
+                animation: 150,
+                handle: '.accordion-header',
+                onEnd: () => {
+                    const newOrder = Array.from(gridElement.querySelectorAll('.accordion')).map(el => el.id);
+                    localStorage.setItem('inventoryOrder', JSON.stringify(newOrder));
+                    iso.reloadItems();
+                    iso.layout();
+                }
+            });
+
+            // 3. Garante que o Isotope se ajuste quando um accordion for expandido/recolhido
+            gridElement.addEventListener('shown.bs.collapse', () => iso.layout());
+            gridElement.addEventListener('hidden.bs.collapse', () => iso.layout());
+        };
+
+        // Escuta pelo evento do Bootstrap e inicializa o layout APENAS na primeira vez.
+        inventoryTab.addEventListener('shown.bs.tab', initInventoryLayout, { once: true });
+    }
+    // ---> FIM DA LÓGICA ATUALIZADA DO INVENTÁRIO <---
 });
 
 function renderGoalResults(data: any) {

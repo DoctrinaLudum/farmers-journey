@@ -1,0 +1,55 @@
+{% macro inventory_card(category_title, items, category_id, start_expanded=False) %}
+{#
+    Macro para renderizar um card de categoria de inventário.
+    Args:
+        category_title (str): O título a ser exibido no cabeçalho do card (ex: "Recursos").
+        items (list): A lista de dicionários de itens dentro da categoria.
+        category_id (str): Um ID único para os elementos do accordion (ex: "recursos").
+        start_expanded (bool): Se True, o card começa expandido.
+#}
+<div class="inventory-card">
+    <div class="accordion" id="accordion-{{ category_id }}">
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button
+                    class="accordion-button {% if not start_expanded %}collapsed{% endif %} p-2"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapse-{{ category_id }}"
+                    aria-expanded="{{ 'true' if start_expanded else 'false' }}"
+                    aria-controls="collapse-{{ category_id }}">
+                    {{ category_title.replace("_", " ") }}
+                    <span class="badge bg-secondary ms-auto me-2">{{ items|length }}</span>
+                </button>
+            </h2>
+            <div id="collapse-{{ category_id }}" class="accordion-collapse collapse {% if start_expanded %}show{% endif %}">
+                <div class="accordion-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th class="text-end">Qtd</th>
+                                    <th class="text-end">Valor</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in items %}
+                                <tr>
+                                    <td>
+                                        <img src="{{ item.icon }}" alt="{{ item.name }}" class="me-2 resource-icon-list" onerror="this.style.display='none'">
+                                        {{ item.name }}
+                                    </td>
+                                    <td class="text-end">{{ "%.2f"|format(item.amount|float) }}</td>
+                                    <td class="text-end fw-bold">{{ "%.2f"|format(item.value|float) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
