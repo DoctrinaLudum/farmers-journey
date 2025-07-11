@@ -1,24 +1,18 @@
-declare var Isotope: any;
-declare var Sortable: any;
+// ARQUIVO ATUALIZADO: typescript/dashboard.ts
+
+// Removido 'declare var Isotope' e 'declare var Sortable' pois não são mais usados.
 
 document.addEventListener('DOMContentLoaded', () => {
+    // A lógica do formulário de metas não muda.
     const goalForm = document.getElementById('goal-form') as HTMLFormElement;
-
     if (goalForm) {
         goalForm.addEventListener('submit', async (event) => {
-            event.preventDefault(); 
-            
+            event.preventDefault();
             const resultsContainer = document.getElementById('goal-results-container');
             if (!resultsContainer) return;
 
-            resultsContainer.innerHTML = `
-                <div class="d-flex justify-content-center align-items-center mt-3">
-                    <div class="spinner-border spinner-border-sm" role="status">
-                        <span class="visually-hidden">Calculando...</span>
-                    </div>
-                    <span class="ms-2 small">Calculando plano...</span>
-                </div>`;
-            
+            resultsContainer.innerHTML = `<div class="d-flex justify-content-center align-items-center mt-3"><div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Calculando...</span></div><span class="ms-2 small">Calculando plano...</span></div>`;
+
             const farmId = goalForm.dataset.farmId;
             const currentLandType = goalForm.dataset.currentLandType;
             const currentLevel = goalForm.dataset.currentLevel;
@@ -29,9 +23,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 resultsContainer.innerHTML = '<p class="text-muted text-center small mt-3">Por favor, selecione um nível válido.</p>';
                 return;
             }
-            
+
             const apiUrl = `/api/goal_requirements/${farmId}/${currentLandType}/${currentLevel}?goal_level=${goalLevel}`;
-            
+
             try {
                 const response = await fetch(apiUrl);
                 const responseText = await response.text();
@@ -57,80 +51,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ---> INÍCIO DA LÓGICA ATUALIZADA DO INVENTÁRIO <---
-
-    const inventoryTab = document.querySelector('#inventory-tab');
-    if (inventoryTab) {
-        // Função que inicializa todo o nosso layout dinâmico.
-        const initInventoryLayout = () => {
-            const gridElement = document.getElementById('inventory-grid');
-            if (!gridElement) return;
-
-            // 1. Inicializa o Isotope para o layout Masonry
-            const iso = new Isotope(gridElement, {
-                itemSelector: '.inventory-card',
-                layoutMode: 'masonry',
-                masonry: {
-                    gutter: 15
-                }
-            });
-
-            // Função para carregar a ordem salva do localStorage
-            const loadLayout = () => {
-                const savedOrderJSON = localStorage.getItem('inventoryOrder');
-                if (savedOrderJSON) {
-                    try {
-                        const savedOrder: string[] = JSON.parse(savedOrderJSON);
-                        const items = Array.from(gridElement.children) as HTMLElement[];
-                        const itemMap = new Map(items.map(item => {
-                            const accordion = item.querySelector('.accordion');
-                            return [accordion ? accordion.id : '', item];
-                        }));
-
-                        const sortedElements = savedOrder
-                            .map(id => itemMap.get(id))
-                            .filter((el): el is HTMLElement => !!el);
-                        
-                        items.forEach(item => {
-                            if (!sortedElements.includes(item)) {
-                                sortedElements.push(item);
-                            }
-                        });
-
-                        gridElement.append(...sortedElements);
-                        iso.reloadItems();
-                        iso.layout();
-                    } catch (e) {
-                        console.error("Falha ao carregar a ordem do inventário:", e);
-                    }
-                }
-            };
-
-            loadLayout();
-
-            // 2. Inicializa o SortableJS para o drag-and-drop
-            Sortable.create(gridElement, {
-                animation: 150,
-                handle: '.accordion-header',
-                onEnd: () => {
-                    const newOrder = Array.from(gridElement.querySelectorAll('.accordion')).map(el => el.id);
-                    localStorage.setItem('inventoryOrder', JSON.stringify(newOrder));
-                    iso.reloadItems();
-                    iso.layout();
-                }
-            });
-
-            // 3. Garante que o Isotope se ajuste quando um accordion for expandido/recolhido
-            gridElement.addEventListener('shown.bs.collapse', () => iso.layout());
-            gridElement.addEventListener('hidden.bs.collapse', () => iso.layout());
-        };
-
-        // Escuta pelo evento do Bootstrap e inicializa o layout APENAS na primeira vez.
-        inventoryTab.addEventListener('shown.bs.tab', initInventoryLayout, { once: true });
-    }
-    // ---> FIM DA LÓGICA ATUALIZADA DO INVENTÁRIO <---
+    // ---> LÓGICA DO INVENTÁRIO REMOVIDA <---
+    // Não precisamos mais de JavaScript para controlar o layout do inventário.
+    // O CSS agora trata de tudo.
 });
 
+// A função renderGoalResults permanece a mesma.
 function renderGoalResults(data: any) {
     const resultsContainer = document.getElementById('goal-results-container');
     const mainTemplate = document.getElementById('goal-list-template') as HTMLTemplateElement;
@@ -145,19 +71,19 @@ function renderGoalResults(data: any) {
     mainClone.querySelector('[data-template="goal-land-type"]')!.textContent = data.goal_land_type;
     mainClone.querySelector('[data-template="bumpkin-level"]')!.textContent = data.max_bumpkin_level;
     mainClone.querySelector('[data-template="total-time"]')!.textContent = data.total_time_str;
-    
+
     const totalCostFormatted = parseFloat(data.total_sfl_cost).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     mainClone.querySelector('[data-template="total-cost"]')!.textContent = totalCostFormatted;
 
     const column1 = mainClone.querySelector('[data-column="1"]')!;
     const column2 = mainClone.querySelector('[data-column="2"]')!;
-    
+
     data.requirements.forEach((item: any, index: number) => {
         const itemClone = itemTemplate.content.cloneNode(true) as DocumentFragment;
 
         itemClone.querySelector<HTMLImageElement>('[data-template="icon"]')!.src = item.icon;
         itemClone.querySelector('[data-template="name"]')!.textContent = item.name;
-        
+
         const shortfallEl = itemClone.querySelector<HTMLSpanElement>('[data-template="shortfall"]')!;
         const shortfallValue = parseFloat(item.shortfall);
 

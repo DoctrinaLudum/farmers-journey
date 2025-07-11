@@ -105,10 +105,8 @@
 
 {% block scripts %}
 {# 1. Carregamos o Isotope via CDN #}
-<script src="https://unpkg.com/isotope-layout@3/dist/isotope.pkgd.min.js"></script>
 
 {# 2. Carregamos o SortableJS via CDN #}
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 
 {# 3. Carregamos o nosso script, que agora pode usar as bibliotecas globais #}
 <script src="{{ url_for('static', filename='js/dashboard.js') }}" type="module"></script>

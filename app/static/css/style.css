@@ -1,67 +1,19 @@
-/* Estilo para a barra de progresso, para que não precise ser inline */
-.progress-bar-dynamic {
-    /* A largura será definida pela variável --progress-width no HTML */
-    width: var(--progress-width, 0%);
-    transition: width 0.6s ease; /* Adiciona uma transição suave */
-}
-
 /* =================================
-   ESTILOS DOS CARDS DO PAINEL
+   VARIÁVEIS GLOBAIS E ESTILOS DE BASE
    ================================= */
 
-/* Classe base para todos os cards do nosso painel */
-.dashboard-card {
-    border: 1px solid #e9ecef; /* Borda sutil */
-    border-radius: 0.5rem;     /* Cantos um pouco mais arredondados */
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    height: 100%;
-    /* display: flex e flex-direction: column foram removidos para não conflitar com o Isotope. */
-}
-
-/* Estilo para o cabeçalho dos cards */
-.dashboard-card .card-header {
-    background-color: #f8f9fa; /* Fundo cinza bem claro */
-    padding: 0.75rem 1rem;
-    font-weight: 500;
-    border-bottom: 1px solid #e9ecef;
-}
-
-/* Estilo para o corpo dos cards */
-.dashboard-card .card-body {
-    padding: 1rem;
-    flex-grow: 1; /* Faz o corpo do card ocupar o espaço disponível */
-}
-
-/* Estilos para listas dentro dos cards, para um visual mais compacto */
-.dashboard-card .list-group-item {
-    padding: 0.6rem 1rem; /* Padding vertical menor */
-    font-size: 0.9rem;    /* Fonte um pouco menor */
-}
-
-/* =================================
-   PALETA DE CORES E VARIÁVEIS
-   ================================= */
 :root {
-    --cor-primaria: #0d6efd;   /* Azul padrão do Bootstrap */
-    --cor-sucesso: #198754;    /* Verde padrão do Bootstrap */
-    --cor-aviso: #ffc107;      /* Amarelo padrão do Bootstrap */
-    --cor-perigo: #dc3545;     /* Vermelho padrão do Bootstrap */
-    --cor-texto: #212529;      /* Cor de texto principal */
-    --cor-fundo-claro: #f8f9fa; /* Cinza bem claro para fundos */
-    --cor-borda: #e9ecef;       /* Cor de borda sutil */
-}
-
-/* Exemplo de como usar as variáveis */
-.dashboard-card {
-    border-color: var(--cor-borda);
-}
-
-.dashboard-card .card-header {
-    background-color: var(--cor-fundo-claro);
+    --cor-primaria: #0d6efd;
+    --cor-sucesso: #198754;
+    --cor-aviso: #ffc107;
+    --cor-perigo: #dc3545;
+    --cor-texto: #212529;
+    --cor-fundo-claro: #f8f9fa;
+    --cor-borda: #dee2e6;
 }
 
 /* =================================
-   ESTILOS DOS COMPONENTES DO PAINEL
+   COMPONENTES GERAIS DO PAINEL
    ================================= */
 
 /* Define uma altura menor para as barras de progresso */
@@ -69,41 +21,51 @@
     height: 8px;
 }
 
-/* Classe para padronizar o tamanho dos ícones de recursos nas listas */
+/* Barra de progresso com animação */
+.progress-bar-dynamic {
+    width: var(--progress-width, 0%);
+    transition: width 0.6s ease;
+}
+
+/* Padroniza o tamanho dos ícones de recursos nas listas */
 .resource-icon-list {
     width: 20px;
     height: 20px;
-    object-fit: contain; /* Garante que a imagem não fique distorcida */
+    object-fit: contain;
 }
 
-/* Classe para os badges de excedente, para dar uma cor diferente */
-.badge-surplus {
-    background-color: #0dcaf0; /* Cor ciano (info) do Bootstrap */
-    color: #000;
+/* =================================
+   ESTILOS DOS CARDS DO PAINEL
+   ================================= */
+
+.dashboard-card {
+    height: 100%;
+    border: 1px solid var(--cor-borda);
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 
-/* Classe para os badges de défice, para dar uma cor de alerta */
-.badge-shortfall {
-    background-color: #ffc107; /* Cor amarela (warning) do Bootstrap */
-    color: #000;
+.dashboard-card .card-header {
+    padding: 0.75rem 1rem;
+    font-weight: 500;
+    background-color: var(--cor-fundo-claro);
+    border-bottom: 1px solid var(--cor-borda);
 }
 
-/* Itens da lista no card "Meta Final" com menos espaçamento vertical */
-.compact-list-item {
-    padding-top: 0.4rem;
-    padding-bottom: 0.4rem;
-    font-size: 0.85rem; /* Fonte ligeiramente menor */
+.dashboard-card .card-body {
+    padding: 1rem;
 }
 
-/* Garante que o ícone na lista compacta fique bem alinhado */
-.compact-list-item .resource-icon-list {
-    width: 18px;
-    height: 18px;
+.dashboard-card .list-group-item {
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
 }
 
+/* =================================
+   PAINEL DE EXPANSÃO E METAS
+   ================================= */
 
-/* --- ESTILOS PARA O LAYOUT COMPACTO DA PRÓXIMA JORNADA --- */
-
+/* Itens da lista na "Próxima Jornada" */
 .journey-list-item {
     padding-top: 0.5rem;
     padding-bottom: 0.5rem;
@@ -113,7 +75,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.25rem; /* Pequeno espaço antes da barra de progresso */
+    margin-bottom: 0.25rem;
 }
 
 .journey-item-progress {
@@ -122,6 +84,7 @@
     align-items: center;
 }
 
+/* Valores (ex: 50/100) sobrepostos à barra de progresso */
 .progress-values {
     position: absolute;
     right: 0.5rem;
@@ -134,6 +97,29 @@
     line-height: 1;
 }
 
+/* Itens da lista na meta final */
+.compact-list-item {
+    padding-top: 0.4rem;
+    padding-bottom: 0.4rem;
+    font-size: 0.85rem;
+}
+
+.compact-list-item .resource-icon-list {
+    width: 18px;
+    height: 18px;
+}
+
+/* Badges de status (excedente/défice) */
+.badge-surplus {
+    background-color: #0dcaf0; /* Ciano */
+    color: #000;
+}
+
+.badge-shortfall {
+    background-color: var(--cor-aviso);
+    color: #000;
+}
+
 /* --- ESTILO PARA O DISPLAY DA IMAGEM DE EXPANSÃO --- */
 .expansion-image-display {
     background-size: contain;
@@ -142,21 +128,52 @@
     min-height: 220px;
 }
 
-/* Adiciona borda e melhora o espaçamento do conteúdo das abas */
+/* =================================
+   PAINEL DE INVENTÁRIO (ABAS)
+   ================================= */
+
+/* Contêiner do conteúdo das abas */
 .tab-content {
-    border: 1px solid #dee2e6;
-    border-top: none;
+    border: 1px solid var(--cor-borda);
+    border-top: none; /* Remove a borda superior para evitar sobreposição */
     border-radius: 0 0 .375rem .375rem;
 }
 
-/* --- ESTILOS PARA AS TABELAS DE INVENTÁRIO --- */
+/* --- CORREÇÃO PARA A BORDA DA ABA ATIVA --- */
+/* Faz com que a aba ativa "funda-se" com o conteúdo abaixo */
+.nav-tabs .nav-link.active {
+    /* Move a aba um pouco para baixo para cobrir a borda do .tab-content */
+    margin-bottom: -1px;
+    border-bottom-color: var(--bs-body-bg, white); /* Usa a cor de fundo do corpo para esconder a linha */
+}
 
+/* --- ABORDAGEM MODERNA E ROBUSTA COM CSS COLUMNS --- */
+
+#inventory-grid {
+    /* Define o número de colunas desejado para o layout */
+    column-count: 3;
+    /* Define o espaço entre as colunas */
+    column-gap: 1rem;
+    /* Adiciona um preenchimento interno para que o conteúdo não cole nas bordas */
+    padding: 1rem;
+}
+
+#inventory-grid .inventory-card {
+    /* Regra CRÍTICA: Impede que um card seja cortado ao meio e passe para a próxima coluna */
+    break-inside: avoid;
+    /* Adiciona um espaçamento na parte inferior de cada card para separá-los verticalmente */
+    margin-bottom: 1rem;
+    /* A largura é gerida automaticamente pelo navegador, não precisamos mais de a definir */
+    width: 100%;
+}
+
+/* Estilos para os accordions dentro do inventário */
 .accordion-item .table {
     font-size: 0.85rem;
 }
 
 .accordion-item .table thead th {
-    background-color: #f8f9fa;
+    background-color: var(--cor-fundo-claro);
     font-weight: 600;
     border-bottom-width: 1px;
 }
@@ -166,54 +183,20 @@
     font-weight: bold !important;
 }
 
-/* --- ESTILOS PARA O LAYOUT MASONRY (ABORDAGEM COM SIZER) --- */
+/* =================================
+   MEDIA QUERIES PARA RESPONSIVIDADE
+   ================================= */
 
-#inventory-grid {
-    margin: 0 -8px; /* Compensa o padding dos itens para alinhar com o container */
-}
-
-/* O "Sizer" define a largura da coluna. Ele é invisível. */
-.inventory-sizer {
-    width: 33.3333%;
-}
-
-/* O card ocupa a mesma largura do sizer. */
-#inventory-grid .inventory-card {
-    width: 33.3333%;
-    padding: 8px; /* Espaçamento entre os cards */
-    /* Remove a margem que usávamos antes */
-    margin-bottom: 0;
-}
-
-/* Media query para 2 colunas em telas menores */
-@media (max-width: 992px) {
-    .inventory-sizer,
-    #inventory-grid .inventory-card {
-        width: 50%;
+/* Para 2 colunas em ecrãs de tablet */
+@media (max-width: 991px) {
+    #inventory-grid {
+        column-count: 2;
     }
 }
 
-/* Media query para 1 coluna em telas de celular */
-@media (max-width: 768px) {
-    .inventory-sizer,
-    #inventory-grid .inventory-card {
-        width: 100%;
+/* Para 1 coluna em ecrãs de telemóvel */
+@media (max-width: 576px) {
+    #inventory-grid {
+        column-count: 1;
     }
-}
-
-
-/* --- ESTILOS PARA DRAG-AND-DROP (CONTINUAM OS MESMOS) --- */
-
-.inventory-card .accordion-header {
-    cursor: move;
-}
-
-.sortable-ghost {
-    background: #f0f8ff;
-    border: 2px dashed #add8e6;
-    opacity: 0.7;
-}
-
-.sortable-ghost > * {
-    visibility: hidden;
 }
