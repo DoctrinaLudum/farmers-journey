@@ -208,7 +208,7 @@ INVENTORY_ITEMS = {
     "White Clover":          {"type": "Flower", "source_seed": "Clover Seed"},
     "Blue Clover":           {"type": "Flower", "source_seed": "Clover Seed"},
     "Chamomile":             {"type": "Flower"},
-    "Chicory":               {"type": "Flower"},
+    "Chicory":               {"type": "Flower"},    
     "Desert Rose":           {"type": "Flower"},
     "Lunalist":              {"type": "Flower"},
     

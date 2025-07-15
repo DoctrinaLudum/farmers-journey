@@ -1,7 +1,6 @@
 /* =================================
    VARIÁVEIS GLOBAIS E ESTILOS DE BASE
    ================================= */
-
 :root {
     --cor-primaria: #0d6efd;
     --cor-sucesso: #198754;
@@ -16,22 +15,34 @@
    COMPONENTES GERAIS DO PAINEL
    ================================= */
 
-/* Define uma altura menor para as barras de progresso */
-.progress-thin {
-    height: 8px;
-}
-
-/* Barra de progresso com animação */
-.progress-bar-dynamic {
-    width: var(--progress-width, 0%);
-    transition: width 0.6s ease;
-}
-
 /* Padroniza o tamanho dos ícones de recursos nas listas */
 .resource-icon-list {
     width: 20px;
     height: 20px;
     object-fit: contain;
+}
+
+/* Cabeçalhos de card que são clicáveis para recolher/expandir */
+.clickable-header {
+    cursor: pointer;
+}
+
+/* Animação para os ícones de chevron dos cards retráteis */
+.clickable-header .bi-chevron-down {
+    transition: transform 0.2s ease-in-out;
+}
+.clickable-header[aria-expanded="true"] .bi-chevron-down {
+    transform: rotate(180deg);
+}
+
+/* Barras de progresso com altura customizada */
+.progress-sm { height: 8px; }
+.progress-thin { height: 8px; }
+
+/* Barra de progresso dinâmica que usa uma variável CSS para a largura */
+.progress-bar-dynamic {
+    width: var(--progress-width, 0%);
+    transition: width 0.6s ease;
 }
 
 /* =================================
@@ -44,18 +55,15 @@
     border-radius: 0.5rem;
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
-
 .dashboard-card .card-header {
     padding: 0.75rem 1rem;
     font-weight: 500;
     background-color: var(--cor-fundo-claro);
     border-bottom: 1px solid var(--cor-borda);
 }
-
 .dashboard-card .card-body {
     padding: 1rem;
 }
-
 .dashboard-card .list-group-item {
     padding: 0.6rem 1rem;
     font-size: 0.9rem;
@@ -65,26 +73,16 @@
    PAINEL DE EXPANSÃO E METAS
    ================================= */
 
-/* Itens da lista na "Próxima Jornada" */
 .journey-list-item {
     padding-top: 0.5rem;
     padding-bottom: 0.5rem;
 }
-
 .journey-item-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 0.25rem;
 }
-
-.journey-item-progress {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-
-/* Valores (ex: 50/100) sobrepostos à barra de progresso */
 .progress-values {
     position: absolute;
     right: 0.5rem;
@@ -94,33 +92,7 @@
     background-color: rgba(0, 0, 0, 0.45);
     padding: 0.1rem 0.4rem;
     border-radius: 0.25rem;
-    line-height: 1;
 }
-
-/* Itens da lista na meta final */
-.compact-list-item {
-    padding-top: 0.4rem;
-    padding-bottom: 0.4rem;
-    font-size: 0.85rem;
-}
-
-.compact-list-item .resource-icon-list {
-    width: 18px;
-    height: 18px;
-}
-
-/* Badges de status (excedente/défice) */
-.badge-surplus {
-    background-color: #0dcaf0; /* Ciano */
-    color: #000;
-}
-
-.badge-shortfall {
-    background-color: var(--cor-aviso);
-    color: #000;
-}
-
-/* --- ESTILO PARA O DISPLAY DA IMAGEM DE EXPANSÃO --- */
 .expansion-image-display {
     background-size: contain;
     background-repeat: no-repeat;
@@ -129,72 +101,92 @@
 }
 
 /* =================================
-   PAINEL DE INVENTÁRIO (ABAS)
+   PAINEL DE INVENTÁRIO (ABAS E COLUNAS)
    ================================= */
 
-/* Contêiner do conteúdo das abas */
 .tab-content {
     border: 1px solid var(--cor-borda);
-    border-top: none; /* Remove a borda superior para evitar sobreposição */
+    border-top: none;
     border-radius: 0 0 .375rem .375rem;
 }
-
-/* --- CORREÇÃO PARA A BORDA DA ABA ATIVA --- */
-/* Faz com que a aba ativa "funda-se" com o conteúdo abaixo */
 .nav-tabs .nav-link.active {
-    /* Move a aba um pouco para baixo para cobrir a borda do .tab-content */
     margin-bottom: -1px;
-    border-bottom-color: var(--bs-body-bg, white); /* Usa a cor de fundo do corpo para esconder a linha */
+    border-bottom-color: var(--bs-body-bg, white);
 }
-
-/* --- ABORDAGEM MODERNA E ROBUSTA COM CSS COLUMNS --- */
-
 #inventory-grid {
-    /* Define o número de colunas desejado para o layout */
     column-count: 3;
-    /* Define o espaço entre as colunas */
     column-gap: 1rem;
-    /* Adiciona um preenchimento interno para que o conteúdo não cole nas bordas */
     padding: 1rem;
 }
-
 #inventory-grid .inventory-card {
-    /* Regra CRÍTICA: Impede que um card seja cortado ao meio e passe para a próxima coluna */
     break-inside: avoid;
-    /* Adiciona um espaçamento na parte inferior de cada card para separá-los verticalmente */
     margin-bottom: 1rem;
-    /* A largura é gerida automaticamente pelo navegador, não precisamos mais de a definir */
     width: 100%;
 }
 
-/* Estilos para os accordions dentro do inventário */
-.accordion-item .table {
-    font-size: 0.85rem;
+/* =================================
+   PAINEL DE PESCA
+   ================================= */
+
+/* Ícone do peixe na tabela do diário */
+.fish-icon-inline {
+    width: 1.5em;
+    height: 1.5em;
+    vertical-align: middle;
 }
 
-.accordion-item .table thead th {
-    background-color: var(--cor-fundo-claro);
-    font-weight: 600;
-    border-bottom-width: 1px;
+/* Ícones de estação na tabela */
+.season-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 4px;
 }
 
-.accordion-button {
-    font-size: 0.9rem;
-    font-weight: bold !important;
+/* Linha da tabela para peixes já capturados */
+.table-success-light,
+.table-success-light > th,
+.table-success-light > td {
+    --bs-table-accent-bg: #d1e7dd;
+    color: var(--bs-table-color-state, var(--bs-success-text-emphasis));
+}
+
+/* Códice Visual */
+.codex-item {
+    position: relative;
+    border: 1px solid #dee2e6;
+    padding: 4px;
+    border-radius: 4px;
+    background-color: #f8f9fa;
+}
+.codex-icon {
+    width: 32px;
+    height: 32px;
+    display: block;
+}
+.codex-item.not-caught .codex-icon {
+    filter: grayscale(100%) opacity(60%);
+}
+.codex-check {
+    position: absolute;
+    bottom: -5px;
+    right: -5px;
+    color: var(--bs-success);
+    background-color: white;
+    border-radius: 50%;
 }
 
 /* =================================
    MEDIA QUERIES PARA RESPONSIVIDADE
    ================================= */
 
-/* Para 2 colunas em ecrãs de tablet */
+/* 2 colunas para o inventário em ecrãs de tablet */
 @media (max-width: 991px) {
     #inventory-grid {
         column-count: 2;
     }
 }
 
-/* Para 1 coluna em ecrãs de telemóvel */
+/* 1 coluna para o inventário em ecrãs de telemóvel */
 @media (max-width: 576px) {
     #inventory-grid {
         column-count: 1;

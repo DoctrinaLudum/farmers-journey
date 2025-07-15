@@ -416,3 +416,16 @@ FISHING_DATA = {
         "difficulty": None,
     },
 }
+# ==============================================================================
+#  2: FISHING MILESTONES -
+# ==============================================================================
+FISHING_MILESTONES = {
+    "Novice Angler": {"task": "Capturar cada peixe básico"},
+    "Advanced Angler": {"task": "Capturar cada peixe avançado"},
+    "Expert Angler": {"task": "Capturar 300 peixes no total"},
+    "Fish Encyclopedia": {"task": "Descobrir 30 espécies de peixes"},
+    "Master Angler": {"task": "Capturar 1500 peixes no total"},
+    "Marine Marvel Master": {"task": "Capturar cada Maravilha Marinha"},
+    "Deep Sea Diver": {"task": "Capturar 5 de cada peixe"},
+    "Marine Biologist": {"task": "Descobrir todas as 37 espécies de peixes"}
+}

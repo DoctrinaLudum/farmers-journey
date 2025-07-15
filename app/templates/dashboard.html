@@ -30,6 +30,10 @@
             </button>
         </li>
         <li class="nav-item" role="presentation">
+            <button class="nav-link" id="fishing-tab" data-bs-toggle="tab" data-bs-target="#fishing-pane" type="button" role="tab" aria-controls="fishing-pane" aria-selected="false">
+                <i class="bi bi-fish me-1"></i> Pescaria
+            </button></li>
+        <li class="nav-item" role="presentation">
             <button class="nav-link" id="test-tab" data-bs-toggle="tab" data-bs-target="#test-pane" type="button" role="tab" aria-controls="test-pane" aria-selected="false">
                 <i class="bi bi-bug-fill me-1"></i> Área de testes futuros
             </button>
@@ -38,24 +42,7 @@
 
     <div class="tab-content" id="dashboardTabsContent">
         <div class="tab-pane fade show active p-3 border border-top-0 rounded-bottom" id="overview-pane" role="tabpanel" aria-labelledby="overview-tab">
-            {# Aqui podemos incluir o painel de visão geral no futuro, se ele crescer #}
-            <div class="row g-4">
-                <div class="col-md-6 col-lg-4">
-                    <div class="card dashboard-card">
-                        <div class="card-header"><i class="bi bi-info-circle-fill me-1"></i> Informações Gerais</div>
-                        <ul class="list-group list-group-flush">
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span><img src="{{ url_for('static', filename='images/Flower.png') }}" alt="SFL" class="me-2 resource-icon-list">SFL</span>
-                                    <strong>{{ "%.4f"|format(sfl|float) }}</strong>
-                                </li>
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span><img src="https://sunflower-land.com/play/assets/coins.d7fde244.png" alt="Coins" class="me-2 resource-icon-list">Moedas</span>
-                                    <strong>{{ "{:,}".format(coins).replace(",", ".") }}</strong>
-                                </li>
-                            </ul>
-                    </div>
-                </div>
-            </div>
+                    {% include 'partials/_geral_panel.html' %}
         </div>
 
         <div class="tab-pane fade p-3 border border-top-0 rounded-bottom" id="expansion-pane" role="tabpanel" aria-labelledby="expansion-tab">
@@ -64,6 +51,10 @@
 
         <div class="tab-pane fade" id="inventory-pane" role="tabpanel" aria-labelledby="inventory-tab">
             {% include 'partials/_inventory_panel.html' %}
+        </div>
+
+        <div class="tab-pane fade" id="fishing-pane" role="tabpanel" aria-labelledby="fishing-tab">
+            {% include 'partials/_fishing_panel.html' %}
         </div>
 
         <div class="tab-pane fade" id="test-pane" role="tabpanel" aria-labelledby="test-tab">

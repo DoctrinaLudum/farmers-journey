@@ -1,0 +1,142 @@
+{# app/templates/partials/_fishing_panel.html (Versão Final e 100% Limpa de CSS) #}
+
+{% if fishing_info %}
+<div class="row g-3 mt-1">
+
+    <div class="col-lg-5">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-light"><h5 class="mb-0">Diário de Pesca</h5></div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Peixe</th>
+                                <th>Estações</th>
+                                <th class="text-end">Capturados</th>
+                            </tr>
+                        </thead>
+                        <tbody class="accordion" id="fishingLogAccordion">
+                        {% for fish in fishing_info.all_fish_sorted %}
+                            <tr class="clickable-header {% if fish.player_count > 0 %}table-success-light{% endif %}" data-bs-toggle="collapse" data-bs-target="#collapse-{{ fish.name|replace(' ', '-')|lower }}">
+                                <td class="align-middle">
+                                    <img src="{{ url_for('static', filename='images/fish/' + fish.image_filename) }}" alt="{{ fish.name }}" class="fish-icon-inline me-2">
+                                    <span>{{ fish.name }}</span>
+                                </td>
+                                <td class="align-middle">
+                                    {% for season in fish.seasons %}
+                                        <img src="{{ url_for('static', filename='images/seasons/' + season + '.png') }}" title="{{ season|title }}" class="season-icon">
+                                    {% endfor %}
+                                </td>
+                                <td class="text-end align-middle">{{ fish.player_count }}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="p-0 border-0">
+                                    <div id="collapse-{{ fish.name|replace(' ', '-')|lower }}" class="accordion-collapse collapse" data-bs-parent="#fishingLogAccordion">
+                                        <div class="p-2 bg-light-subtle d-flex justify-content-between small">
+                                            <span><strong>Iscas:</strong> {% for bait in fish.baits %}<span class="badge bg-dark fw-normal me-1">{{ bait }}</span>{% endfor %}</span>
+                                            <span><strong>Gostos:</strong> {% for like in fish.likes %}<span class="badge bg-info fw-normal me-1">{{ like }}</span>{% else %}<span class="badge bg-secondary fw-normal">N/A</span>{% endfor %}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center clickable-header" data-bs-toggle="collapse" data-bs-target="#achievementsCollapse">
+                <h5 class="mb-0"><i class="bi bi-trophy-fill me-2"></i>Conquistas</h5>
+                <i class="bi bi-chevron-down"></i>
+            </div>
+            <div class="collapse show" id="achievementsCollapse">
+                <div class="card-body">
+                    {% for ach in fishing_info.player_achievements %}
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center">
+                                <i class="bi me-2 fs-5 {% if ach.player_has %}bi-check-circle-fill text-success{% else %}bi-circle text-muted{% endif %}"></i>
+                                <strong>{{ ach.name }}</strong>
+                            </div>
+                            <p class="small text-muted mb-1 ms-4 fst-italic">"{{ ach.task }}"</p>
+                            {% if not ach.player_has %}
+                            <div class="progress progress-sm ms-4">
+                                <div class="progress-bar progress-bar-dynamic" role="progressbar" style="--progress-width: {{ ach.progress_percent }}%;" aria-valuenow="{{ ach.progress_percent }}"></div>
+                            </div>
+                            <div class="small text-end text-muted ms-4">{{ ach.progress_text }}</div>
+                            {% endif %}
+                        </div>
+                        {% if not loop.last %}<hr class="my-2">{% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="card shadow-sm">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center clickable-header" data-bs-toggle="collapse" data-bs-target="#statsCollapse">
+                <h5 class="mb-0"><i class="bi bi-bar-chart-line-fill me-2"></i>Estatísticas</h5>
+                <i class="bi bi-chevron-down"></i>
+            </div>
+            <ul class="list-group list-group-flush collapse show" id="statsCollapse">
+                <li class="list-group-item d-flex justify-content-between"><span>Lançamentos de Vara:</span> <strong>{{ fishing_info.total_casts }}</strong></li>
+                <li class="list-group-item d-flex justify-content-between"><span>Total de Peixes Capturados:</span> <strong>{{ fishing_info.total_fish_caught }}</strong></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-lg-3">
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-light"><h5 class="mb-0">Códice Visual</h5></div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <span class="fs-4 fw-bold">{{ fishing_info.codex_completed }}/{{ fishing_info.codex_total }}</span><br>
+                    <small class="text-muted">Peixes Descobertos</small>
+                </div>
+                {% for tier_name, fishes in fishing_info.codex_by_tier.items() %}
+                    {% if fishes %}
+                    <div class="mt-2">
+                        <h6 class="d-flex justify-content-between align-items-center mb-1 clickable-header" data-bs-toggle="collapse" data-bs-target="#codex-{{ tier_name|replace(' ', '-')|lower }}">
+                            <span>{{ tier_name }}</span>
+                            <i class="bi bi-chevron-down"></i>
+                        </h6>
+                        <div class="collapse show" id="codex-{{ tier_name|replace(' ', '-')|lower }}">
+                            <div class="d-flex flex-wrap gap-1">
+                                {% for fish in fishes %}
+                                    <div class="codex-item {% if fish.player_count == 0 %}not-caught{% endif %}" title="{{ fish.name }}">
+                                        <img src="{{ url_for('static', filename='images/fish/' + fish.image_filename) }}" alt="{{ fish.name }}" class="codex-icon">
+                                        {% if fish.player_count > 0 %}<i class="bi bi-check-circle-fill codex-check"></i>{% endif %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center clickable-header" data-bs-toggle="collapse" data-bs-target="#baitsCollapse">
+                <h5 class="mb-0"><i class="bi bi-record-circle me-2"></i>Iscas</h5>
+                <i class="bi bi-chevron-down"></i>
+            </div>
+            <ul class="list-group list-group-flush collapse show" id="baitsCollapse">
+                {% for bait in fishing_info.bait_inventory %}<li class="list-group-item d-flex justify-content-between"><span>{{ bait.name }}</span> <span class="badge bg-primary rounded-pill">{{ bait.player_quantity }}</span></li>{% endfor %}
+            </ul>
+        </div>
+        <div class="card shadow-sm">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center clickable-header" data-bs-toggle="collapse" data-bs-target="#treasuresCollapse">
+                <h5 class="mb-0"><i class="bi bi-gem me-2"></i>Tesoros</h5>
+                <i class="bi bi-chevron-down"></i>
+            </div>
+            <ul class="list-group list-group-flush collapse show" id="treasuresCollapse">
+                {% for treasure in fishing_info.fished_treasures %}<li class="list-group-item d-flex justify-content-between"><span>{{ treasure.name }}</span> <span class="badge bg-info rounded-pill">{{ treasure.player_count }}</span></li>{% else %}<li class="list-group-item text-muted">Nenhum.</li>{% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% else %}
+    <div class="alert alert-warning mt-4" role="alert"><i class="bi bi-exclamation-triangle-fill me-2"></i> Não foi possível carregar os dados de pesca. Verifique se o ID da fazenda está correto e se o jogador já pescou antes.</div>
+{% endif %}

@@ -25,44 +25,61 @@ def handle_farm_request():
 
 @bp.route('/farm/<int:farm_id>')
 def farm_dashboard(farm_id):
-    """Exibe o painel de bordo completo para uma fazenda específica."""
+    """
+    Exibe o painel de bordo completo para uma fazenda específica.
+    Esta versão é refatorada para ser mais robusta, isolando cada
+    componente de análise de dados.
+    """
     log.info(f"Iniciando a montagem do painel para a fazenda #{farm_id}")
 
+    # 1. Começamos com um contexto base, com valores padrão seguros.
     context = {
         "farm_id": farm_id,
         "username": f"Fazenda #{farm_id}",
-        "error": None,
+        "error": None, # Erro geral, apenas para falhas críticas.
         "sfl": 0,
         "coins": 0,
         "bumpkin_level": 0,
         "current_land_level": 0,
-        "expansion_progress": None,
+        "expansion_progress": None, # Será preenchido se a análise for bem-sucedida
         "expansion_goals": {},
-        "inventory_list": [],
+        "categorized_inventory": {}, # Começa como um dicionário vazio
         "total_inventory_value": 0,
         "chores_list": []
     }
 
-    farm_data, farm_error = sunflower_api.get_farm_data(farm_id)
-    prices_data, prices_error = sunflower_api.get_prices_data()
+    # 2. Bloco Try/Except CRÍTICO: Buscar os dados principais.
+    # Se esta parte falhar, não há nada a mostrar.
+    try:
+        farm_data, farm_error = sunflower_api.get_farm_data(farm_id)
+        prices_data, prices_error = sunflower_api.get_prices_data()
 
-    if farm_error or prices_error:
-        context['error'] = farm_error or prices_error
+        if farm_error or prices_error:
+            # Este é um erro crítico, então paramos aqui.
+            context['error'] = farm_error or prices_error
+            log.error(f"Erro crítico ao buscar dados para a fazenda {farm_id}: {context['error']}")
+            return render_template('dashboard.html', title=f"Erro na Fazenda #{farm_id}", **context)
+
+    except Exception as e:
+        log.exception(f"Exceção crítica não tratada ao buscar dados da API para a fazenda {farm_id}.")
+        context['error'] = f"Falha ao comunicar com as APIs do jogo: {e}"
         return render_template('dashboard.html', title=f"Erro na Fazenda #{farm_id}", **context)
 
+
+    # 3. Processamento de DADOS GERAIS (SFL, Moedas, Nível)
+    # Esta parte é geralmente segura, mas podemos envolvê-la também.
     try:
         context['username'] = farm_data.get('username', 'N/A')
         context['sfl'] = Decimal(farm_data.get('balance', '0'))
         context['coins'] = int(farm_data.get('coins', 0))
-        
-        land_info = farm_data.get('expansion_data', {}).get('land', {})
-        bumpkin_info = farm_data.get('bumpkin', {})
-        context['bumpkin_level'] = bumpkin_info.get('level', 0)
-        
-        current_land_type = land_info.get('type')
-        current_land_level = land_info.get('level')
-        context['current_land_level'] = current_land_level
+        context['bumpkin_level'] = farm_data.get('bumpkin', {}).get('level', 0)
+    except (TypeError, ValueError, InvalidOperation) as e:
+        log.error(f"Erro ao processar dados gerais da fazenda {farm_id}: {e}")
+        # Não definimos um erro geral, apenas deixamos os valores padrão.
 
+
+    # 4. Processamento do ASSESSOR DE EXPANSÃO (Componente Isolado)
+    try:
         expansion_progress_data = analysis.analyze_expansion_progress(farm_data)
         if expansion_progress_data and 'resources' in expansion_progress_data:
             for resource in expansion_progress_data['resources']:
@@ -73,71 +90,54 @@ def farm_dashboard(farm_id):
                 icon_name = "Flower" if resource['name'] == "SFL" else resource['name']
                 resource['icon'] = url_for('static', filename=f'images/{icon_name}.png')
         context['expansion_progress'] = expansion_progress_data
-        
-        # ---> INÍCIO DA NOVA LÓGICA: CATEGORIZAR O INVENTÁRIO <---
+        context['current_land_level'] = farm_data.get('expansion_data', {}).get('land', {}).get('level')
+    except Exception as e:
+        log.error(f"Falha ao analisar o progresso de expansão para a fazenda {farm_id}: {e}")
+        # O 'expansion_progress' continuará como None, e o template pode lidar com isso.
+
+
+    # 5. Processamento do INVENTÁRIO (Componente Isolado)
+    # Esta é a parte que estava a causar o erro!
+    try:
         categorized_inventory = {}
         total_inventory_value = Decimal('0')
         inventory_from_api = farm_data.get('inventory', {})
+        # Note: A API de preços já foi verificada acima.
         item_prices = prices_data.get("data", {}).get("p2p", {})
 
-        for category, item_list in config.INVENTORY_CATEGORIES.items():
-            owned_items_in_category = []
-            for item_name in item_list:
-                # Verifica se o jogador possui o item
-                if item_name in inventory_from_api:
-                    try:
+        # Esta lógica de categorização precisa ser adicionada ao seu config.py
+        # Se você ainda não o fez, podemos trabalhar nisso a seguir.
+        # Por enquanto, vamos supor que config.INVENTORY_CATEGORIES existe.
+        if hasattr(config, 'INVENTORY_CATEGORIES'):
+            for category, item_list in config.INVENTORY_CATEGORIES.items():
+                owned_items_in_category = []
+                for item_name in item_list:
+                    if item_name in inventory_from_api:
                         quantity = Decimal(inventory_from_api[item_name])
                         if quantity > 0:
-                            # Tenta encontrar o preço do item
-                            price_info = item_prices.get(item_name)
-                            price = Decimal(str(price_info)) if price_info else Decimal('0')
-                            
+                            price = Decimal(str(item_prices.get(item_name, '0')))
                             value = quantity * price
                             total_inventory_value += value
-                            
-                            # Adiciona o item à lista, independentemente de ter valor ou não
                             owned_items_in_category.append({
-                                "name": item_name,
-                                "amount": float(quantity),
-                                "value": float(value), # Será 0.00 se não houver preço
+                                "name": item_name, "amount": float(quantity), "value": float(value),
                                 "icon": url_for('static', filename=f'images/{item_name}.png')
                             })
-                    except (InvalidOperation, TypeError):
-                        log.warning(f"Ignorando item '{item_name}' com quantidade inválida.")
-            
-            if owned_items_in_category:
-                owned_items_in_category.sort(key=lambda x: x['name']) # Ordena por nome
-                categorized_inventory[category] = owned_items_in_category
+                if owned_items_in_category:
+                    owned_items_in_category.sort(key=lambda x: x['name'])
+                    categorized_inventory[category] = owned_items_in_category
         
         context['categorized_inventory'] = categorized_inventory
         context['total_inventory_value'] = float(total_inventory_value)
-        # ---> FIM DA NOVA LÓGICA ---
+    except Exception as e:
+        log.error(f"Falha ao analisar o inventário para a fazenda {farm_id}: {e}")
+        # O 'categorized_inventory' continuará vazio. O erro não vai parar a página.
 
-        item_prices = prices_data.get("data", {}).get("p2p", {})
-        raw_inventory = farm_data.get("inventory", {})
-        inventory_list = []
-        total_inventory_value = Decimal('0')
 
-        for item_name, quantity_str in raw_inventory.items():
-            if item_name in item_prices:
-                try:
-                    quantity = Decimal(quantity_str)
-                    price = Decimal(str(item_prices[item_name]))
-                    value = quantity * price
-                    total_inventory_value += value
-                    inventory_list.append({
-                        "name": item_name, "quantity": quantity, "value": value,
-                        "icon": url_for('static', filename=f'images/{item_name}.png')
-                    })
-                except (InvalidOperation, TypeError):
-                    log.warning("Ignorando item '%s' do inventário com quantidade inválida.", item_name)
-        
-        inventory_list.sort(key=lambda x: x['name'])
-        context['inventory_list'] = inventory_list
-        context['total_inventory_value'] = total_inventory_value
-
-        # Esta lógica calcula quais as metas de expansão válidas para mostrar no dropdown.
+    # 6. Processamento das METAS DE EXPANSÃO (Dropdown)
+    try:
         expansion_goals = {}
+        current_land_type = farm_data.get('expansion_data', {}).get('land', {}).get('type')
+        current_land_level = farm_data.get('expansion_data', {}).get('land', {}).get('level')
         if current_land_type and current_land_level:
             island_order = ["basic", "petal", "desert", "volcano"]
             if current_land_type in island_order:
@@ -145,20 +145,25 @@ def farm_dashboard(farm_id):
                 for island_name, levels in config.LAND_EXPANSION_REQUIREMENTS.items():
                     if island_name in island_order:
                         island_index = island_order.index(island_name)
-                        if island_index < current_island_index:
-                            continue
-                        
-                        # Se for a ilha atual, pega apenas os níveis futuros. Se for uma ilha futura, pega todos os níveis.
+                        if island_index < current_island_index: continue
                         valid_levels = [lvl for lvl in sorted(levels.keys()) if lvl > current_land_level] if island_index == current_island_index else sorted(levels.keys())
-                        
                         if valid_levels:
                             expansion_goals[island_name] = valid_levels
         context['expansion_goals'] = expansion_goals
+    except Exception as e:
+        log.error(f"Falha ao calcular as metas de expansão para a fazenda {farm_id}: {e}")
 
-    except Exception:
-        log.error("Erro CRÍTICO ao processar dados do painel para a fazenda %s", farm_id, exc_info=True)
-        context['error'] = "Ocorreu um erro inesperado ao processar os dados da fazenda."
+    # 7. Processamento da PESCA (Componente Isolado)
+    context['fishing_info'] = None # Definir um valor padrão
+    try:
+        # A nossa nova função de análise é chamada aqui!
+        context['fishing_info'] = analysis.analyze_fishing_data(farm_data)
+    except Exception as e:
+        log.error(f"Falha ao analisar os dados de pesca para a fazenda {farm_id}: {e}")
+        # Em caso de erro, 'fishing_info' permanece None e a página não quebra.
 
+
+    # No final, renderizamos o template com o que foi possível processar.
     return render_template('dashboard.html', title=f"Painel de {context['username']}", **context)
 
 
