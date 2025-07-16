@@ -1,8 +1,9 @@
-{# app/templates/partials/_fishing_panel.html (Versão Final e 100% Limpa de CSS) #}
+{# app/templates/partials/_fishing_panel.html (Versão Final com as últimas melhorias) #}
 
 {% if fishing_info %}
 <div class="row g-3 mt-1">
 
+    {# COLUNA ESQUERDA: DIÁRIO DE PESCA (Sem alterações) #}
     <div class="col-lg-5">
         <div class="card shadow-sm h-100">
             <div class="card-header bg-light"><h5 class="mb-0">Diário de Pesca</h5></div>
@@ -48,33 +49,51 @@
         </div>
     </div>
 
+    {# --- COLUNA CENTRAL ATUALIZADA --- #}
     <div class="col-lg-4">
         <div class="card shadow-sm mb-3">
-            <div class="card-header bg-light d-flex justify-content-between align-items-center clickable-header" data-bs-toggle="collapse" data-bs-target="#achievementsCollapse">
+            <div class="card-header bg-light">
                 <h5 class="mb-0"><i class="bi bi-trophy-fill me-2"></i>Conquistas</h5>
-                <i class="bi bi-chevron-down"></i>
             </div>
-            <div class="collapse show" id="achievementsCollapse">
-                <div class="card-body">
+            <div class="card-body">
+                <div class="milestones-mini-cards-container">
                     {% for ach in fishing_info.player_achievements %}
-                        <div class="mb-3">
-                            <div class="d-flex align-items-center">
-                                <i class="bi me-2 fs-5 {% if ach.player_has %}bi-check-circle-fill text-success{% else %}bi-circle text-muted{% endif %}"></i>
-                                <strong>{{ ach.name }}</strong>
+                        <a class="milestone-mini-card {% if ach.player_has %}is-completed{% endif %} tier-{{ ach.tier }}" data-bs-toggle="collapse" href="#details-{{ loop.index }}" role="button">
+                            <div class="milestone-mini-card-header">
+                                <span class="milestone-mini-card-title">{{ ach.name }}</span>
+                                {% if ach.player_has %}
+                                    <i class="bi bi-check-circle-fill"></i>
+                                {% endif %}
                             </div>
-                            <p class="small text-muted mb-1 ms-4 fst-italic">"{{ ach.task }}"</p>
-                            {% if not ach.player_has %}
-                            <div class="progress progress-sm ms-4">
-                                <div class="progress-bar progress-bar-dynamic" role="progressbar" style="--progress-width: {{ ach.progress_percent }}%;" aria-valuenow="{{ ach.progress_percent }}"></div>
+                            <div class="progress progress-thin mt-auto">
+                                <div class="progress-bar" role="progressbar" aria-valuenow="{{ ach.progress_percent }}"></div>
                             </div>
-                            <div class="small text-end text-muted ms-4">{{ ach.progress_text }}</div>
-                            {% endif %}
+                        </a>
+                    {% endfor %}
+                </div>
+
+                <div class="milestone-details-wrapper" id="milestone-accordion-parent">
+                    {% for ach in fishing_info.player_achievements %}
+                        <div class="collapse" id="details-{{ loop.index }}" data-bs-parent="#milestone-accordion-parent">
+                            <div class="milestone-detail-pane">
+                                <p class="mb-2">"{{ ach.long_task }}"</p>
+                                {% if not ach.player_has %}
+                                    <div class="progress">
+                                        <div class="progress-bar" role="progressbar" aria-valuenow="{{ ach.progress_percent }}"></div>
+                                    </div>
+                                    <div class="small text-end text-muted mt-1">{{ ach.progress_text }}</div>
+                                {% else %}
+                                    <div class="text-center text-success">
+                                        <i class="bi bi-check-lg"></i> Conquista Completa!
+                                    </div>
+                                {% endif %}
+                            </div>
                         </div>
-                        {% if not loop.last %}<hr class="my-2">{% endif %}
                     {% endfor %}
                 </div>
             </div>
         </div>
+        
         <div class="card shadow-sm">
             <div class="card-header bg-light d-flex justify-content-between align-items-center clickable-header" data-bs-toggle="collapse" data-bs-target="#statsCollapse">
                 <h5 class="mb-0"><i class="bi bi-bar-chart-line-fill me-2"></i>Estatísticas</h5>
@@ -86,7 +105,10 @@
             </ul>
         </div>
     </div>
+    {# --- FIM DA COLUNA CENTRAL --- #}
 
+
+    {# COLUNA DIREITA: CÓDICE E ITENS (Sem alterações) #}
     <div class="col-lg-3">
         <div class="card shadow-sm mb-3">
             <div class="card-header bg-light"><h5 class="mb-0">Códice Visual</h5></div>
@@ -128,7 +150,7 @@
         </div>
         <div class="card shadow-sm">
             <div class="card-header bg-light d-flex justify-content-between align-items-center clickable-header" data-bs-toggle="collapse" data-bs-target="#treasuresCollapse">
-                <h5 class="mb-0"><i class="bi bi-gem me-2"></i>Tesoros</h5>
+                <h5 class="mb-0"><i class="bi bi-gem me-2"></i>Tesouros</h5>
                 <i class="bi bi-chevron-down"></i>
             </div>
             <ul class="list-group list-group-flush collapse show" id="treasuresCollapse">

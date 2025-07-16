@@ -1,9 +1,7 @@
 // ARQUIVO ATUALIZADO: typescript/dashboard.ts
 
-// Removido 'declare var Isotope' e 'declare var Sortable' pois não são mais usados.
-
 document.addEventListener('DOMContentLoaded', () => {
-    // A lógica do formulário de metas não muda.
+    // ---- LÓGICA 1: FORMULÁRIO DE METAS ----
     const goalForm = document.getElementById('goal-form') as HTMLFormElement;
     if (goalForm) {
         goalForm.addEventListener('submit', async (event) => {
@@ -51,12 +49,68 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ---> LÓGICA DO INVENTÁRIO REMOVIDA <---
-    // Não precisamos mais de JavaScript para controlar o layout do inventário.
-    // O CSS agora trata de tudo.
+    // ---- LÓGICA 2: PAINEL DE CONQUISTAS ----
+    // Chama a função para configurar a interatividade do painel.
+    setupMilestoneInteraction();
 });
 
-// A função renderGoalResults permanece a mesma.
+
+/**
+ * Lida com a interatividade do painel de conquistas de pesca.
+ */
+function setupMilestoneInteraction() {
+    const miniCardsContainer = document.querySelector('.milestones-mini-cards-container');
+    const detailsWrapper = document.getElementById('milestone-accordion-parent');
+
+    if (!miniCardsContainer || !detailsWrapper) {
+        return;
+    }
+
+    const miniCards = miniCardsContainer.querySelectorAll('.milestone-mini-card');
+    const collapseElements = detailsWrapper.querySelectorAll('.collapse');
+
+    collapseElements.forEach(collapseEl => {
+        // Quando um painel de detalhe VAI SER MOSTRADO
+        collapseEl.addEventListener('show.bs.collapse', (event) => {
+            const target = event.target as HTMLElement;
+            const triggerCard = document.querySelector(`[href="#${target.id}"]`);
+
+            miniCards.forEach(card => {
+                if (card === triggerCard) {
+                    card.classList.add('active');
+                    card.classList.remove('is-inactive');
+                } else {
+                    card.classList.remove('active');
+                    card.classList.add('is-inactive');
+                }
+            });
+        });
+
+        // QUANDO UM PAINEL DE DETALHE VAI SER ESCONDIDO (SEJA POR CLICAR NELE DE NOVO OU POR OUTRO ABRIR)
+        collapseEl.addEventListener('hide.bs.collapse', () => {
+            // Remove o estado de 'ativo' ou 'inativo' de todos os cards,
+            // preparando-os para um novo clique ou para o estado fechado.
+            miniCards.forEach(card => {
+                card.classList.remove('active', 'is-inactive');
+            });
+        });
+    });
+
+    // Lógica para definir a largura de TODAS as barras de progresso na página
+    const allProgressBars = document.querySelectorAll('.progress-bar');
+    allProgressBars.forEach(bar => {
+        const progressBar = bar as HTMLElement;
+        const progressValue = progressBar.getAttribute('aria-valuenow');
+        if (progressValue) {
+            progressBar.style.width = progressValue + '%';
+        }
+    });
+}
+
+
+/**
+ * Renderiza os resultados do formulário de metas.
+ */
 function renderGoalResults(data: any) {
     const resultsContainer = document.getElementById('goal-results-container');
     const mainTemplate = document.getElementById('goal-list-template') as HTMLTemplateElement;

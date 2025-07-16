@@ -153,9 +153,11 @@ def farm_dashboard(farm_id):
     except Exception as e:
         log.error(f"Falha ao calcular as metas de expansão para a fazenda {farm_id}: {e}")
 
+
     # 7. Processamento da PESCA (Componente Isolado)
     context['fishing_info'] = None # Definir um valor padrão
     try:
+        print("DEBUG - Milestones:", farm_data.get('bumpkin', {}).get('milestones'))
         # A nossa nova função de análise é chamada aqui!
         context['fishing_info'] = analysis.analyze_fishing_data(farm_data)
     except Exception as e:

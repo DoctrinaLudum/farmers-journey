@@ -37,13 +37,7 @@
 
 /* Barras de progresso com altura customizada */
 .progress-sm { height: 8px; }
-.progress-thin { height: 8px; }
-
-/* Barra de progresso dinâmica que usa uma variável CSS para a largura */
-.progress-bar-dynamic {
-    width: var(--progress-width, 0%);
-    transition: width 0.6s ease;
-}
+.progress-thin { height: 6px; } /* Altura mais fina para os mini-cards */
 
 /* =================================
    ESTILOS DOS CARDS DO PAINEL
@@ -125,7 +119,7 @@
 }
 
 /* =================================
-   PAINEL DE PESCA
+   PAINEL DE PESCA (GERAL)
    ================================= */
 
 /* Ícone do peixe na tabela do diário */
@@ -176,17 +170,104 @@
 }
 
 /* =================================
+   PAINEL DE CONQUISTAS (ESTILO JOGO) - ATUALIZADO
+   ================================= */
+
+.milestones-mini-cards-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+}
+
+.milestone-mini-card {
+    flex: 1;
+    height: 70px;
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem;
+    border: 2px solid var(--cor-borda);
+    border-radius: 0.375rem;
+    background-color: #fff;
+    cursor: pointer;
+    text-decoration: none;
+    color: var(--cor-texto);
+    transition: all 0.2s ease;
+}
+
+.milestone-mini-card.is-completed {
+    background-color: #e8f5e9;
+}
+
+.milestone-mini-card.active,
+.milestone-mini-card:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+    opacity: 1;
+    filter: grayscale(0);
+}
+
+/* PONTO DE ATUALIZAÇÃO: Estilo para os cards inativos */
+.milestone-mini-card.is-inactive {
+    opacity: 0.5;
+    filter: grayscale(90%);
+    pointer-events: none;
+}
+
+.milestone-mini-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.milestone-mini-card-title {
+    font-size: 0.8rem;
+    font-weight: bold;
+    line-height: 1.2;
+}
+
+.milestone-details-wrapper {
+    margin-top: 1rem;
+}
+
+.milestone-detail-pane {
+    padding: 1rem;
+    background-color: var(--cor-fundo-claro);
+    border-radius: 0.375rem;
+}
+
+/* Cores para os tiers dos mini-cards */
+.milestone-mini-card.tier-basic { border-color: #a0a0a0; }
+.milestone-mini-card.tier-advanced { border-color: #4a90e2; }
+.milestone-mini-card.tier-expert { border-color: #d0a000; }
+
+.milestone-mini-card.active.tier-basic, 
+.milestone-mini-card:hover.tier-basic { border-color: #777; }
+.milestone-mini-card.active.tier-advanced, 
+.milestone-mini-card:hover.tier-advanced { border-color: #2a70c2; }
+.milestone-mini-card.active.tier-expert, 
+.milestone-mini-card:hover.tier-expert { border-color: #b08000; }
+
+/* Ajusta a cor do checkmark */
+.milestone-mini-card.is-completed .bi-check-circle-fill {
+    color: var(--cor-sucesso);
+}
+
+/* Cor da barra de progresso do mini-card */
+.milestone-mini-card.tier-basic .progress-bar { background-color: #a0a0a0; }
+.milestone-mini-card.tier-advanced .progress-bar { background-color: #4a90e2; }
+.milestone-mini-card.tier-expert .progress-bar { background-color: #d0a000; }
+
+
+/* =================================
    MEDIA QUERIES PARA RESPONSIVIDADE
    ================================= */
 
-/* 2 colunas para o inventário em ecrãs de tablet */
 @media (max-width: 991px) {
     #inventory-grid {
         column-count: 2;
     }
 }
 
-/* 1 coluna para o inventário em ecrãs de telemóvel */
 @media (max-width: 576px) {
     #inventory-grid {
         column-count: 1;

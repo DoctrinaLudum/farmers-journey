@@ -67,7 +67,7 @@ def get_prices_data():
 # ---> FIM FUNÇÃO AUXILIAR PREÇOS ---
 
 
-# ---> FUNÇÃO PRINCIPAL ---
+# ---> FUNÇÃO PRINCIPAL (COM A CORREÇÃO) ---
 @cache.cached(make_cache_key=lambda farm_id: f"farm_data_{farm_id}")
 def get_farm_data(farm_id: int):
     """
@@ -77,6 +77,7 @@ def get_farm_data(farm_id: int):
         return None, "Farm ID deve ser um número inteiro positivo."
 
     try:
+        # 1. Busca os dados principais (que contêm as 'milestones')
         sfl_api_url = f"{SFL_API_BASE_URL}{farm_id}"
         log.info(f"Buscando dados na URL (API SFL): {sfl_api_url}")
         response = requests.get(sfl_api_url, timeout=10)
@@ -85,13 +86,19 @@ def get_farm_data(farm_id: int):
         farm_data = data.get('farm')
 
         if farm_data:
+            # 2. Busca dados secundários
             sfl_world_data, world_api_error = get_sfl_world_data(farm_id, 'land')
             if world_api_error:
-                return None, world_api_error
-            
-            farm_data['expansion_data'] = sfl_world_data
-            if sfl_world_data and 'bumpkin' in sfl_world_data:
-                farm_data['bumpkin'] = sfl_world_data['bumpkin']
+                log.warning("Erro na API secundária não impediu o retorno dos dados principais para a fazenda %s", farm_id)
+            else:
+                # 3. Adiciona dados de expansão e COMBINA os dados do bumpkin
+                farm_data['expansion_data'] = sfl_world_data
+                if sfl_world_data and 'bumpkin' in sfl_world_data:
+                    # Garante que farm_data['bumpkin'] existe antes de o atualizar
+                    if 'bumpkin' not in farm_data:
+                        farm_data['bumpkin'] = {}
+                    # A CORREÇÃO CRÍTICA: .update() combina os dicionários, preservando as 'milestones'
+                    farm_data['bumpkin'].update(sfl_world_data['bumpkin'])
         
         if farm_data:
             log.info(f"Dados consolidados recebidos com sucesso para a fazenda: {farm_id}")
@@ -112,3 +119,4 @@ def get_farm_data(farm_id: int):
     except Exception:
         log.error("Erro genérico em get_farm_data para a fazenda %s.", farm_id, exc_info=True)
         return None, "Um erro inesperado ocorreu ao buscar os dados da fazenda."
+# ---> FIM FUNÇÃO PRINCIPAL ---
