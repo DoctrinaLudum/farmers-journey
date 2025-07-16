@@ -333,3 +333,37 @@
     color: #6c757d; /* Cinza para a data de término */
     text-align: right; /* Alinha a data à direita */
 }
+/* =================================
+   RECURSOS DA EXPANSÃO (NODES)
+   ================================= */
+.level-nodes-container {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--cor-borda);
+}
+
+.nodes-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--cor-texto);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.node-item {
+    display: flex;
+    align-items: center;
+    padding: 0.3rem 0;
+    font-size: 0.85rem;
+}
+
+.node-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 0.75rem;
+}
+
+.node-name {
+    font-weight: 500;
+}

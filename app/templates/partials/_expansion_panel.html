@@ -3,10 +3,10 @@
         <div class="card dashboard-card">
             <div class="card-header"><i class="bi bi-pin-map-fill me-1"></i> Você está aqui</div>
             <div class="card-body">
-                <div class="d-flex align-items-center mb-3">
+                <div class="d-flex align-items-center">
                     <div class="display-4 fw-bold text-success me-3">{{ current_land_level or 'N/A' }}</div>
                     <div class="text-start">
-                        <h6 class="card-title mb-0">Ilha {{ expansion_progress.land_type|title if expansion_progress else 'N/A' }}</h6>
+                        <h6 class="card-title mb-0">Ilha {{ current_land_type|title if current_land_type else 'N/A' }}</h6>
                         <small class="text-muted">Nível de Expansão</small>
                         <div class="border-top mt-2 pt-2">
                             <small class="text-muted"><i class="bi bi-person-walking me-1"></i>Nv: <strong>{{ bumpkin_level or 'N/A' }}</strong></small>
@@ -26,7 +26,21 @@
                     </div>
                 </div>
                 {% endif %}
-                
+
+                {% if current_level_nodes %}
+                <div class="level-nodes-container">
+                    <h6 class="nodes-title">Recursos Totais na Expansão</h6>
+                    <ul class="list-unstyled mb-0">
+                        {% for node in current_level_nodes %}
+                        <li class="node-item" title="{{ node.name }}">
+                            <img src="{{ node.icon }}" alt="{{ node.name }}" class="node-icon" onerror="this.style.display='none'">
+                            <span class="node-name">{{ node.name }}</span>
+                            <span class="badge bg-secondary-subtle text-dark-emphasis rounded-pill ms-auto">{{ node.count }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>

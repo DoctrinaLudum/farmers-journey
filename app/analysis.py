@@ -4,7 +4,9 @@ from decimal import Decimal, InvalidOperation
 import config
 from collections import defaultdict
 from datetime import timedelta
-from .domain import fishing as fishing_data_domain
+from .domain import fishing as fishing_data_domain 
+from .domain import expansions
+
 
 
 
@@ -40,14 +42,11 @@ def format_seconds_to_str(seconds: int) -> str:
 def analyze_expansion_progress(secondary_data: dict, main_data: dict):
     """
     Analisa o progresso do jogador para a próxima expansão de terra.
-    - secondary_data: Contém os dados da ilha (tipo, nível) da API sfl.world.
-    - main_data: Contém o inventário e o balanço de SFL/moedas da API principal.
     """
     if not secondary_data or not main_data:
         return None
 
     try:
-        # Pega o tipo e o nível da ilha dos dados secundários
         land_info = secondary_data.get("land", {})
         land_type = land_info.get("type")
         current_level = land_info.get("level")
@@ -58,14 +57,18 @@ def analyze_expansion_progress(secondary_data: dict, main_data: dict):
 
         next_level = current_level + 1
         
-        # Busca os requisitos no config
-        requirements = config.LAND_EXPANSION_REQUIREMENTS.get(land_type, {}).get(next_level)
-
-        if not requirements:
+        # ALTERADO: Busca os detalhes da nova estrutura unificada
+        expansion_details = expansions.EXPANSION_DATA.get(land_type, {}).get(next_level)
+        
+        if not expansion_details:
             log.info(f"Nenhum requisito de expansão encontrado para {land_type} nível {next_level}.")
-            return {"requirements_met": True} # Sinaliza que pode ser o nível máximo
+            return {"requirements_met": True}
 
-        # ---> Lógica de Comparação <---
+        # Acessa a sub-chave 'requirements'
+        requirements = expansion_details.get("requirements", {})
+        if not requirements:
+             return {"requirements_met": True}
+
         progress = {
             "land_type": land_type,
             "next_level": next_level,
@@ -73,8 +76,7 @@ def analyze_expansion_progress(secondary_data: dict, main_data: dict):
             "time_req": requirements.get("Time", "N/A"),
             "resources": []
         }
-        
-        # Pega os recursos do jogador dos dados principais
+
         inventory = main_data.get("inventory", {})
         sfl_balance = Decimal(main_data.get("balance", "0"))
         coins_balance = Decimal(main_data.get("coins", "0"))
@@ -96,10 +98,8 @@ def analyze_expansion_progress(secondary_data: dict, main_data: dict):
                 percentage = min((have_amount / Decimal(str(required_amount))) * 100, 100)
 
             progress["resources"].append({
-                "name": item,
-                "have": have_amount,
-                "required": required_amount,
-                "percentage": percentage
+                "name": item, "have": have_amount,
+                "required": required_amount, "percentage": percentage
             })
         
         return progress
@@ -107,19 +107,20 @@ def analyze_expansion_progress(secondary_data: dict, main_data: dict):
     except Exception as e:
         log.exception(f"Erro ao analisar o progresso da expansão: {e}")
         return None
-# ---> FIM FUNÇÃO PARA ANÁLISE DE EXPANSÃO ---
 
-# ---> NOVA FUNÇÃO PARA CÁLCULO DE META TOTAL <---
-def calculate_total_requirements(current_land_type, current_level, goal_land_type, goal_level, all_reqs):
+# ---> FUNÇÃO PARA CÁLCULO DE META TOTAL (ATUALIZADA) ---
+def calculate_total_requirements(current_land_type, current_level, goal_land_type, goal_level):
     """
     Calcula o total de recursos, o tempo acumulado e o nível máximo de Bumpkin
-    necessários para ir do nível atual até um nível objetivo.
+    necessários para ir do nível atual até um nível objetivo, usando a fonte de dados unificada.
     """
     total_needed = defaultdict(Decimal)
     total_seconds = 0
     max_bumpkin_level = 0
     
     island_order = ["basic", "petal", "desert", "volcano"]
+    # ALTERADO: Usa a nova fonte de dados centralizada que foi importada
+    all_expansions = expansions.EXPANSION_DATA 
 
     try:
         current_island_index = island_order.index(current_land_type)
@@ -133,17 +134,19 @@ def calculate_total_requirements(current_land_type, current_level, goal_land_typ
     if is_invalid_goal:
         return {}
 
-    # Itera sobre as ilhas desde a atual até a do objetivo
     for i in range(current_island_index, goal_island_index + 1):
         island_name = island_order[i]
-        island_reqs = all_reqs.get(island_name, {})
+        island_data = all_expansions.get(island_name, {})
         
-        start_range = current_level + 1 if i == current_island_index else min(island_reqs.keys())
-        end_range = goal_level if i == goal_island_index else max(island_reqs.keys())
+        start_range = current_level + 1 if i == current_island_index else min(island_data.keys())
+        end_range = goal_level if i == goal_island_index else max(island_data.keys())
 
-        # Soma os requisitos para cada nível no intervalo definido
         for level in range(start_range, end_range + 1):
-            level_reqs = island_reqs.get(level)
+            level_details = island_data.get(level)
+            if not level_details:
+                continue
+            
+            level_reqs = level_details.get("requirements", {})
             if not level_reqs:
                 continue
 
