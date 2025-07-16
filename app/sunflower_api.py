@@ -67,56 +67,56 @@ def get_prices_data():
 # ---> FIM FUNÇÃO AUXILIAR PREÇOS ---
 
 
-# ---> FUNÇÃO PRINCIPAL (COM A CORREÇÃO) ---
+# ---> FUNÇÃO PRINCIPAL  ---
 @cache.cached(make_cache_key=lambda farm_id: f"farm_data_{farm_id}")
 def get_farm_data(farm_id: int):
     """
-    Busca todos os dados da fazenda, consolidando a SFL API e a sfl.world API.
+    Busca os dados das duas APIs e os retorna como dicionários separados.
+    Esta abordagem evita a "fusão" de dados, prevenindo conflitos e perda de informação.
+    
+    Retorna:
+        - main_data (dict): Dados da API principal (api.sunflower-land.com).
+        - secondary_data (dict): Dados da API secundária (sfl.world).
+        - error_message (str | None): Uma mensagem de erro, se ocorrer.
     """
     if not isinstance(farm_id, int) or farm_id <= 0:
-        return None, "Farm ID deve ser um número inteiro positivo."
+        return None, None, "Farm ID deve ser um número inteiro positivo."
 
+    main_data = None
+    secondary_data = None
+    
     try:
-        # 1. Busca os dados principais (que contêm as 'milestones')
+        # Etapa 1: Buscar dados da API principal (nossa 'farm_data_main')
+        # Esta fonte é a mais completa e contém as 'milestones'.
         sfl_api_url = f"{SFL_API_BASE_URL}{farm_id}"
-        log.info(f"Buscando dados na URL (API SFL): {sfl_api_url}")
+        log.info(f"Buscando dados principais: {sfl_api_url}")
         response = requests.get(sfl_api_url, timeout=10)
         response.raise_for_status()
-        data = response.json()
-        farm_data = data.get('farm')
+        main_data = response.json().get('farm')
 
-        if farm_data:
-            # 2. Busca dados secundários
-            sfl_world_data, world_api_error = get_sfl_world_data(farm_id, 'land')
-            if world_api_error:
-                log.warning("Erro na API secundária não impediu o retorno dos dados principais para a fazenda %s", farm_id)
-            else:
-                # 3. Adiciona dados de expansão e COMBINA os dados do bumpkin
-                farm_data['expansion_data'] = sfl_world_data
-                if sfl_world_data and 'bumpkin' in sfl_world_data:
-                    # Garante que farm_data['bumpkin'] existe antes de o atualizar
-                    if 'bumpkin' not in farm_data:
-                        farm_data['bumpkin'] = {}
-                    # A CORREÇÃO CRÍTICA: .update() combina os dicionários, preservando as 'milestones'
-                    farm_data['bumpkin'].update(sfl_world_data['bumpkin'])
-        
-        if farm_data:
-            log.info(f"Dados consolidados recebidos com sucesso para a fazenda: {farm_id}")
-            return farm_data, None
-        
-        return None, "Não foi possível obter os dados da fazenda."
+        if not main_data:
+            return None, None, "Não foi possível obter os dados da fazenda da API principal."
+
+        # Etapa 2: Buscar dados da API secundária (nossa 'farm_data_slave')
+        # Esta fonte contém 'level', 'experience' e dados de expansão detalhados.
+        secondary_data, world_api_error = get_sfl_world_data(farm_id, 'land')
+
+        if world_api_error:
+            log.warning("A API secundária (sfl.world) falhou para a fazenda %s: %s.", farm_id, world_api_error)
+            # Mesmo com a falha, retornamos os dados principais para não quebrar a aplicação.
+            # Retornamos um dicionário vazio para os dados secundários.
+            return main_data, {}, None
+
+        # Etapa 3: Retornar os dois dicionários, separados e puros.
+        log.info(f"Dados das duas APIs recebidos com sucesso para a fazenda: {farm_id}")
+        return main_data, secondary_data, None
 
     except requests.exceptions.HTTPError as http_err:
         status_code = http_err.response.status_code if http_err.response else "N/A"
-        log.warning("Erro HTTP na API principal para a fazenda %s. Status: %s", farm_id, status_code)
-        return None, f"Erro na API do Sunflower Land (Status {status_code}). A fazenda existe?"
-    except requests.exceptions.RequestException:
-        log.error("Erro de conexão na API principal para a fazenda %s.", farm_id, exc_info=True)
-        return None, "Erro de conexão. Verifique sua internet."
-    except JSONDecodeError:
-        log.error("Erro ao decodificar JSON da API principal para a fazenda %s.", farm_id, exc_info=True)
-        return None, "Não foi possível ler os dados da fazenda (resposta inválida da API principal)."
-    except Exception:
-        log.error("Erro genérico em get_farm_data para a fazenda %s.", farm_id, exc_info=True)
-        return None, "Um erro inesperado ocorreu ao buscar os dados da fazenda."
+        error_msg = f"Erro na API do Sunflower Land (Status {status_code}). A fazenda pode não existir."
+        log.warning(f"Erro HTTP na API principal para a fazenda {farm_id}. Status: {status_code}")
+        return None, None, error_msg
+    except Exception as e:
+        log.error(f"Erro genérico em get_farm_data para a fazenda {farm_id}: {e}", exc_info=True)
+        return None, None, "Um erro inesperado ocorreu ao buscar os dados das APIs."
 # ---> FIM FUNÇÃO PRINCIPAL ---

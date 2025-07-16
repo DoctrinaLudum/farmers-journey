@@ -2,18 +2,35 @@
     <div class="col-lg-3 col-md-6">
         <div class="card dashboard-card">
             <div class="card-header"><i class="bi bi-pin-map-fill me-1"></i> Você está aqui</div>
-            <div class="card-body d-flex align-items-center">
-                <div class="display-4 fw-bold text-success me-3">{{ current_land_level or 'N/A' }}</div>
-                <div class="text-start">
-                    <h6 class="card-title mb-0">Ilha {{ expansion_progress.land_type|title if expansion_progress else 'N/A' }}</h6>
-                    <small class="text-muted">Nível de Expansão</small>
-                    <div class="border-top mt-2 pt-2">
-                        <small class="text-muted"><i class="bi bi-person-walking me-1"></i>Nv: <strong>{{ bumpkin_level or 'N/A' }}</strong></small>
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="display-4 fw-bold text-success me-3">{{ current_land_level or 'N/A' }}</div>
+                    <div class="text-start">
+                        <h6 class="card-title mb-0">Ilha {{ expansion_progress.land_type|title if expansion_progress else 'N/A' }}</h6>
+                        <small class="text-muted">Nível de Expansão</small>
+                        <div class="border-top mt-2 pt-2">
+                            <small class="text-muted"><i class="bi bi-person-walking me-1"></i>Nv: <strong>{{ bumpkin_level or 'N/A' }}</strong></small>
+                        </div>
                     </div>
                 </div>
+
+                {% if expansion_construction_info %}
+                <div class="expansion-timer-card">
+                    <div class="timer-icon">
+                        <i class="bi bi-tools"></i>
+                    </div>
+                    <div class="timer-details">
+                        <div class="timer-title">Expansão para o Nível {{ expansion_construction_info.target_level }} em andamento!</div>
+                        <div id="countdown-timer" class="countdown-time" data-ready-at="{{ expansion_construction_info.readyAt }}">Calculando...</div>
+                        <div class="timer-end-date">Término: {{ expansion_construction_info.readyAt_formatted }}</div>
+                    </div>
+                </div>
+                {% endif %}
+                
             </div>
         </div>
     </div>
+
 
     <div class="col-lg-5 col-md-6">
         <div class="card dashboard-card">

@@ -15,19 +15,16 @@
    COMPONENTES GERAIS DO PAINEL
    ================================= */
 
-/* Padroniza o tamanho dos ícones de recursos nas listas */
 .resource-icon-list {
     width: 20px;
     height: 20px;
     object-fit: contain;
 }
 
-/* Cabeçalhos de card que são clicáveis para recolher/expandir */
 .clickable-header {
     cursor: pointer;
 }
 
-/* Animação para os ícones de chevron dos cards retráteis */
 .clickable-header .bi-chevron-down {
     transition: transform 0.2s ease-in-out;
 }
@@ -35,9 +32,8 @@
     transform: rotate(180deg);
 }
 
-/* Barras de progresso com altura customizada */
 .progress-sm { height: 8px; }
-.progress-thin { height: 6px; } /* Altura mais fina para os mini-cards */
+.progress-thin { height: 6px; }
 
 /* =================================
    ESTILOS DOS CARDS DO PAINEL
@@ -77,16 +73,6 @@
     align-items: center;
     margin-bottom: 0.25rem;
 }
-.progress-values {
-    position: absolute;
-    right: 0.5rem;
-    font-size: 0.7em;
-    font-weight: bold;
-    color: white;
-    background-color: rgba(0, 0, 0, 0.45);
-    padding: 0.1rem 0.4rem;
-    border-radius: 0.25rem;
-}
 .expansion-image-display {
     background-size: contain;
     background-repeat: no-repeat;
@@ -94,8 +80,61 @@
     min-height: 220px;
 }
 
+/* --- INÍCIO DAS NOVAS REGRAS DE ESTILO --- */
+
+/* 1. CORREÇÃO PARA AS BARRAS DE PROGRESSO */
+.journey-item-progress {
+    position: relative; /* Necessário para o posicionamento do texto */
+}
+
+/* Define a largura da barra de progresso usando a variável que vem do HTML */
+.progress-bar-dynamic {
+    width: var(--progress-width, 0%);
+    transition: width 0.6s ease; /* Adiciona uma animação suave */
+}
+
+/* Garante que o texto fique por cima da barra de progresso */
+.progress-values {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%; /* Centraliza o texto verticalmente */
+    transform: translateY(-50%);
+    font-size: 0.7em;
+    font-weight: bold;
+    color: white;
+    text-shadow: 1px 1px 1px rgba(0,0,0,0.6); /* Sombra para melhorar a leitura */
+    background-color: rgba(0, 0, 0, 0.45);
+    padding: 0.1rem 0.4rem;
+    border-radius: 0.25rem;
+}
+
+/* 2. MELHORIA VISUAL PARA A LISTA DE METAS ("META FINAL") */
+
+/* Estiliza os itens da lista de requisitos da meta */
+#goal-results-container .list-group-item {
+    font-size: 0.85rem;      /* Fonte um pouco menor */
+    padding-top: 0.4rem;     /* Menos espaçamento vertical */
+    padding-bottom: 0.4rem;
+    background-color: transparent; /* Remove o fundo branco padrão da lista */
+    border-bottom: 1px solid #f0f0f0; /* Linha separadora mais suave */
+}
+
+/* Remove a borda do último item para um acabamento mais limpo */
+#goal-results-container .list-group-item:last-child {
+    border-bottom: none;
+}
+
+/* Ajusta o peso da fonte dos badges (etiquetas "Completo" / "Faltam") */
+#goal-results-container .badge {
+    font-weight: 500;
+}
+
+/* --- FIM DAS NOVAS REGRAS DE ESTILO --- */
+
+
 /* =================================
-   PAINEL DE INVENTÁRIO (ABAS E COLUNAS)
+   PAINEL DE INVENTÁRIO, PESCA, ETC.
+   (O resto do seu CSS original permanece aqui)
    ================================= */
 
 .tab-content {
@@ -118,25 +157,18 @@
     width: 100%;
 }
 
-/* =================================
-   PAINEL DE PESCA (GERAL)
-   ================================= */
-
-/* Ícone do peixe na tabela do diário */
 .fish-icon-inline {
     width: 1.5em;
     height: 1.5em;
     vertical-align: middle;
 }
 
-/* Ícones de estação na tabela */
 .season-icon {
     width: 20px;
     height: 20px;
     margin-right: 4px;
 }
 
-/* Linha da tabela para peixes já capturados */
 .table-success-light,
 .table-success-light > th,
 .table-success-light > td {
@@ -144,7 +176,6 @@
     color: var(--bs-table-color-state, var(--bs-success-text-emphasis));
 }
 
-/* Códice Visual */
 .codex-item {
     position: relative;
     border: 1px solid #dee2e6;
@@ -168,10 +199,6 @@
     background-color: white;
     border-radius: 50%;
 }
-
-/* =================================
-   PAINEL DE CONQUISTAS (ESTILO JOGO) - ATUALIZADO
-   ================================= */
 
 .milestones-mini-cards-container {
     display: grid;
@@ -206,7 +233,6 @@
     filter: grayscale(0);
 }
 
-/* PONTO DE ATUALIZAÇÃO: Estilo para os cards inativos */
 .milestone-mini-card.is-inactive {
     opacity: 0.5;
     filter: grayscale(90%);
@@ -235,7 +261,6 @@
     border-radius: 0.375rem;
 }
 
-/* Cores para os tiers dos mini-cards */
 .milestone-mini-card.tier-basic { border-color: #a0a0a0; }
 .milestone-mini-card.tier-advanced { border-color: #4a90e2; }
 .milestone-mini-card.tier-expert { border-color: #d0a000; }
@@ -247,20 +272,14 @@
 .milestone-mini-card.active.tier-expert, 
 .milestone-mini-card:hover.tier-expert { border-color: #b08000; }
 
-/* Ajusta a cor do checkmark */
 .milestone-mini-card.is-completed .bi-check-circle-fill {
     color: var(--cor-sucesso);
 }
 
-/* Cor da barra de progresso do mini-card */
 .milestone-mini-card.tier-basic .progress-bar { background-color: #a0a0a0; }
 .milestone-mini-card.tier-advanced .progress-bar { background-color: #4a90e2; }
 .milestone-mini-card.tier-expert .progress-bar { background-color: #d0a000; }
 
-
-/* =================================
-   MEDIA QUERIES PARA RESPONSIVIDADE
-   ================================= */
 
 @media (max-width: 991px) {
     #inventory-grid {
@@ -272,4 +291,45 @@
     #inventory-grid {
         column-count: 1;
     }
+}
+/* =================================
+   NOVO: ESTILO PARA O TEMPORIZADOR DE EXPANSÃO
+   ================================= */
+.expansion-timer-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background-color: #e9ecef; /* Um cinza claro para um look suave */
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem; /* Bordas mais arredondadas */
+    padding: 0.75rem 1rem;
+    margin-top: 1.25rem; /* AUMENTADO: Mais espaço para "descolar" do topo */
+}
+
+.expansion-timer-card .timer-icon i {
+    font-size: 1.8rem;
+    color: var(--cor-primaria); /* Usa a cor primária do tema */
+}
+
+.expansion-timer-card .timer-details {
+    line-height: 1.4;
+    width: 100%;
+}
+
+.expansion-timer-card .timer-title {
+    font-size: 0.8rem;
+    font-weight: 700; /* Título em negrito */
+}
+
+.expansion-timer-card .countdown-time {
+    font-size: 1.2rem;
+    font-weight: 700;
+    font-family: monospace;
+    color: var(--cor-sucesso); /* Tempo restante em verde */
+}
+
+.expansion-timer-card .timer-end-date {
+    font-size: 0.75rem;
+    color: #6c757d; /* Cinza para a data de término */
+    text-align: right; /* Alinha a data à direita */
 }

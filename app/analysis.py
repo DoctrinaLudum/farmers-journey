@@ -37,21 +37,23 @@ def format_seconds_to_str(seconds: int) -> str:
     return " ".join(parts) if parts else "0m"
 
 # ---> FUNÇÃO PARA ANÁLISE DE EXPANSÃO ---
-def analyze_expansion_progress(farm_data: dict):
+def analyze_expansion_progress(secondary_data: dict, main_data: dict):
     """
     Analisa o progresso do jogador para a próxima expansão de terra.
+    - secondary_data: Contém os dados da ilha (tipo, nível) da API sfl.world.
+    - main_data: Contém o inventário e o balanço de SFL/moedas da API principal.
     """
-    if not farm_data:
+    if not secondary_data or not main_data:
         return None
 
     try:
-        # Pega o tipo e o nível da ilha
-        land_info = farm_data.get("expansion_data", {}).get("land", {})
+        # Pega o tipo e o nível da ilha dos dados secundários
+        land_info = secondary_data.get("land", {})
         land_type = land_info.get("type")
         current_level = land_info.get("level")
 
         if not land_type or current_level is None:
-            log.warning("Dados de tipo ou nível da ilha ausentes.")
+            log.warning("Dados de tipo ou nível da ilha ausentes nos dados secundários.")
             return None
 
         next_level = current_level + 1
@@ -71,10 +73,11 @@ def analyze_expansion_progress(farm_data: dict):
             "time_req": requirements.get("Time", "N/A"),
             "resources": []
         }
-
-        inventory = farm_data.get("inventory", {})
-        sfl_balance = Decimal(farm_data.get("balance", "0"))
-        coins_balance = Decimal(farm_data.get("coins", "0"))
+        
+        # Pega os recursos do jogador dos dados principais
+        inventory = main_data.get("inventory", {})
+        sfl_balance = Decimal(main_data.get("balance", "0"))
+        coins_balance = Decimal(main_data.get("coins", "0"))
 
         for item, required_amount in requirements.items():
             if item in ["Bumpkin Level", "Time"]:
@@ -90,7 +93,7 @@ def analyze_expansion_progress(farm_data: dict):
 
             percentage = 0
             if required_amount > 0:
-                percentage = min((have_amount / Decimal(required_amount)) * 100, 100)
+                percentage = min((have_amount / Decimal(str(required_amount))) * 100, 100)
 
             progress["resources"].append({
                 "name": item,
@@ -169,27 +172,35 @@ def calculate_total_requirements(current_land_type, current_level, goal_land_typ
 # ---> FIM DA FUNÇÃO DE CÁLCULO DE META TOTAL <---
 
 # ---> FUNÇÃO PARA ANÁLISE DE PESCA ---
-def analyze_fishing_data(farm_data: dict):
+def analyze_fishing_data(main_data: dict, secondary_data: dict):
     """
     Analisa os dados de pesca, com lógica de conquistas 100% alinhada
     com o ficheiro milestones.ts do jogo.
+    - main_data: Contém 'milestones', inventário e atividades.
+    - secondary_data: Usado para obter o 'level' do bumpkin (se necessário).
     """
-    bumpkin_data = farm_data.get('bumpkin')
-    if not bumpkin_data:
+    if not main_data:
+        log.warning("Dados principais (main_data) não fornecidos para a análise de pesca.")
         return None
 
-    inventory = farm_data.get('inventory', {})
-    # Prioriza 'farmActivity', mas usa 'activity' como alternativa
-    farm_activity = farm_data.get('farmActivity', {}) or bumpkin_data.get('activity', {})
+    # O 'bumpkin_data' é usado para obter a 'activity' como alternativa.
+    bumpkin_data = main_data.get('bumpkin', {}) or {}
     
-    # PONTO-CHAVE: Acessa os milestones DENTRO de 'bumpkin_data'
-    player_milestones = bumpkin_data.get('milestones', {})
+    inventory = main_data.get('inventory', {})
+    # Prioriza 'farmActivity' dos dados principais, mas usa 'activity' como alternativa.
+    farm_activity = main_data.get('farmActivity', {}) or bumpkin_data.get('activity', {})
+    
+    # PONTO-CHAVE CORRIGIDO: Acessa os milestones diretamente de 'main_data',
+    # que representa o objeto 'farm'. O caminho é farm > milestones.
+    player_milestones = main_data.get('milestones', {})
+    log.debug(f"Analisando pesca com milestones encontrados em farm > milestones: {player_milestones}")
 
     all_fish_static = fishing_data_domain.FISHING_DATA
     
     all_fish_list = []
     fish_by_type = defaultdict(list)
     
+    # O resto da função permanece exatamente igual.
     for fish_name, details in all_fish_static.items():
         fish_type = details.get('type', 'basic')
         fish_info = {
@@ -215,7 +226,6 @@ def analyze_fishing_data(farm_data: dict):
     
     marine_marvels_for_milestone = [f for f in fish_by_type.get('marine marvel', []) if f['type'] != 'chapter']
 
-    # PONTO DE ATUALIZAÇÃO: Dicionários com detalhes e categorias de cor
     long_tasks = {
         "Novice Angler": "Capture pelo menos 1 de cada peixe da categoria Basic.",
         "Advanced Angler": "Capture pelo menos 1 de cada peixe da categoria Advanced.",
@@ -235,9 +245,7 @@ def analyze_fishing_data(farm_data: dict):
     }
 
     for ach_name, ach_details in milestone_info.items():
-        # A verificação de 'completo'
         is_completed = ach_name in player_milestones
-        
         progress = {"current": 0, "total": 1, "percent": 100 if is_completed else 0}
 
         if not is_completed:
@@ -263,16 +271,12 @@ def analyze_fishing_data(farm_data: dict):
             else:
                 progress["percent"] = 100 if progress.get('current', 0) > 0 else 0
         
-        # Define o valor de 'current' para conquistas completas para exibição no texto
         if is_completed:
             progress['current'] = progress.get('total', 1)
 
-        # PONTO DE ATUALIZAÇÃO: Adiciona 'long_task' e 'tier' ao dicionário
         player_achievements.append({
-            "name": ach_name,
-            "player_has": is_completed,
-            "task": ach_details["task"],
-            "long_task": long_tasks.get(ach_name, ach_details["task"]),
+            "name": ach_name, "player_has": is_completed,
+            "task": ach_details["task"], "long_task": long_tasks.get(ach_name, ach_details["task"]),
             "tier": tier_map.get(ach_name, "basic"),
             "progress_percent": progress.get('percent', 100),
             "progress_text": f"{int(progress.get('current', 0))}/{int(progress.get('total', 1))}"
