@@ -1,12 +1,12 @@
 <div class="row g-4">
-    <div class="col-lg-3 col-md-6">
-        <div class="card dashboard-card">
+    <div class="col-lg-4">
+        <div class="card dashboard-card h-100">
             <div class="card-header"><i class="bi bi-pin-map-fill me-1"></i> Você está aqui</div>
-            <div class="card-body">
+            <div class="card-body d-flex flex-column">
                 <div class="d-flex align-items-center">
                     <div class="display-4 fw-bold text-success me-3">{{ current_land_level or 'N/A' }}</div>
-                    <div class="text-start">
-                        <h6 class="card-title mb-0">Ilha {{ current_land_type|title if current_land_type else 'N/A' }}</h6>
+                    <div>
+                        <h6 class="card-title mb-0">Ilha {{ current_land_type|title }}</h6>
                         <small class="text-muted">Nível de Expansão</small>
                         <div class="border-top mt-2 pt-2">
                             <small class="text-muted"><i class="bi bi-person-walking me-1"></i>Nv: <strong>{{ bumpkin_level or 'N/A' }}</strong></small>
@@ -17,18 +17,30 @@
                 {% if expansion_construction_info %}
                 <div class="expansion-timer-card">
                     <div class="timer-icon">
-                        <i class="bi bi-tools"></i>
+                        {% if expansion_construction_info.is_complete %}
+                            <div class="completed-icon-stack">
+                                <img src="{{ url_for('static', filename='images/misc/land_complete.png') }}" alt="Expansão completa" class="stack-layer base-layer">
+                                <img src="{{ url_for('static', filename='images/misc/disc.png') }}" alt="Círculo" class="stack-layer middle-layer">
+                                <img src="{{ url_for('static', filename='images/misc/confirm.png') }}" alt="Confirmar" class="stack-layer top-layer-animated">
+                            </div>
+                        {% else %}
+                            <img src="{{ url_for('static', filename='images/misc/construct.gif') }}" alt="Construção" class="construction-gif-timer">
+                        {% endif %}
                     </div>
                     <div class="timer-details">
-                        <div class="timer-title">Expansão para o Nível {{ expansion_construction_info.target_level }} em andamento!</div>
-                        <div id="countdown-timer" class="countdown-time" data-ready-at="{{ expansion_construction_info.readyAt }}">Calculando...</div>
-                        <div class="timer-end-date">Término: {{ expansion_construction_info.readyAt_formatted }}</div>
+                        {% if expansion_construction_info.is_complete %}
+                            <div class="timer-title">Expansão para o Nível {{ expansion_construction_info.target_level }}</div>
+                            <div class="countdown-time text-success">Concluída!</div>
+                        {% else %}
+                            <div class="timer-title">Expansão para o Nível {{ expansion_construction_info.target_level }} em andamento!</div>
+                            <div id="countdown-timer" class="countdown-time" data-ready-at="{{ expansion_construction_info.readyAt }}">Calculando...</div>
+                        {% endif %}
                     </div>
                 </div>
                 {% endif %}
 
                 {% if current_level_nodes %}
-                <div class="level-nodes-container">
+                <div class="level-nodes-container flex-grow-1">
                     <h6 class="nodes-title">Recursos Totais na Expansão</h6>
                     <ul class="list-unstyled mb-0">
                         {% for node in current_level_nodes %}
@@ -45,72 +57,116 @@
         </div>
     </div>
 
-
-    <div class="col-lg-5 col-md-6">
-        <div class="card dashboard-card">
-            <div class="card-header"><i class="bi bi-signpost-split-fill me-1"></i> Próxima Jornada</div>
+    <div class="col-lg-8">
+        <div class="card dashboard-card h-100">
+            <div class="card-header"><i class="bi bi-compass me-1"></i> Planejador de Expansão</div>
             <div class="card-body">
-                {% if expansion_progress and not expansion_progress.get('requirements_met') %}
-                    <h6 class="card-title">Próxima Expansão: Nível {{ expansion_progress.next_level }}</h6>
-                    <p class="text-muted small mb-2">Req. Bumpkin: Nv.{{ expansion_progress.bumpkin_level_req }} | Tempo: {{ expansion_progress.time_req }}</p>
-                    
-                    <ul class="list-unstyled mb-0">
-                        {% for resource in expansion_progress.resources|sort(attribute='name') %}
-                        <li class="journey-list-item border-bottom">
-                            <div class="journey-item-header small">
-                                <div class="d-flex align-items-center">
-                                    <img src="{{ resource.icon }}" alt="{{ resource.name }}" class="me-2 resource-icon-list">
-                                    <span class="fw-bold">{{ resource.name }}</span>
-                                </div>
-                                <div>
-                                    {% if resource.shortfall > 0 %}
-                                        <span class="badge badge-shortfall">Faltam {{ "{:,.2f}".format(resource.shortfall|float) }}</span>
-                                    {% elif resource.surplus > 0 %}
-                                        <span class="badge badge-surplus">Excedente {{ "{:,.2f}".format(resource.surplus|float) }}</span>
-                                    {% else %}
-                                         <span class="badge bg-success">Completo</span>
-                                    {% endif %}
+                <div class="row">
+                    <div class="col-lg-7 border-end-lg-custom">
+                        <div class="pe-lg-3">
+                            <h6 class="mb-2 fw-bold">Simulador de Meta</h6>
+                            <form id="goal-form" class="d-flex gap-2" data-farm-id="{{ farm_id }}" data-current-land-type="{{ current_land_type }}" data-current-level="{{ current_land_level }}">
+                                <select class="form-select" id="goal_level" name="goal_level">
+                                    <option selected disabled value="">Selecione um nível...</option>
+                                    {% for island, levels in expansion_goals.items() %}
+                                        <optgroup label="Ilha {{ island|title }}">
+                                            {% for level in levels %}
+                                                <option value="{{ island }}-{{ level }}">Nível {{ level }}</option>
+                                            {% endfor %}
+                                        </optgroup>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-primary flex-shrink-0">Definir</button>
+                            </form>
+                            <div id="goal-results-container" class="mt-3">
+                                <div class="text-center text-muted p-3">
+                                    <h5 class="text-dark">Bem-vindo ao Planejador de Expansão!</h5>
+                                    <p class="small">Esta é a sua central de comando para o crescimento da sua ilha.</p>
+                                    
+                                    <div class="row mt-4 text-start">
+                                        <div class="col-lg-4">
+                                            <div class="d-flex">
+                                                <i class="bi bi-pin-map-fill me-2 fs-4 text-success"></i>
+                                                <div>
+                                                    <strong>Você está aqui</strong>
+                                                    <p class="small mb-0">À esquerda, veja seu nível atual, nodes de recursos totais e o tempo de qualquer expansão em andamento.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-4">
+                                            <div class="d-flex mt-3 mt-lg-0">
+                                                <i class="bi bi-bullseye me-2 fs-4 text-primary"></i>
+                                                <div>
+                                                    <strong>Simulador de Meta</strong>
+                                                    <p class="small mb-0">Use o seletor acima para calcular os custos e o tempo para alcançar qualquer nível futuro.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-4">
+                                            <div class="d-flex mt-3 mt-lg-0">
+                                                <i class="bi bi-map me-2 fs-4 text-warning"></i>
+                                                <div>
+                                                    <strong>Mapa Interativo</strong>
+                                                    <p class="small mb-0">À direita, explore o mapa, filtre por ilha e posicione o ponteiro sobre os lotes para ver detalhes.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="journey-item-progress">
-                                <div class="progress progress-thin flex-grow-1">
-                                    <div class="progress-bar progress-bar-dynamic {% if resource.percentage == 100 %}bg-success{% else %}bg-primary{% endif %}" role="progressbar" style="--progress-width: {{ resource.percentage }}%;"></div>
-                                </div>
-                                <div class="progress-values">
-                                    <span>{{ "{:,.2f}".format(resource.have|float) }} / {{ "{:,}".format(resource.required|int) }}</span>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-5 mt-4 mt-lg-0">
+                        <div class="ps-lg-3">
+                            <div class="map-controls">
+                                <h6 class="mb-0 fw-bold">Mapa de Expansão</h6>
+                                <div class="btn-group btn-group-sm" id="map-filter-tabs" role="group">
+                                    <button type="button" class="btn btn-outline-secondary active" data-island-filter="all">Todos</button>
+                                    <button type="button" class="btn btn-outline-secondary" data-island-filter="basic">Basic</button>
+                                    <button type="button" class="btn btn-outline-secondary" data-island-filter="petal">Petal</button>
+                                    <button type="button" class="btn btn-outline-secondary" data-island-filter="desert">Desert</button>
+                                    <button type="button" class="btn btn-outline-secondary" data-island-filter="volcano">Volcano</button>
                                 </div>
                             </div>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                {% else %}
-                    <p class="text-muted mt-3 text-center">Você já atingiu o nível máximo conhecido.</p>
-                {% endif %}
+                            <div class="expansion-map-wrapper">
+                                <div id="expansion-map-grid">
+                                    {% for plot in map_plots %}
+                                        <div class="map-plot plot-{{ plot.number }} island-{{ plot.island }} state-{{ plot.state }}" 
+                                             title="Lote {{ plot.number }}"
+                                             data-plot-number="{{ plot.number }}"
+                                             data-plot-island="{{ plot.island }}"
+                                             data-plot-state="{{ plot.state }}"
+                                             data-plot-requirements='{{ plot.requirements_data }}'
+                                             data-plot-nodes='{{ plot.nodes_data }}'>
+                                            {{ plot.number }}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                <div id="map-tooltip" class="map-tooltip" style="display: none;"></div>
+                            </div>
+                            <div class="map-legend">
+                                <div class="legend-item"><span class="legend-color island-basic"></span> Basic</div>
+                                <div class="legend-item"><span class="legend-color island-petal"></span> Petal</div>
+                                <div class="legend-item"><span class="legend-color island-desert"></span> Desert</div>
+                                <div class="legend-item"><span class="legend-color island-volcano"></span> Volcano</div>
+                                <div class="legend-item"><span class="legend-color state-locked"></span> Bloqueado</div>
+
+                                {% if in_progress_plot_island %}
+                                    <div class="legend-item">
+                                        <span class="legend-color state-in_progress island-{{ in_progress_plot_island }}"></span> Em Construção
+                                    </div>
+                                {% endif %}
+                                {% if complete_plot_island %}
+                                    <div class="legend-item">
+                                        <span class="legend-color state-construction_complete island-{{ complete_plot_island }}"></span> Concluído
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    
-    <div class="col-lg-4 col-md-12">
-        <div class="card dashboard-card">
-           <div class="card-header"><i class="bi bi-bullseye me-1"></i> Meta Final</div>
-           <div class="card-body">
-               <form id="goal-form" data-farm-id="{{ farm_id }}" data-current-land-type="{{ expansion_progress.land_type if expansion_progress else '' }}" data-current-level="{{ current_land_level or '0' }}" class="d-flex gap-2 mb-3">
-                   <select class="form-select form-select-sm" name="goal_level" id="goal_level" aria-label="Meu Objetivo de Expansão">
-                       <option value="">Selecione um nível...</option>
-                       {% for island, levels in expansion_goals.items() %}
-                       <optgroup label="{{ island|title }}">
-                           {% for level in levels %}
-                           <option value="{{ island }}-{{ level }}">{{ level }}</option>
-                           {% endfor %}
-                       </optgroup>
-                       {% endfor %}
-                   </select>
-                   <button type="submit" class="btn btn-info btn-sm flex-shrink-0">Definir</button>
-               </form>
-               <div id="goal-results-container">
-                   <p class="text-muted text-center small mt-3">Selecione um objetivo acima para ver o plano de projeto.</p>
-               </div>
-           </div>
-       </div>
-   </div>
 </div>

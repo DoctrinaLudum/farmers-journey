@@ -15,12 +15,6 @@
    COMPONENTES GERAIS DO PAINEL
    ================================= */
 
-.resource-icon-list {
-    width: 20px;
-    height: 20px;
-    object-fit: contain;
-}
-
 .clickable-header {
     cursor: pointer;
 }
@@ -28,12 +22,14 @@
 .clickable-header .bi-chevron-down {
     transition: transform 0.2s ease-in-out;
 }
+
 .clickable-header[aria-expanded="true"] .bi-chevron-down {
     transform: rotate(180deg);
 }
 
-.progress-sm { height: 8px; }
-.progress-thin { height: 6px; }
+.progress-thin {
+    height: 6px;
+}
 
 /* =================================
    ESTILOS DOS CARDS DO PAINEL
@@ -45,130 +41,329 @@
     border-radius: 0.5rem;
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
+
 .dashboard-card .card-header {
     padding: 0.75rem 1rem;
     font-weight: 500;
     background-color: var(--cor-fundo-claro);
     border-bottom: 1px solid var(--cor-borda);
 }
+
 .dashboard-card .card-body {
     padding: 1rem;
 }
-.dashboard-card .list-group-item {
-    padding: 0.6rem 1rem;
-    font-size: 0.9rem;
-}
 
 /* =================================
-   PAINEL DE EXPANSÃO E METAS
+   PAINEL DE EXPANSÃO
    ================================= */
 
-.journey-list-item {
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
-}
-.journey-item-header {
+/* --- Card: Você está aqui --- */
+.expansion-timer-card {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.25rem;
-}
-.expansion-image-display {
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-    min-height: 220px;
-}
-
-/* --- INÍCIO DAS NOVAS REGRAS DE ESTILO --- */
-
-/* 1. CORREÇÃO PARA AS BARRAS DE PROGRESSO */
-.journey-item-progress {
-    position: relative; /* Necessário para o posicionamento do texto */
+    gap: 0.75rem;
+    background-color: #e9ecef;
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    margin-top: 1.25rem;
 }
 
-/* Define a largura da barra de progresso usando a variável que vem do HTML */
-.progress-bar-dynamic {
-    width: var(--progress-width, 0%);
-    transition: width 0.6s ease; /* Adiciona uma animação suave */
+.completed-icon-stack {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 102px;
+    height: 92px;
 }
 
-/* Garante que o texto fique por cima da barra de progresso */
-.progress-values {
-    position: absolute;
-    right: 0.5rem;
-    top: 50%; /* Centraliza o texto verticalmente */
-    transform: translateY(-50%);
-    font-size: 0.7em;
-    font-weight: bold;
-    color: white;
-    text-shadow: 1px 1px 1px rgba(0,0,0,0.6); /* Sombra para melhorar a leitura */
-    background-color: rgba(0, 0, 0, 0.45);
-    padding: 0.1rem 0.4rem;
-    border-radius: 0.25rem;
+.completed-icon-stack .stack-layer {
+    grid-area: 1 / 1;
 }
 
-/* 2. MELHORIA VISUAL PARA A LISTA DE METAS ("META FINAL") */
-
-/* Estiliza os itens da lista de requisitos da meta */
-#goal-results-container .list-group-item {
-    font-size: 0.85rem;      /* Fonte um pouco menor */
-    padding-top: 0.4rem;     /* Menos espaçamento vertical */
-    padding-bottom: 0.4rem;
-    background-color: transparent; /* Remove o fundo branco padrão da lista */
-    border-bottom: 1px solid #f0f0f0; /* Linha separadora mais suave */
+.completed-icon-stack .base-layer {
+    width: 100%;
+    height: auto;
 }
 
-/* Remove a borda do último item para um acabamento mais limpo */
-#goal-results-container .list-group-item:last-child {
-    border-bottom: none;
+.completed-icon-stack .middle-layer,
+.completed-icon-stack .top-layer-animated {
+    width: 30%;
 }
 
-/* Ajusta o peso da fonte dos badges (etiquetas "Completo" / "Faltam") */
-#goal-results-container .badge {
-    font-weight: 500;
+.completed-icon-stack .top-layer-animated {
+    animation: pulse-checkmark 2s infinite ease-in-out;
 }
 
-/* --- FIM DAS NOVAS REGRAS DE ESTILO --- */
-
-
-/* =================================
-   PAINEL DE INVENTÁRIO, PESCA, ETC.
-   (O resto do seu CSS original permanece aqui)
-   ================================= */
-
-.tab-content {
-    border: 1px solid var(--cor-borda);
-    border-top: none;
-    border-radius: 0 0 .375rem .375rem;
+@keyframes pulse-checkmark {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.15);
+    }
+    100% {
+        transform: scale(1);
+    }
 }
-.nav-tabs .nav-link.active {
-    margin-bottom: -1px;
-    border-bottom-color: var(--bs-body-bg, white);
+
+.expansion-timer-card .timer-icon img.construction-gif-timer {
+    width: 36px;
+    height: 36px;
 }
-#inventory-grid {
-    column-count: 3;
-    column-gap: 1rem;
-    padding: 1rem;
-}
-#inventory-grid .inventory-card {
-    break-inside: avoid;
-    margin-bottom: 1rem;
+
+.expansion-timer-card .timer-details {
+    line-height: 1.4;
     width: 100%;
 }
 
+.expansion-timer-card .timer-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.expansion-timer-card .countdown-time {
+    font-size: 1.2rem;
+    font-weight: 700;
+    font-family: monospace;
+    color: var(--cor-sucesso);
+}
+
+.level-nodes-container {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--cor-borda);
+}
+
+.nodes-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.node-item {
+    display: flex;
+    align-items: center;
+    padding: 0.3rem 0;
+    font-size: 0.85rem;
+}
+
+.node-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 0.75rem;
+}
+
+/* --- Card: Planejador de Expansão --- */
+@media (min-width: 992px) {
+    .border-end-lg-custom {
+        border-right: 1px solid var(--cor-borda);
+    }
+}
+
+.map-controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+#map-filter-tabs .btn.active {
+    color: white;
+}
+#map-filter-tabs .btn[data-island-filter="basic"].active {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+#map-filter-tabs .btn[data-island-filter="petal"].active {
+    background-color: #4de706;
+    border-color: #4de706;
+}
+#map-filter-tabs .btn[data-island-filter="desert"].active {
+    background-color: #ffc107;
+    border-color: #ffc107;
+}
+#map-filter-tabs .btn[data-island-filter="volcano"].active {
+    background-color: #3a3a3a;
+    border-color: #3a3a3a;
+}
+
+.expansion-map-wrapper {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    min-height: 310px;
+}
+
+#expansion-map-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: repeat(7, 1fr);
+    gap: 4px;
+    width: 290px;
+    height: 290px;
+}
+
+.map-plot {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: white;
+    text-shadow: 1px 1px 1px rgba(0,0,0,0.4);
+    border-radius: 4px;
+    border: 1px solid rgba(0,0,0,0.2);
+    transition: all 0.2s ease-in-out;
+    cursor: help;
+}
+
+/* Posicionamento de cada lote via classe */
+.plot-1 { grid-area: 3 / 3; } .plot-2 { grid-area: 3 / 4; } .plot-3 { grid-area: 2 / 4; }
+.plot-4 { grid-area: 2 / 3; } .plot-5 { grid-area: 2 / 2; } .plot-6 { grid-area: 3 / 2; }
+.plot-7 { grid-area: 4 / 2; } .plot-8 { grid-area: 4 / 3; } .plot-9 { grid-area: 4 / 4; }
+.plot-10 { grid-area: 4 / 5; } .plot-11 { grid-area: 3 / 5; } .plot-12 { grid-area: 2 / 5; }
+.plot-13 { grid-area: 1 / 5; } .plot-14 { grid-area: 1 / 4; } .plot-15 { grid-area: 1 / 3; }
+.plot-16 { grid-area: 1 / 2; } .plot-17 { grid-area: 1 / 1; } .plot-18 { grid-area: 2 / 1; }
+.plot-19 { grid-area: 3 / 1; } .plot-20 { grid-area: 4 / 1; } .plot-21 { grid-area: 5 / 1; }
+.plot-22 { grid-area: 5 / 2; } .plot-23 { grid-area: 5 / 3; } .plot-24 { grid-area: 5 / 4; }
+.plot-25 { grid-area: 5 / 5; } .plot-26 { grid-area: 5 / 6; } .plot-27 { grid-area: 4 / 6; }
+.plot-28 { grid-area: 3 / 6; } .plot-29 { grid-area: 2 / 6; } .plot-30 { grid-area: 1 / 6; }
+
+/* Estilos de estado e ilha do mapa */
+.map-plot.island-basic { background-color: #28a745; }
+.map-plot.island-petal { background-color: #4de706; }
+.map-plot.island-desert { background-color: #ffc107; }
+.map-plot.island-volcano { background-color: #3a3a3a; }
+.map-plot.state-owned { opacity: 0.9; }
+.map-plot.state-in_progress {
+    border: 2px solid #0dcaf0;
+    animation: pulse-blue 1.5s infinite;
+}
+.map-plot.state-construction_complete {
+    border: 2px solid var(--cor-primaria);
+    animation: pulse-blue 1.5s infinite;
+}
+.map-plot.state-next_available {
+    border: 2px solid #0dcaf0;
+    transform: scale(1.1);
+}
+.map-plot.state-locked {
+    opacity: 0.4;
+    background-color: #6c757d;
+}
+.map-plot.is-filtered {
+    opacity: 0.2;
+    pointer-events: none;
+}
+.map-plot:hover {
+    transform: scale(1.2);
+    z-index: 10;
+    border-color: #fff !important;
+}
+
+@keyframes pulse-blue {
+    0% { box-shadow: 0 0 5px 0px rgba(13, 110, 253, 0.7); }
+    50% { box-shadow: 0 0 12px 4px rgba(13, 110, 253, 1); }
+    100% { box-shadow: 0 0 5px 0px rgba(13, 110, 253, 0.7); }
+}
+
+/* Legenda e Tooltip do Mapa */
+.map-legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem 1rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--cor-borda);
+}
+.legend-item {
+    display: flex;
+    align-items: center;
+    font-size: 0.75rem;
+}
+.legend-color {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    margin-right: 0.4rem;
+    border: 1px solid rgba(0,0,0,0.2);
+}
+.legend-color.island-basic { background-color: #28a745; }
+.legend-color.island-petal { background-color: #4de706; }
+.legend-color.island-desert { background-color: #ffc107; }
+.legend-color.island-volcano { background-color: #3a3a3a; }
+.legend-color.state-locked { background-color: #6c757d; }
+.legend-color.state-in_progress,
+.legend-color.state-construction_complete {
+    animation: pulse-blue 1.5s infinite;
+}
+
+.map-tooltip {
+    position: fixed;
+    z-index: 1000;
+    padding: 0.75rem;
+    background-color: rgba(255,255,255,0.95);
+    color: var(--cor-texto);
+    border-radius: 0.5rem;
+    font-size: 0.8rem;
+    max-width: 250px;
+    pointer-events: none;
+    border: 1px solid var(--cor-borda);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    backdrop-filter: blur(5px);
+}
+.tooltip-title {
+    font-weight: bold;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid var(--cor-borda);
+    padding-bottom: 0.5rem;
+}
+.tooltip-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.tooltip-list-header {
+    font-weight: 600;
+    color: var(--cor-primaria);
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
+}
+.tooltip-list li {
+    padding: 0.1rem 0;
+}
+.unlocks-header {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    margin-top: 0.5rem;
+    color: var(--cor-texto);
+}
+/* =================================
+   PAINEL DE PESCA
+   ================================= */
 .fish-icon-inline {
     width: 1.5em;
     height: 1.5em;
     vertical-align: middle;
 }
-
 .season-icon {
     width: 20px;
     height: 20px;
     margin-right: 4px;
 }
-
 .table-success-light,
 .table-success-light > th,
 .table-success-light > td {
@@ -195,7 +390,7 @@
     position: absolute;
     bottom: -5px;
     right: -5px;
-    color: var(--bs-success);
+    color: var(--cor-sucesso);
     background-color: white;
     border-radius: 50%;
 }
@@ -207,7 +402,6 @@
 }
 
 .milestone-mini-card {
-    flex: 1;
     height: 70px;
     display: flex;
     flex-direction: column;
@@ -261,26 +455,46 @@
     border-radius: 0.375rem;
 }
 
-.milestone-mini-card.tier-basic { border-color: #a0a0a0; }
-.milestone-mini-card.tier-advanced { border-color: #4a90e2; }
-.milestone-mini-card.tier-expert { border-color: #d0a000; }
+.milestone-mini-card.tier-basic {
+    border-color: #a0a0a0;
+}
+.milestone-mini-card.tier-advanced {
+    border-color: #4a90e2;
+}
+.milestone-mini-card.tier-expert {
+    border-color: #d0a000;
+}
 
 .milestone-mini-card.active.tier-basic, 
-.milestone-mini-card:hover.tier-basic { border-color: #777; }
+.milestone-mini-card:hover.tier-basic {
+    border-color: #777;
+}
 .milestone-mini-card.active.tier-advanced, 
-.milestone-mini-card:hover.tier-advanced { border-color: #2a70c2; }
+.milestone-mini-card:hover.tier-advanced {
+    border-color: #2a70c2;
+}
 .milestone-mini-card.active.tier-expert, 
-.milestone-mini-card:hover.tier-expert { border-color: #b08000; }
+.milestone-mini-card:hover.tier-expert {
+    border-color: #b08000;
+}
 
 .milestone-mini-card.is-completed .bi-check-circle-fill {
     color: var(--cor-sucesso);
 }
 
-.milestone-mini-card.tier-basic .progress-bar { background-color: #a0a0a0; }
-.milestone-mini-card.tier-advanced .progress-bar { background-color: #4a90e2; }
-.milestone-mini-card.tier-expert .progress-bar { background-color: #d0a000; }
+.milestone-mini-card.tier-basic .progress-bar {
+    background-color: #a0a0a0;
+}
+.milestone-mini-card.tier-advanced .progress-bar {
+    background-color: #4a90e2;
+}
+.milestone-mini-card.tier-expert .progress-bar {
+    background-color: #d0a000;
+}
 
-
+/* =================================
+   MEDIA QUERIES PARA RESPONSIVIDADE
+   ================================= */
 @media (max-width: 991px) {
     #inventory-grid {
         column-count: 2;
@@ -291,79 +505,4 @@
     #inventory-grid {
         column-count: 1;
     }
-}
-/* =================================
-   NOVO: ESTILO PARA O TEMPORIZADOR DE EXPANSÃO
-   ================================= */
-.expansion-timer-card {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    background-color: #e9ecef; /* Um cinza claro para um look suave */
-    border: 1px solid #dee2e6;
-    border-radius: 0.5rem; /* Bordas mais arredondadas */
-    padding: 0.75rem 1rem;
-    margin-top: 1.25rem; /* AUMENTADO: Mais espaço para "descolar" do topo */
-}
-
-.expansion-timer-card .timer-icon i {
-    font-size: 1.8rem;
-    color: var(--cor-primaria); /* Usa a cor primária do tema */
-}
-
-.expansion-timer-card .timer-details {
-    line-height: 1.4;
-    width: 100%;
-}
-
-.expansion-timer-card .timer-title {
-    font-size: 0.8rem;
-    font-weight: 700; /* Título em negrito */
-}
-
-.expansion-timer-card .countdown-time {
-    font-size: 1.2rem;
-    font-weight: 700;
-    font-family: monospace;
-    color: var(--cor-sucesso); /* Tempo restante em verde */
-}
-
-.expansion-timer-card .timer-end-date {
-    font-size: 0.75rem;
-    color: #6c757d; /* Cinza para a data de término */
-    text-align: right; /* Alinha a data à direita */
-}
-/* =================================
-   RECURSOS DA EXPANSÃO (NODES)
-   ================================= */
-.level-nodes-container {
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--cor-borda);
-}
-
-.nodes-title {
-    font-size: 0.85rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    color: var(--cor-texto);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.node-item {
-    display: flex;
-    align-items: center;
-    padding: 0.3rem 0;
-    font-size: 0.85rem;
-}
-
-.node-icon {
-    width: 20px;
-    height: 20px;
-    margin-right: 0.75rem;
-}
-
-.node-name {
-    font-weight: 500;
 }

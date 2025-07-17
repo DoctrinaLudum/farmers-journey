@@ -6,6 +6,21 @@ Combina os requisitos para desbloquear um nível e os recursos (nodes)
 que esse nível fornece, numa única estrutura de dados.
 """
 
+# Coordenadas para cada lote de expansão para o mini-mapa
+EXPANSION_COORDINATES = {
+    # Lote 0 é omitido, pois não é uma expansão comprável
+    1: {"x": 0, "y": 0}, 2: {"x": 0, "y": 1}, 3: {"x": -1, "y": 1},
+    4: {"x": -2, "y": 1}, 5: {"x": -2, "y": 0}, 6: {"x": -2, "y": -1},
+    7: {"x": -1, "y": -1}, 8: {"x": 0, "y": -1}, 9: {"x": 1, "y": -1},
+    10: {"x": 1, "y": 0}, 11: {"x": 1, "y": 1}, 12: {"x": 1, "y": 2},
+    13: {"x": 0, "y": 2}, 14: {"x": -1, "y": 2}, 15: {"x": -2, "y": 2},
+    16: {"x": -3, "y": 2}, 17: {"x": -3, "y": 1}, 18: {"x": -3, "y": 0},
+    19: {"x": -3, "y": -1}, 20: {"x": -3, "y": -2}, 21: {"x": -2, "y": -2},
+    22: {"x": -1, "y": -2}, 23: {"x": 0, "y": -2}, 24: {"x": 1, "y": -2},
+    25: {"x": 2, "y": -2}, 26: {"x": 2, "y": -1}, 27: {"x": 2, "y": 0},
+    28: {"x": 2, "y": 1}, 29: {"x": 2, "y": 2}, 30: {"x": 2, "y": 3}
+}
+
 EXPANSION_DATA = {
     "basic": {
         3: {
@@ -362,3 +377,4 @@ EXPANSION_DATA = {
         }
     }
 }
+

@@ -5,8 +5,7 @@ import config
 from collections import defaultdict
 from datetime import timedelta
 from .domain import fishing as fishing_data_domain 
-from .domain import expansions
-
+from .domain import expansions, buildings
 
 
 
@@ -322,3 +321,55 @@ def analyze_fishing_data(main_data: dict, secondary_data: dict):
         "fished_treasures": fished_treasures
     }
 # ---> FIM FUNÇÃO PARA ANÁLISE DE PESCA ---
+
+# --->  FUNÇÃO GANHO DA EXPANSÂO ---
+def calculate_total_gains(start_level: int, goal_land_type: str, goal_level: int):
+    """
+    Calcula o total de novos nodes e edifícios habilitados desbloqueados
+    ao atingir uma meta de expansão.
+    """
+    total_new_nodes = defaultdict(int)
+    unlocked_buildings = []
+    
+    island_order = ["basic", "petal", "desert", "volcano"]
+    
+    # Define as fontes de dados estáticos
+    expansion_data = expansions.EXPANSION_DATA
+    building_reqs = buildings.BUILDING_REQUIREMENTS
+
+    try:
+        # Encontra o índice da ilha atual com base no nível de partida
+        start_island_index = next((i for i, island in enumerate(island_order) if start_level in expansion_data.get(island, {})), 0)
+        goal_island_index = island_order.index(goal_land_type)
+    except ValueError:
+        return {"nodes": {}, "buildings": []} # Retorna vazio se a ilha for inválida
+
+    # Itera sobre as ilhas, da atual até a do objetivo
+    for i in range(start_island_index, goal_island_index + 1):
+        island_name = island_order[i]
+        island_levels = expansion_data.get(island_name, {})
+        
+        start_range = start_level + 1 if i == start_island_index else min(island_levels.keys() or [0])
+        end_range = goal_level if i == goal_island_index else max(island_levels.keys() or [0])
+
+        for level in range(start_range, end_range + 1):
+            level_details = island_levels.get(level)
+            if not level_details: continue
+
+            # Soma os novos nodes (recursos)
+            for node, count in level_details.get("nodes", {}).items():
+                if count > 0:
+                    total_new_nodes[node] += count
+
+            # Verifica quais edifícios são desbloqueados neste nível
+            for building, reqs in building_reqs.items():
+                # CONDIÇÃO ATUALIZADA:
+                # Verifica se o edifício é desbloqueado neste nível E se está habilitado
+                if reqs.get("unlocksAtLevel") == level and reqs.get("enabled", False):
+                    unlocked_buildings.append(building)
+    
+    return {
+        "nodes": dict(sorted(total_new_nodes.items())),
+        "buildings": sorted(unlocked_buildings)
+    }
+# ---> FIM FUNÇÃO GANHO DA EXPANSÂO ---

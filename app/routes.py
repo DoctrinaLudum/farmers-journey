@@ -1,5 +1,5 @@
 # app/routes.py
-from flask import Blueprint, render_template, request, redirect, url_for, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, jsonify, json
 from decimal import Decimal, InvalidOperation
 import logging
 from datetime import datetime
@@ -69,11 +69,13 @@ def farm_dashboard(farm_id):
         expansion_construction = main_farm_data.get("expansionConstruction")
         if expansion_construction and "readyAt" in expansion_construction:
             ready_at_timestamp = expansion_construction["readyAt"]
-            ready_at_datetime = datetime.fromtimestamp(ready_at_timestamp / 1000)
+            # Compara a data de término com a data atual
+            is_complete = datetime.now().timestamp() * 1000 > ready_at_timestamp
+
             context["expansion_construction_info"] = {
                 "readyAt": ready_at_timestamp,
                 "target_level": current_land_level + 1,
-                "readyAt_formatted": ready_at_datetime.strftime('%d/%m/%Y %H:%M')
+                "is_complete": is_complete # NOVO: Passa o estado de conclusão
             }
     except Exception as e:
         log.error(f"Erro ao processar dados gerais: {e}")
@@ -98,7 +100,6 @@ def farm_dashboard(farm_id):
     try:
         expansion_progress_data = analysis.analyze_expansion_progress(secondary_farm_data, main_farm_data)
         
-        # --- BLOCO RESTAURADO QUE CORRIGE O ERRO ---
         # Este loop adiciona as chaves 'shortfall' e 'surplus' que o template precisa.
         if expansion_progress_data and 'resources' in expansion_progress_data:
             for resource in expansion_progress_data['resources']:
@@ -143,7 +144,53 @@ def farm_dashboard(farm_id):
         context['fishing_info'] = analysis.analyze_fishing_data(main_farm_data, secondary_farm_data)
     except Exception as e:
         log.error(f"Falha ao analisar dados de pesca: {e}", exc_info=True)
+
+    # 8. Processamento do Mini-Mapa de Expansão
+    try:
+        map_plots = []
+        # Define os lotes que pertencem a cada tipo de ilha
+        island_map = {
+            "basic": range(1, 10), "petal": range(10, 16),
+            "desert": range(16, 26), "volcano": range(26, 31)
+        }
+
+        # Pega a informação completa da construção, se existir
+        construction_info = context.get("expansion_construction_info")
+
+        # Variáveis para controlar a legenda dinâmica
+        context['in_progress_plot_island'] = None
+        context['complete_plot_island'] = None
+
+        for plot_number, coords in expansions.EXPANSION_COORDINATES.items():
+            if plot_number == 0: continue
+
+            plot_state = "locked"
+            if plot_number <= context['current_land_level']:
+                plot_state = "owned"
+            elif construction_info and plot_number == construction_info["target_level"]:
+                plot_island_type = next((island for island, r in island_map.items() if plot_number in r), "basic")
+                if construction_info["is_complete"]:
+                    plot_state = "construction_complete"
+                    context['complete_plot_island'] = plot_island_type # Guarda a cor da ilha
+                else:
+                    plot_state = "in_progress"
+                    context['in_progress_plot_island'] = plot_island_type # Guarda a cor da ilha
+            elif plot_number == context['current_land_level'] + 1:
+                plot_state = "next_available"
+            
+            plot_island = next((island for island, r in island_map.items() if plot_number in r), "basic")
+            
+            map_plots.append({
+                "number": plot_number, "x": coords['x'], "y": coords['y'],
+                "state": plot_state, "island": plot_island,
+                "requirements_data": json.dumps(expansions.EXPANSION_DATA.get(plot_island, {}).get(plot_number, {}).get("requirements", {})),
+                "nodes_data": json.dumps({k: v for k, v in expansions.EXPANSION_DATA.get(plot_island, {}).get(plot_number, {}).get("nodes", {}).items() if v > 0})
+            })
         
+        context['map_plots'] = map_plots
+    except Exception as e:
+        log.error(f"Erro ao processar o mapa de expansão: {e}")
+
     return render_template('dashboard.html', title=f"Painel de {context['username']}", **context)
 
 
@@ -161,16 +208,21 @@ def api_goal_requirements(farm_id, current_land_type, current_level):
         goal_land_type = goal_parts[0]
         goal_level = int(goal_parts[1])
 
+        # Busca os dados mais recentes da fazenda para a verificação
         main_farm_data, _, farm_error = sunflower_api.get_farm_data(farm_id)
         prices_data, prices_error = sunflower_api.get_prices_data()
 
         if farm_error or prices_error:
             return jsonify({"error": f"Não foi possível buscar dados: {farm_error or prices_error}"}), 500
 
-        # CORREÇÃO: A chamada da função agora está limpa, sem o argumento 'all_reqs'.
+        # Determina o nível inicial efetivo para o cálculo
+        effective_start_level = current_level
+        if main_farm_data.get("expansionConstruction"):
+            effective_start_level += 1
+
         goal_data = analysis.calculate_total_requirements(
             current_land_type=current_land_type,
-            current_level=current_level,
+            current_level=effective_start_level, # Usa o nível efetivo
             goal_land_type=goal_land_type,
             goal_level=goal_level
         )
