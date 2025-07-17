@@ -229,10 +229,16 @@ def api_goal_requirements(farm_id, current_land_type, current_level):
 
         if not goal_data or "requirements" not in goal_data:
              return jsonify({"requirements": None, "goal_level_display": goal_level})
+        
+        unlocks_data = analysis.calculate_total_gains(
+            start_level=effective_start_level,
+            goal_land_type=goal_land_type,
+            goal_level=goal_level
+    )
 
         # O resto da função permanece igual, pois já está a funcionar corretamente.
         inventory = main_farm_data.get('inventory', {})
-        sfl_balance = Decimal(main_farm_data.get('balance', '0'))
+        sfl_balance = Decimal(main_farm_data.get('bal   ance', '0'))
         coins_balance = Decimal(main_farm_data.get('coins', '0'))
         item_prices = prices_data.get("data", {}).get("p2p", {})
         
@@ -260,7 +266,9 @@ def api_goal_requirements(farm_id, current_land_type, current_level):
             "max_bumpkin_level": goal_data["max_bumpkin_level"],
             "total_time_str": goal_data["total_time_str"],
             "total_sfl_cost": f"{total_sfl_cost:.2f}",
-            "requirements": processed_reqs
+            "requirements": processed_reqs,
+            "unlocks": unlocks_data
+
         }
         return jsonify(response_data)
 

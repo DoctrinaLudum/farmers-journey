@@ -126,9 +126,10 @@ function renderGoalResults(data: any) {
     const mainTemplate = document.getElementById('goal-list-template') as HTMLTemplateElement;
     const itemTemplate = document.getElementById('goal-list-item-template') as HTMLTemplateElement;
     const unlocksSectionTemplate = document.getElementById('unlocks-section-template') as HTMLTemplateElement;
+    const unlocksLevelTemplate = document.getElementById('unlocks-level-template') as HTMLTemplateElement;
     const unlocksItemTemplate = document.getElementById('unlocks-item-template') as HTMLTemplateElement;
 
-    if (!resultsContainer || !mainTemplate || !itemTemplate || !unlocksSectionTemplate || !unlocksItemTemplate) {
+    if (!resultsContainer || !mainTemplate || !itemTemplate || !unlocksSectionTemplate || !unlocksLevelTemplate || !unlocksItemTemplate) {
         console.error("Um ou mais templates para renderizar os resultados não foram encontrados.");
         return;
     }
@@ -197,41 +198,58 @@ function renderGoalResults(data: any) {
 
     resultsContainer.appendChild(mainClone);
 
-    // Renderiza a secção de desbloqueios
+   // --- Parte 2: Renderiza os Desbloqueios e Ganhos ---
     const unlocksData = data.unlocks;
-    const hasBuildings = unlocksData && unlocksData.buildings && unlocksData.buildings.length > 0;
-    const hasNodes = unlocksData && unlocksData.nodes && Object.keys(unlocksData.nodes).length > 0;
+    const gainsByLevel = unlocksData?.gains_by_level;
 
-    if (hasBuildings || hasNodes) {
+    if (gainsByLevel && Object.keys(gainsByLevel).length > 0) {
         const sectionClone = unlocksSectionTemplate.content.cloneNode(true) as DocumentFragment;
-        const contentDiv = sectionClone.querySelector('[data-template="unlocks-content"]');
+        const mainContentDiv = sectionClone.querySelector('[data-template="unlocks-content"]');
+        
+        if (mainContentDiv) {
+            // Itera sobre cada NÍVEL que tem ganhos
+            for (const level in gainsByLevel) {
+                const levelGains = gainsByLevel[level];
+                const hasBuildings = levelGains.buildings && levelGains.buildings.length > 0;
+                const hasNodes = levelGains.nodes && Object.keys(levelGains.nodes).length > 0;
 
-        if (contentDiv) {
-            if (hasBuildings) {
-                contentDiv.innerHTML += '<h6 class="unlocks-header">Novos Edifícios:</h6>';
-                unlocksData.buildings.forEach((building: string) => {
-                    const itemClone = unlocksItemTemplate.content.cloneNode(true) as DocumentFragment;
-                    const icon = itemClone.querySelector<HTMLImageElement>('[data-template="icon"]');
-                    const name = itemClone.querySelector<HTMLSpanElement>('[data-template="name"]');
-                    if (icon) icon.src = `/static/images/buildings/${building.toLowerCase().replace(/ /g, '_')}.png`;
-                    if (name) name.textContent = building;
-                    contentDiv.appendChild(itemClone);
-                });
-            }
+                if (hasBuildings || hasNodes) {
+                    const levelClone = unlocksLevelTemplate.content.cloneNode(true) as DocumentFragment;
+                    
+                    const levelNumberEl = levelClone.querySelector('[data-template="level-number"]');
+                    if (levelNumberEl) levelNumberEl.textContent = level;
 
-            if (hasNodes) {
-                contentDiv.innerHTML += '<h6 class="unlocks-header mt-3">Recursos Adicionais:</h6>';
-                for (const [node, count] of Object.entries(unlocksData.nodes)) {
-                    const itemClone = unlocksItemTemplate.content.cloneNode(true) as DocumentFragment;
-                    const icon = itemClone.querySelector<HTMLImageElement>('[data-template="icon"]');
-                    const name = itemClone.querySelector<HTMLSpanElement>('[data-template="name"]');
-                    if (icon) icon.src = `/static/images/nodes/${node.toLowerCase().replace(/ /g, '_')}.png`;
-                    if (name) name.textContent = `${node}: +${count}`;
-                    contentDiv.appendChild(itemClone);
+                    const levelContentDiv = levelClone.querySelector('[data-template="level-gains-content"]');
+                    if (levelContentDiv) {
+                        if (hasBuildings) {
+                            levelContentDiv.innerHTML += '<strong>Edifícios:</strong>';
+                            levelGains.buildings.forEach((building: string) => {
+                                const itemClone = unlocksItemTemplate.content.cloneNode(true) as DocumentFragment;
+                                const icon = itemClone.querySelector<HTMLImageElement>('[data-template="icon"]');
+                                const name = itemClone.querySelector<HTMLSpanElement>('[data-template="name"]');
+                                if (icon) icon.src = `/static/images/buildings/${building.toLowerCase().replace(/ /g, '_')}.png`;
+                                if (name) name.textContent = building;
+                                levelContentDiv.appendChild(itemClone);
+                            });
+                        }
+
+                        if (hasNodes) {
+                            levelContentDiv.innerHTML += '<strong class="d-block mt-2">Recursos:</strong>';
+                            for (const [node, count] of Object.entries(levelGains.nodes)) {
+                                const itemClone = unlocksItemTemplate.content.cloneNode(true) as DocumentFragment;
+                                const icon = itemClone.querySelector<HTMLImageElement>('[data-template="icon"]');
+                                const name = itemClone.querySelector<HTMLSpanElement>('[data-template="name"]');
+                                if (icon) icon.src = `/static/images/nodes/${node.toLowerCase().replace(/ /g, '_')}.png`;
+                                if (name) name.textContent = `${node}: +${count}`;
+                                levelContentDiv.appendChild(itemClone);
+                            }
+                        }
+                    }
+                    mainContentDiv.appendChild(levelClone);
                 }
             }
-            resultsContainer.appendChild(sectionClone);
         }
+        resultsContainer.appendChild(sectionClone);
     }
 }
 

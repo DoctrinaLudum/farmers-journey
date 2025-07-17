@@ -72,7 +72,7 @@
         <span><i class="bi bi-clock-history me-1"></i>Tempo: <strong data-template="total-time"></strong></span>
     </div>
     <div class="d-flex justify-content-center small text-muted mb-2">
-        <span><img src="{{ url_for('static', filename='images/Flower.png') }}" alt="SFL" class="me-1 resource-icon-list">Custo Total: <strong data-template="total-cost"></strong></span>
+        <span><img src="{{ url_for('static', filename='images/resources/Flower.png') }}" alt="Flower" class="me-1 resource-icon-list">Custo Total: <strong data-template="total-cost"></strong></span>
     </div>
     <div class="row">
         <div class="col-6 pe-2"><ul class="list-group list-group-flush" data-column="1"></ul></div>
@@ -95,8 +95,14 @@
 
 <template id="unlocks-section-template">
     <div class="mt-4 pt-3 border-top">
-        <h6 class="fw-bold mb-2">Desbloqueios e Ganhos</h6>
-        <div data-template="unlocks-content"></div>
+        <h6 class="fw-bold mb-2">Desbloqueios e Ganhos na Jornada</h6>
+        </div>
+</template>
+
+<template id="unlocks-level-template">
+    <div class="level-gain-block mb-3">
+        <h6 class="unlocks-header">Ganhos no Nível <span data-template="level-number"></span>:</h6>
+        <div data-template="level-gains-content"></div>
     </div>
 </template>
 

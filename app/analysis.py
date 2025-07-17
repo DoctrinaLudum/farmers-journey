@@ -325,26 +325,22 @@ def analyze_fishing_data(main_data: dict, secondary_data: dict):
 # --->  FUNÇÃO GANHO DA EXPANSÂO ---
 def calculate_total_gains(start_level: int, goal_land_type: str, goal_level: int):
     """
-    Calcula o total de novos nodes e edifícios habilitados desbloqueados
-    ao atingir uma meta de expansão.
+    Calcula os novos nodes e edifícios desbloqueados para cada nível
+    dentro do intervalo da simulação.
     """
-    total_new_nodes = defaultdict(int)
-    unlocked_buildings = []
+    gains_by_level = defaultdict(lambda: {"nodes": defaultdict(int), "buildings": []})
     
     island_order = ["basic", "petal", "desert", "volcano"]
-    
-    # Define as fontes de dados estáticos
     expansion_data = expansions.EXPANSION_DATA
     building_reqs = buildings.BUILDING_REQUIREMENTS
 
     try:
-        # Encontra o índice da ilha atual com base no nível de partida
         start_island_index = next((i for i, island in enumerate(island_order) if start_level in expansion_data.get(island, {})), 0)
         goal_island_index = island_order.index(goal_land_type)
-    except ValueError:
-        return {"nodes": {}, "buildings": []} # Retorna vazio se a ilha for inválida
+    except (ValueError, StopIteration):
+        return {}
 
-    # Itera sobre as ilhas, da atual até a do objetivo
+    # Itera sobre o intervalo de ilhas e níveis da simulação
     for i in range(start_island_index, goal_island_index + 1):
         island_name = island_order[i]
         island_levels = expansion_data.get(island_name, {})
@@ -356,20 +352,29 @@ def calculate_total_gains(start_level: int, goal_land_type: str, goal_level: int
             level_details = island_levels.get(level)
             if not level_details: continue
 
-            # Soma os novos nodes (recursos)
-            for node, count in level_details.get("nodes", {}).items():
-                if count > 0:
-                    total_new_nodes[node] += count
+            # Calcula a diferença de nodes em relação ao nível anterior
+            nodes_at_this_level = level_details.get("nodes", {})
+            nodes_at_previous_level = island_levels.get(level - 1, {}).get("nodes", {})
 
-            # Verifica quais edifícios são desbloqueados neste nível
+            for node, current_count in nodes_at_this_level.items():
+                previous_count = nodes_at_previous_level.get(node, 0)
+                gain = current_count - previous_count
+                if gain > 0:
+                    gains_by_level[level]["nodes"][node] += gain
+
+            # Verifica os edifícios desbloqueados neste nível
             for building, reqs in building_reqs.items():
-                # CONDIÇÃO ATUALIZADA:
-                # Verifica se o edifício é desbloqueado neste nível E se está habilitado
                 if reqs.get("unlocksAtLevel") == level and reqs.get("enabled", False):
-                    unlocked_buildings.append(building)
+                    gains_by_level[level]["buildings"].append(building)
     
-    return {
-        "nodes": dict(sorted(total_new_nodes.items())),
-        "buildings": sorted(unlocked_buildings)
+    # Converte os defaultdicts para dicionários normais para o JSON
+    final_gains = {
+        level: {
+            "nodes": dict(sorted(gains["nodes"].items())),
+            "buildings": sorted(gains["buildings"])
+        }
+        for level, gains in gains_by_level.items()
     }
+
+    return {"gains_by_level": final_gains}
 # ---> FIM FUNÇÃO GANHO DA EXPANSÂO ---
