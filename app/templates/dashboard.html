@@ -72,45 +72,56 @@
         <span><i class="bi bi-clock-history me-1"></i>Tempo: <strong data-template="total-time"></strong></span>
     </div>
     <div class="d-flex justify-content-center small text-muted mb-2">
-        <span><img src="{{ url_for('static', filename='images/resources/Flower.png') }}" alt="Flower" class="me-1 resource-icon-list">Custo Total: <strong data-template="total-cost"></strong></span>
+        <span>Custo Total<img src="{{ url_for('static', filename='images/resources/Flower.png') }}" alt="SFL" class="me-1 list-icon list-icon">: <strong data-template="total-cost"></strong></span>
     </div>
     <div class="row">
-        <div class="col-6 pe-2"><ul class="list-group list-group-flush" data-column="1"></ul></div>
-        <div class="col-6 ps-2"><ul class="list-group list-group-flush" data-column="2"></ul></div>
+        <div class="col-md-6 pe-md-2"><ul class="list-group list-group-flush" data-column="1"></ul></div>
+        <div class="col-md-6 ps-md-2"><ul class="list-group list-group-flush" data-column="2"></ul></div>
     </div>
 </template>
 
 <template id="goal-list-item-template">
      <li class="list-group-item d-flex justify-content-between align-items-center compact-list-item px-0">
-        <span class="d-flex align-items-center">
-            <img src="" alt="" class="me-2 resource-icon-list" data-template="icon">
-            <span data-template="name"></span>
-        </span>
-        <div class="text-end">
-            <span class="badge" data-template="shortfall"></span>
-            <small class="text-muted d-block" style="font-size: 0.75em;" data-template="value_of_needed"></small>
-        </div>
-    </li>
+         <span class="d-flex align-items-center">
+             <img src="" alt="" class="me-2 list-icon" data-template="icon">
+             <span data-template="name"></span>
+         </span>
+         <div class="text-end">
+             <span class="badge" data-template="shortfall"></span>
+             <small class="text-muted d-block" style="font-size: 0.75em;" data-template="value_of_needed"></small>
+         </div>
+     </li>
 </template>
 
-<template id="unlocks-section-template">
-    <div class="mt-4 pt-3 border-top">
-        <h6 class="fw-bold mb-2">Desbloqueios e Ganhos na Jornada</h6>
-        </div>
-</template>
-
-<template id="unlocks-level-template">
-    <div class="level-gain-block mb-3">
-        <h6 class="unlocks-header">Ganhos no Nível <span data-template="level-number"></span>:</h6>
-        <div data-template="level-gains-content"></div>
+<template id="unlocks-summary-table-template">
+  <div class="mt-4 pt-3 border-top">
+    <h6 class="fw-bold mb-2">Desbloqueios e Ganhos na Jornada</h6>
+    <div class="table-responsive">
+      <table class="table table-sm table-hover small">
+        <thead>
+            <tr>
+                <th style="width: 40px;"></th> {# Coluna vazia para o ícone #}
+                <th>Item</th>
+                <th class="text-end">Total Ganho</th>
+            </tr>
+        </thead>
+        <tbody data-template="summary-table-body">
+          </tbody>
+      </table>
     </div>
+  </div>
 </template>
 
-<template id="unlocks-item-template">
-    <div class="d-flex align-items-center mb-1 small">
-        <img src="" alt="" class="resource-icon-list me-2" data-template="icon" onerror="this.style.display='none'">
+<template id="unlocks-summary-item-template">
+  <tr data-template="item-row">
+    <td class="text-center" style="width: 40px;">
+        <img src="" alt="" class="list-icon" data-template="icon" onerror="this.style.display='none'">
+    </td>
+    <td>
         <span data-template="name"></span>
-    </div>
+    </td>
+    <td class="text-end fw-bold" data-template="total"></td>
+  </tr>
 </template>
 {% endblock %}
 

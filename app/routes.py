@@ -113,28 +113,54 @@ def farm_dashboard(farm_id):
     except Exception as e:
         log.error(f"Falha ao analisar progresso de expansão: {e}", exc_info=True)
 
-    # 6. Processamento das METAS DE EXPANSÃO.
+   # 6. Processamento das METAS DE EXPANSÃO.
     try:
         expansion_goals = {}
         effective_current_level = context['current_land_level']
-        if context["expansion_construction_info"]:
+        if context.get("expansion_construction_info"):
             effective_current_level += 1
 
-        island_order = ["basic", "petal", "desert", "volcano"]
+        island_order = expansions.ISLAND_ORDER
         current_land_type = context['current_land_type']
+        
         if current_land_type in island_order:
             current_island_index = island_order.index(current_land_type)
-            for island_name, levels_data in expansions.EXPANSION_DATA.items():
-                if island_name in island_order:
-                    island_index = island_order.index(island_name)
-                    if island_index < current_island_index:
+            
+            for island_name in island_order:
+                island_index = island_order.index(island_name)
+                
+                if island_index < current_island_index:
+                    continue
+                
+                levels_data = expansions.EXPANSION_DATA.get(island_name, {})
+                
+                # --- LÓGICA FINAL E CORRETA ---
+
+                # 1. Verifica se a ilha tem algum requisito. Se não, não é um objetivo válido.
+                if not any(info.get("requirements") for info in levels_data.values()):
+                    continue # Ignora ilhas como a "Swamp" por enquanto
+
+                # 2. Converte os níveis para números de forma segura
+                levels_as_int = []
+                for lvl in levels_data.keys():
+                    try:
+                        levels_as_int.append(int(lvl))
+                    except (ValueError, TypeError):
                         continue
+                levels_as_int.sort()
+
+                # 3. Determina quais níveis são válidos para a meta
+                if island_index == current_island_index:
+                    # Para a ilha atual, apenas níveis futuros são válidos
+                    valid_levels = [lvl for lvl in levels_as_int if lvl > effective_current_level]
+                else:
+                    # Para ilhas futuras, todos os níveis são válidos
+                    valid_levels = levels_as_int
+                
+                # 4. Adiciona ao dicionário de metas se houver níveis válidos
+                if valid_levels:
+                    expansion_goals[island_name] = valid_levels
                     
-                    levels = levels_data.keys()
-                    valid_levels = [lvl for lvl in sorted(levels) if lvl > effective_current_level] if island_index == current_island_index else sorted(levels)
-                    
-                    if valid_levels:
-                        expansion_goals[island_name] = valid_levels
         context['expansion_goals'] = expansion_goals
     except Exception as e:
         log.error(f"Falha ao calcular metas de expansão: {e}", exc_info=True)
@@ -151,7 +177,8 @@ def farm_dashboard(farm_id):
         # Define os lotes que pertencem a cada tipo de ilha
         island_map = {
             "basic": range(1, 10), "petal": range(10, 16),
-            "desert": range(16, 26), "volcano": range(26, 31)
+            "desert": range(16, 26), "volcano": range(26, 31),
+            "swamp": range(31, 37)
         }
 
         # Pega a informação completa da construção, se existir
@@ -175,8 +202,8 @@ def farm_dashboard(farm_id):
                 else:
                     plot_state = "in_progress"
                     context['in_progress_plot_island'] = plot_island_type # Guarda a cor da ilha
-            elif plot_number == context['current_land_level'] + 1:
-                plot_state = "next_available"
+            # elif plot_number == context['current_land_level'] + 1:
+            #    plot_state = "next_available"
             
             plot_island = next((island for island, r in island_map.items() if plot_number in r), "basic")
             
@@ -231,10 +258,11 @@ def api_goal_requirements(farm_id, current_land_type, current_level):
              return jsonify({"requirements": None, "goal_level_display": goal_level})
         
         unlocks_data = analysis.calculate_total_gains(
+            start_land_type=current_land_type,
             start_level=effective_start_level,
             goal_land_type=goal_land_type,
             goal_level=goal_level
-    )
+        )
 
         # O resto da função permanece igual, pois já está a funcionar corretamente.
         inventory = main_farm_data.get('inventory', {})
@@ -258,7 +286,7 @@ def api_goal_requirements(farm_id, current_land_type, current_level):
             processed_reqs.append({
                 "name": item, "shortfall": f"{shortfall:.2f}",
                 "needed": f"{needed_total:.2f}", "value_of_needed": f"{value_of_needed:.2f}",
-                "icon": url_for('static', filename=f'images/{icon_name}.png')
+                "icon": url_for('static', filename=f'images/resources/{icon_name}.png')
             })
 
         response_data = {

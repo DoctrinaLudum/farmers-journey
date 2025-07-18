@@ -122,22 +122,25 @@ function setupAllProgressBars() {
  * Propósito: Renderizar os resultados do plano de expansão na secção "Meta Final".
  */
 function renderGoalResults(data: any) {
+    // --- Parte 1: Setup dos templates e containers ---
     const resultsContainer = document.getElementById('goal-results-container');
     const mainTemplate = document.getElementById('goal-list-template') as HTMLTemplateElement;
     const itemTemplate = document.getElementById('goal-list-item-template') as HTMLTemplateElement;
-    const unlocksSectionTemplate = document.getElementById('unlocks-section-template') as HTMLTemplateElement;
-    const unlocksLevelTemplate = document.getElementById('unlocks-level-template') as HTMLTemplateElement;
-    const unlocksItemTemplate = document.getElementById('unlocks-item-template') as HTMLTemplateElement;
+    
+    // NOVOS templates para a tabela de resumo
+    const summaryTableTemplate = document.getElementById('unlocks-summary-table-template') as HTMLTemplateElement;
+    const summaryItemTemplate = document.getElementById('unlocks-summary-item-template') as HTMLTemplateElement;
 
-    if (!resultsContainer || !mainTemplate || !itemTemplate || !unlocksSectionTemplate || !unlocksLevelTemplate || !unlocksItemTemplate) {
+    // Verificação de segurança para garantir que todos os templates existem
+    if (!resultsContainer || !mainTemplate || !itemTemplate || !summaryTableTemplate || !summaryItemTemplate) {
         console.error("Um ou mais templates para renderizar os resultados não foram encontrados.");
         return;
     }
 
-    resultsContainer.innerHTML = '';
+    resultsContainer.innerHTML = ''; // Limpa os resultados anteriores
     const mainClone = mainTemplate.content.cloneNode(true) as DocumentFragment;
 
-    // Preenche as informações gerais do plano
+    // --- Parte 2: Preenche as informações gerais do plano (sem alterações aqui) ---
     const goalLevelEl = mainClone.querySelector('[data-template="goal-level"]');
     if (goalLevelEl) goalLevelEl.textContent = data.goal_level_display;
 
@@ -156,10 +159,10 @@ function renderGoalResults(data: any) {
         totalCostEl.textContent = totalCostFormatted;
     }
 
+    // --- Parte 3: Renderiza a lista de requisitos (sem alterações aqui) ---
     const column1 = mainClone.querySelector('[data-column="1"]');
     const column2 = mainClone.querySelector('[data-column="2"]');
 
-    // Itera sobre cada requisito para criar a lista de custos
     if (column1 && column2 && data.requirements) {
         data.requirements.forEach((item: any, index: number) => {
             const itemClone = itemTemplate.content.cloneNode(true) as DocumentFragment;
@@ -196,60 +199,51 @@ function renderGoalResults(data: any) {
         });
     }
 
+    // Adiciona a primeira parte (requisitos) ao container
     resultsContainer.appendChild(mainClone);
 
-   // --- Parte 2: Renderiza os Desbloqueios e Ganhos ---
+    // --- Parte 4: Renderiza os Desbloqueios e Ganhos (LÓGICA CORRIGIDA E ATUALIZADA) ---
     const unlocksData = data.unlocks;
-    const gainsByLevel = unlocksData?.gains_by_level;
+    const summaryList = unlocksData?.summary; // Usando a nova estrutura de dados 'summary'
 
-    if (gainsByLevel && Object.keys(gainsByLevel).length > 0) {
-        const sectionClone = unlocksSectionTemplate.content.cloneNode(true) as DocumentFragment;
-        const mainContentDiv = sectionClone.querySelector('[data-template="unlocks-content"]');
-        
-        if (mainContentDiv) {
-            // Itera sobre cada NÍVEL que tem ganhos
-            for (const level in gainsByLevel) {
-                const levelGains = gainsByLevel[level];
-                const hasBuildings = levelGains.buildings && levelGains.buildings.length > 0;
-                const hasNodes = levelGains.nodes && Object.keys(levelGains.nodes).length > 0;
+    if (summaryList && summaryList.length > 0) {
+        // Usa os novos templates de tabela
+        const tableClone = summaryTableTemplate.content.cloneNode(true) as DocumentFragment;
+        const tableBody = tableClone.querySelector('[data-template="summary-table-body"]');
 
-                if (hasBuildings || hasNodes) {
-                    const levelClone = unlocksLevelTemplate.content.cloneNode(true) as DocumentFragment;
-                    
-                    const levelNumberEl = levelClone.querySelector('[data-template="level-number"]');
-                    if (levelNumberEl) levelNumberEl.textContent = level;
+        if (tableBody) {
+            summaryList.forEach((item: any) => {
+                const itemClone = summaryItemTemplate.content.cloneNode(true) as DocumentFragment;
+                const row = itemClone.querySelector('[data-template="item-row"]') as HTMLElement;
+                const icon = itemClone.querySelector<HTMLImageElement>('[data-template="icon"]');
+                const name = itemClone.querySelector<HTMLSpanElement>('[data-template="name"]');
+                const total = itemClone.querySelector<HTMLTableCellElement>('[data-template="total"]');
 
-                    const levelContentDiv = levelClone.querySelector('[data-template="level-gains-content"]');
-                    if (levelContentDiv) {
-                        if (hasBuildings) {
-                            levelContentDiv.innerHTML += '<strong>Edifícios:</strong>';
-                            levelGains.buildings.forEach((building: string) => {
-                                const itemClone = unlocksItemTemplate.content.cloneNode(true) as DocumentFragment;
-                                const icon = itemClone.querySelector<HTMLImageElement>('[data-template="icon"]');
-                                const name = itemClone.querySelector<HTMLSpanElement>('[data-template="name"]');
-                                if (icon) icon.src = `/static/images/buildings/${building.toLowerCase().replace(/ /g, '_')}.png`;
-                                if (name) name.textContent = building;
-                                levelContentDiv.appendChild(itemClone);
-                            });
-                        }
-
-                        if (hasNodes) {
-                            levelContentDiv.innerHTML += '<strong class="d-block mt-2">Recursos:</strong>';
-                            for (const [node, count] of Object.entries(levelGains.nodes)) {
-                                const itemClone = unlocksItemTemplate.content.cloneNode(true) as DocumentFragment;
-                                const icon = itemClone.querySelector<HTMLImageElement>('[data-template="icon"]');
-                                const name = itemClone.querySelector<HTMLSpanElement>('[data-template="name"]');
-                                if (icon) icon.src = `/static/images/nodes/${node.toLowerCase().replace(/ /g, '_')}.png`;
-                                if (name) name.textContent = `${node}: +${count}`;
-                                levelContentDiv.appendChild(itemClone);
-                            }
-                        }
-                    }
-                    mainContentDiv.appendChild(levelClone);
+                if (icon) {
+                    // Determina a pasta do ícone com base no tipo do item
+                    const iconType = item.type === 'building' ? 'buildings' : 'nodes';
+                    icon.src = `/static/images/${iconType}/${item.name.toLowerCase().replace(/ /g, '_')}.png`;
                 }
-            }
+                if (name) name.textContent = item.name;
+                if (total) total.textContent = `+${item.total}`;
+
+                // Cria o texto para o tooltip dinamicamente
+                let tooltipTitle = 'Ganhos por Nível:\n';
+                // Itera sobre os detalhes de cada item
+                for (const [level, count] of Object.entries(item.details)) {
+                    tooltipTitle += `- Nível ${level}: +${count}\n`;
+                }
+                
+                // Adiciona o tooltip à linha da tabela (<tr>)
+                if (row) {
+                    row.title = tooltipTitle.trim();
+                }
+
+                tableBody.appendChild(itemClone);
+            });
         }
-        resultsContainer.appendChild(sectionClone);
+        // Adiciona a tabela de ganhos ao container de resultados
+        resultsContainer.appendChild(tableClone);
     }
 }
 
@@ -349,8 +343,8 @@ function setupInteractiveMap() {
         plot.addEventListener('mousemove', (event) => {
             const offsetX = 5;
             const offsetY = 5;
-            tooltip.style.left = `${event.pageX + offsetX}px`;
-            tooltip.style.top = `${event.pageY + offsetY}px`;
+            tooltip.style.left = `${event.clientX + offsetX}px`;
+            tooltip.style.top = `${event.clientY + offsetY}px`;
         });
 
         plot.addEventListener('mouseleave', () => {

@@ -6,6 +6,8 @@ Combina os requisitos para desbloquear um nível e os recursos (nodes)
 que esse nível fornece, numa única estrutura de dados.
 """
 
+ISLAND_ORDER = ["basic", "petal", "desert", "volcano", "swamp"]
+
 # Coordenadas para cada lote de expansão para o mini-mapa
 EXPANSION_COORDINATES = {
     # Lote 0 é omitido, pois não é uma expansão comprável
@@ -18,7 +20,9 @@ EXPANSION_COORDINATES = {
     19: {"x": -3, "y": -1}, 20: {"x": -3, "y": -2}, 21: {"x": -2, "y": -2},
     22: {"x": -1, "y": -2}, 23: {"x": 0, "y": -2}, 24: {"x": 1, "y": -2},
     25: {"x": 2, "y": -2}, 26: {"x": 2, "y": -1}, 27: {"x": 2, "y": 0},
-    28: {"x": 2, "y": 1}, 29: {"x": 2, "y": 2}, 30: {"x": 2, "y": 3}
+    28: {"x": 2, "y": 1}, 29: {"x": 2, "y": 2}, 30: {"x": 2, "y": 3},
+    31: {"x": 3, "y": 3}, 32: {"x": 3, "y": 2}, 33: {"x": 3, "y": 1},
+    34: {"x": 3, "y": 0}, 35: {"x": 3, "y": -1}, 36: {"x": 3, "y": -2}
 }
 
 EXPANSION_DATA = {
@@ -374,6 +378,9 @@ EXPANSION_DATA = {
         30: {
             "requirements": {"Bumpkin Level": 120, "Time": "72:00:00", "Coins": 50000, "Wood": 1500, "Stone": 600, "Iron": 70, "Gold": 50, "Crimstone": 125, "Oil": 300, "Obsidian": 42, "Gem": 225},
             "nodes": {"Crop Plot": 65, "Tree": 23, "Stone Rock": 20, "Iron Rock": 13, "Gold Rock": 8, "Fruit Patch": 15, "Crimstone Rock": 5, "Sunstone Rock": 13, "Oil Reserve": 4, "Lava Pit": 3, "Beehive": 3, "Flower Bed": 3}
+        },
+        "swamp": {
+        level: {"requirements": {}, "nodes": {}} for level in range(31, 37)
         }
     }
 }

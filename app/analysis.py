@@ -107,9 +107,9 @@ def analyze_expansion_progress(secondary_data: dict, main_data: dict):
         log.exception(f"Erro ao analisar o progresso da expansão: {e}")
         return None
 
-# ---> FUNÇÃO PARA CÁLCULO DE META TOTAL (ATUALIZADA) ---
+# ---> FUNÇÃO PARA CÁLCULO DE META TOTAL ---
 def calculate_total_requirements(current_land_type, current_level, goal_land_type, goal_level):
-    """
+    """calculate_total_requirements
     Calcula o total de recursos, o tempo acumulado e o nível máximo de Bumpkin
     necessários para ir do nível atual até um nível objetivo, usando a fonte de dados unificada.
     """
@@ -117,14 +117,19 @@ def calculate_total_requirements(current_land_type, current_level, goal_land_typ
     total_seconds = 0
     max_bumpkin_level = 0
     
-    island_order = ["basic", "petal", "desert", "volcano"]
-    # ALTERADO: Usa a nova fonte de dados centralizada que foi importada
+    island_order = expansions.ISLAND_ORDER
     all_expansions = expansions.EXPANSION_DATA 
 
     try:
+        # --- INÍCIO DA CORREÇÃO ---
+        # 1. Garante que os níveis de entrada sejam sempre números inteiros
+        current_level = int(current_level)
+        goal_level = int(goal_level)
+        # --- FIM DA CORREÇÃO ---
+
         current_island_index = island_order.index(current_land_type)
         goal_island_index = island_order.index(goal_land_type)
-    except ValueError:
+    except (ValueError, TypeError):
         return {}
 
     is_invalid_goal = goal_island_index < current_island_index or \
@@ -135,8 +140,12 @@ def calculate_total_requirements(current_land_type, current_level, goal_land_typ
 
     for i in range(current_island_index, goal_island_index + 1):
         island_name = island_order[i]
-        island_data = all_expansions.get(island_name, {})
         
+         # 2. Converte a chave para string ANTES de chamar .isdigit()
+        island_data = {int(k): v for k, v in all_expansions.get(island_name, {}).items() if str(k).isdigit()}
+        if not island_data:
+            continue
+
         start_range = current_level + 1 if i == current_island_index else min(island_data.keys())
         end_range = goal_level if i == goal_island_index else max(island_data.keys())
 
@@ -323,58 +332,94 @@ def analyze_fishing_data(main_data: dict, secondary_data: dict):
 # ---> FIM FUNÇÃO PARA ANÁLISE DE PESCA ---
 
 # --->  FUNÇÃO GANHO DA EXPANSÂO ---
-def calculate_total_gains(start_level: int, goal_land_type: str, goal_level: int):
+def calculate_total_gains(start_land_type: str, start_level: int, goal_land_type: str, goal_level: int):
     """
-    Calcula os novos nodes e edifícios desbloqueados para cada nível
-    dentro do intervalo da simulação.
+    Calcula os ganhos de nodes e edifícios dentro do intervalo da simulação
+    e retorna um resumo agregado.
     """
     gains_by_level = defaultdict(lambda: {"nodes": defaultdict(int), "buildings": []})
     
-    island_order = ["basic", "petal", "desert", "volcano"]
+    island_order = expansions.ISLAND_ORDER
     expansion_data = expansions.EXPANSION_DATA
     building_reqs = buildings.BUILDING_REQUIREMENTS
 
     try:
-        start_island_index = next((i for i, island in enumerate(island_order) if start_level in expansion_data.get(island, {})), 0)
+        start_level = int(start_level)
+        goal_level = int(goal_level)
+        
+        start_island_index = island_order.index(start_land_type)
         goal_island_index = island_order.index(goal_land_type)
-    except (ValueError, StopIteration):
+    except (ValueError, TypeError):
+        log.error(f"Tipo de ilha inválido fornecido: start={start_land_type}, goal={goal_land_type}")
         return {}
 
-    # Itera sobre o intervalo de ilhas e níveis da simulação
     for i in range(start_island_index, goal_island_index + 1):
         island_name = island_order[i]
-        island_levels = expansion_data.get(island_name, {})
         
-        start_range = start_level + 1 if i == start_island_index else min(island_levels.keys() or [0])
-        end_range = goal_level if i == goal_island_index else max(island_levels.keys() or [0])
-
-        for level in range(start_range, end_range + 1):
-            level_details = island_levels.get(level)
+        # CORREÇÃO 1: Usa str(k).isdigit() para lidar com chaves que são int ou str
+        island_data = {int(k): v for k, v in expansion_data.get(island_name, {}).items() if str(k).isdigit()}
+        if not island_data:
+            continue
+        
+        levels_on_this_island = sorted(island_data.keys())
+        
+        for level in levels_on_this_island:
+            if (i == start_island_index and level <= start_level) or \
+               (i == goal_island_index and level > goal_level):
+                continue
+            
+            level_details = island_data.get(level)
             if not level_details: continue
 
-            # Calcula a diferença de nodes em relação ao nível anterior
             nodes_at_this_level = level_details.get("nodes", {})
-            nodes_at_previous_level = island_levels.get(level - 1, {}).get("nodes", {})
+            previous_level = level - 1
+            nodes_at_previous_level = {}
+
+            if previous_level in island_data:
+                nodes_at_previous_level = island_data.get(previous_level, {}).get("nodes", {})
+            elif i == start_island_index and previous_level == start_level:
+                 start_island_data_int = {int(k): v for k, v in expansion_data.get(start_land_type, {}).items() if str(k).isdigit()}
+                 nodes_at_previous_level = start_island_data_int.get(start_level, {}).get("nodes",{})
+            elif i > start_island_index:
+                prev_island_name = island_order[i - 1]
+                prev_island_data = {int(k): v for k, v in expansion_data.get(prev_island_name, {}).items() if str(k).isdigit()}
+                if prev_island_data:
+                    last_level_of_prev_island = max(prev_island_data.keys())
+                    nodes_at_previous_level = prev_island_data.get(last_level_of_prev_island, {}).get("nodes", {})
 
             for node, current_count in nodes_at_this_level.items():
                 previous_count = nodes_at_previous_level.get(node, 0)
                 gain = current_count - previous_count
                 if gain > 0:
                     gains_by_level[level]["nodes"][node] += gain
-
-            # Verifica os edifícios desbloqueados neste nível
+            
             for building, reqs in building_reqs.items():
-                if reqs.get("unlocksAtLevel") == level and reqs.get("enabled", False):
+                if reqs.get("unlocksAtLevel") == level and reqs.get("unlocksOnIsland") == island_name and reqs.get("enabled", False):
                     gains_by_level[level]["buildings"].append(building)
-    
-    # Converte os defaultdicts para dicionários normais para o JSON
-    final_gains = {
-        level: {
-            "nodes": dict(sorted(gains["nodes"].items())),
-            "buildings": sorted(gains["buildings"])
-        }
-        for level, gains in gains_by_level.items()
-    }
 
-    return {"gains_by_level": final_gains}
+    # --- Parte 2: Lógica de resumo ---
+    summarized_gains = defaultdict(lambda: {"total": 0, "details": defaultdict(int)})
+
+    for level, gains in gains_by_level.items():
+        for building in gains.get("buildings", []):
+            summarized_gains[building]["total"] += 1
+            summarized_gains[building]["details"][level] += 1
+            summarized_gains[building]["type"] = "building"
+
+        for node, count in gains.get("nodes", {}).items():
+            # CORREÇÃO 2: Especifica que estamos a somar ao valor "total"
+            summarized_gains[node]["total"] += count
+            summarized_gains[node]["details"][level] += count
+            summarized_gains[node]["type"] = "node"
+
+    summary_list = []
+    for name, data in summarized_gains.items():
+        summary_list.append({
+            "name": name,
+            "total": data["total"],
+            "details": dict(sorted(data["details"].items())),
+            "type": data["type"]
+        })
+    
+    return {"summary": sorted(summary_list, key=lambda x: x['name'])}
 # ---> FIM FUNÇÃO GANHO DA EXPANSÂO ---

@@ -42,15 +42,21 @@
                 {% if current_level_nodes %}
                 <div class="level-nodes-container flex-grow-1">
                     <h6 class="nodes-title">Recursos Totais na Expansão</h6>
-                    <ul class="list-unstyled mb-0">
-                        {% for node in current_level_nodes %}
-                        <li class="node-item" title="{{ node.name }}">
-                            <img src="{{ node.icon }}" alt="{{ node.name }}" class="node-icon" onerror="this.style.display='none'">
-                            <span class="node-name">{{ node.name }}</span>
-                            <span class="badge bg-secondary-subtle text-dark-emphasis rounded-pill ms-auto">{{ node.count }}</span>
-                        </li>
-                        {% endfor %}
-                    </ul>
+                    <table class="table table-sm table-borderless mb-0">
+                        <tbody>
+                            {% for node in current_level_nodes %}
+                            <tr>
+                                <td style="width: 40px;" class="text-center">
+                                    <img src="{{ node.icon }}" alt="{{ node.name }}" class="list-icon" onerror="this.style.display='none'">
+                                </td>
+                                <td class="small align-middle">{{ node.name }}</td>
+                                <td class="text-end" style="width: 40px;">
+                                    <span class="badge bg-secondary-subtle text-dark-emphasis rounded-pill">{{ node.count }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
                 {% endif %}
             </div>
@@ -121,12 +127,17 @@
                         <div class="ps-lg-3">
                             <div class="map-controls">
                                 <h6 class="mb-0 fw-bold">Mapa de Expansão</h6>
-                                <div class="btn-group btn-group-sm" id="map-filter-tabs" role="group">
-                                    <button type="button" class="btn btn-outline-secondary active" data-island-filter="all">Todos</button>
-                                    <button type="button" class="btn btn-outline-secondary" data-island-filter="basic">Basic</button>
-                                    <button type="button" class="btn btn-outline-secondary" data-island-filter="petal">Petal</button>
-                                    <button type="button" class="btn btn-outline-secondary" data-island-filter="desert">Desert</button>
-                                    <button type="button" class="btn btn-outline-secondary" data-island-filter="volcano">Volcano</button>
+                                <div id="map-filter-tabs">
+                                    <div class="d-grid mb-2">
+                                        <button type="button" class="btn btn-sm btn-secondary active" data-island-filter="all">Todos</button>
+                                    </div>
+                                    <div class="btn-group btn-group-sm w-100" role="group">
+                                        <button type="button" class="btn btn-outline-secondary" data-island-filter="basic">Basic</button>
+                                        <button type="button" class="btn btn-outline-secondary" data-island-filter="petal">Petal</button>
+                                        <button type="button" class="btn btn-outline-secondary" data-island-filter="desert">Desert</button>
+                                        <button type="button" class="btn btn-outline-secondary" data-island-filter="volcano">Volcano</button>
+                                        <button type="button" class="btn btn-outline-secondary" data-island-filter="swamp">Swamp</button>
+                                    </div>
                                 </div>
                             </div>
                             <div class="expansion-map-wrapper">
@@ -150,6 +161,7 @@
                                 <div class="legend-item"><span class="legend-color island-petal"></span> Petal</div>
                                 <div class="legend-item"><span class="legend-color island-desert"></span> Desert</div>
                                 <div class="legend-item"><span class="legend-color island-volcano"></span> Volcano</div>
+                                <div class="legend-item"><span class="legend-color island-swamp"></span> Swamp</div>
                                 <div class="legend-item"><span class="legend-color state-locked"></span> Bloqueado</div>
 
                                 {% if in_progress_plot_island %}
