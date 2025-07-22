@@ -185,130 +185,145 @@ def calculate_total_requirements(current_land_type, current_level, goal_land_typ
 # ---> FUNÇÃO PARA ANÁLISE DE PESCA ---
 def analyze_fishing_data(main_data: dict, secondary_data: dict):
     """
-    Analisa os dados de pesca, com lógica de conquistas 100% alinhada
-    com o ficheiro milestones.ts do jogo.
+    Analisa os dados de pesca, com lógica de conquistas e caminhos de imagem corretos.
     - main_data: Contém 'milestones', inventário e atividades.
     - secondary_data: Usado para obter o 'level' do bumpkin (se necessário).
     """
+    # --- 1. Inicialização e Extração de Dados ---
     if not main_data:
         log.warning("Dados principais (main_data) não fornecidos para a análise de pesca.")
         return None
 
-    # O 'bumpkin_data' é usado para obter a 'activity' como alternativa.
-    bumpkin_data = main_data.get('bumpkin', {}) or {}
-    
     inventory = main_data.get('inventory', {})
-    # Prioriza 'farmActivity' dos dados principais, mas usa 'activity' como alternativa.
-    farm_activity = main_data.get('farmActivity', {}) or bumpkin_data.get('activity', {})
-    
-    # PONTO-CHAVE CORRIGIDO: Acessa os milestones diretamente de 'main_data',
-    # que representa o objeto 'farm'. O caminho é farm > milestones.
     player_milestones = main_data.get('milestones', {})
-    log.debug(f"Analisando pesca com milestones encontrados em farm > milestones: {player_milestones}")
+    activity_from_root = main_data.get('farmActivity', {})
+    activity_from_bumpkin = main_data.get('bumpkin', {}).get('activity', {})
+    farm_activity = {**activity_from_root, **activity_from_bumpkin}
 
     all_fish_static = fishing_data_domain.FISHING_DATA
-    
     all_fish_list = []
-    fish_by_type = defaultdict(list)
+    all_seasons = ["spring", "summer", "autumn", "winter"]
     
-    # O resto da função permanece exatamente igual.
+    # --- 2. Processamento de Peixes e Tesouros ---
     for fish_name, details in all_fish_static.items():
         fish_type = details.get('type', 'basic')
-        fish_info = {
+        seasons_for_item = all_seasons if fish_type == 'chapter' else details.get('seasons', [])
+
+        # Lógica para processar Iscas e Gostos com ícones
+        baits_with_icons = []
+        for bait_name in details.get('baits', []):
+            item_details = config.INVENTORY_ITEMS.get(bait_name, {})
+            item_type = item_details.get("type", "Resource").lower()
+            folder = "composters" if item_type == "compostworm" or bait_name == "Fishing Lure" else "resources"
+            baits_with_icons.append({
+                "name": bait_name,
+                "image_path": f"{folder}/{bait_name.lower().replace(' ', '_')}.png"
+            })
+
+        likes_with_icons = []
+        for like_name in details.get('likes', []):
+            item_details = config.INVENTORY_ITEMS.get(like_name, {})
+            item_type_raw = item_details.get("type", "")
+            
+            # Mapeia o tipo do item para a pasta correta
+            folder = "resources" # Padrão
+            if item_type_raw == "Crop": folder = "crops"
+            elif item_type_raw == "Fruit": folder = "fruits"
+            elif item_type_raw == "Animal Product": folder = "animal"
+            elif item_type_raw == "Treasure": folder = "treasure"
+            elif item_type_raw in ["basic", "advanced", "expert", "marine marvel", "chapter"] or fishing_data_domain.FISHING_DATA.get(like_name):
+                folder = "fish"
+            if "Chicken" in like_name:
+                folder = "animals/chickens"
+            
+            likes_with_icons.append({
+                "name": like_name,
+                "image_path": f"{folder}/{like_name.lower().replace(' ', '_')}.png"
+            })
+
+        all_fish_list.append({
             "name": fish_name,
             "type": fish_type,
-            "seasons": details.get('seasons', []),
-            "baits": details.get('baits', []),
-            "likes": details.get('likes', []),
+            "seasons": seasons_for_item,
+            "baits": baits_with_icons,      
+            "likes": likes_with_icons,    
             "player_count": farm_activity.get(f"{fish_name} Caught", 0),
-            "image_filename": f"{fish_name.lower().replace(' ', '_')}.png"
-        }
-        all_fish_list.append(fish_info)
-        fish_by_type[fish_type].append(fish_info)
+            "inventory_count": int(inventory.get(fish_name, 0)),
+            "image_path": f"fish/{fish_name.lower().replace(' ', '_')}.png"
+        })
+
+    treasure_list = [item for item, details in config.INVENTORY_ITEMS.items() if details.get('type') == 'Treasure']
+    for treasure_name in treasure_list:
+        player_count = farm_activity.get(f"{treasure_name} Caught", 0) + farm_activity.get(f"{treasure_name} Dug", 0)
+        if player_count > 0:
+            all_fish_list.append({
+                "name": treasure_name,
+                "type": "treasure",
+                "seasons": all_seasons,
+                "baits": [], 
+                "likes": [], 
+                "player_count": player_count,
+                "inventory_count": int(inventory.get(treasure_name, 0)),
+                "image_path": f"treasure/{treasure_name.lower().replace(' ', '_')}.png"
+            })
 
     all_fish_list.sort(key=lambda x: x['name'])
-    total_fish_caught = sum(f['player_count'] for f in all_fish_list)
     
+    # --- 3. Processamento de Iscas e Insumos ---
+    consumable_items = ["Rod", "Earthworm", "Grub", "Red Wiggler", "Fishing Lure"]
+    bait_inventory = []
+    for item_name in consumable_items:
+        item_details = config.INVENTORY_ITEMS.get(item_name, {})
+        item_type = item_details.get("type", "Resource").lower()
+        folder = "resources"
+        if item_type == "tool":
+            folder = "tools"
+        elif item_type == "compostworm":
+            folder = "composters"
+        if item_name == "Fishing Lure":
+            folder = "composters"
+        display_name = "Varas de Pesca" if item_name == "Rod" else item_name
+        bait_inventory.append({
+            "name": display_name,
+            "player_quantity": int(inventory.get(item_name, 0)),
+            "image_path": f"{folder}/{item_name.lower().replace(' ', '_')}.png"
+        })
+
+    # --- 4. Lógica de Análise das Conquistas ---
+    total_fish_caught = sum(f['player_count'] for f in all_fish_list if f.get('type') != 'treasure')
+    fish_by_type = defaultdict(list)
+    for fish in all_fish_list:
+        if fish.get('type') != 'treasure':
+            fish_by_type[fish['type']].append(fish)
+
     encyclopedia_fish = fish_by_type.get('basic', []) + fish_by_type.get('advanced', []) + fish_by_type.get('expert', [])
-    
-    # --- Lógica de Análise das Conquistas ---
     milestone_info = fishing_data_domain.FISHING_MILESTONES
     player_achievements = []
-    
     marine_marvels_for_milestone = [f for f in fish_by_type.get('marine marvel', []) if f['type'] != 'chapter']
-
-    long_tasks = {
-        "Novice Angler": "Capture pelo menos 1 de cada peixe da categoria Basic.",
-        "Advanced Angler": "Capture pelo menos 1 de cada peixe da categoria Advanced.",
-        "Expert Angler": f"Capture um total de {300} peixes de qualquer tipo.",
-        "Fish Encyclopedia": "Descubra 30 espécies de peixes das categorias Basic, Advanced e Expert.",
-        "Master Angler": f"Capture um total de {1500} peixes de qualquer tipo.",
-        "Marine Marvel Master": "Capture pelo menos 1 de cada Maravilha Marinha (excluindo peixes de capítulo).",
-        "Deep Sea Diver": "Capture 5 de cada peixe das categorias Basic, Advanced e Expert.",
-        "Marine Biologist": "Descubra todas as 38 espécies de peixes das categorias Basic, Advanced e Expert."
-    }
     
-    tier_map = {
-        "Novice Angler": "basic", "Advanced Angler": "basic",
-        "Expert Angler": "advanced", "Fish Encyclopedia": "advanced",
-        "Master Angler": "expert", "Marine Marvel Master": "expert",
-        "Deep Sea Diver": "expert", "Marine Biologist": "expert"
-    }
+    long_tasks = { "Novice Angler": "Capture pelo menos 1 de cada peixe da categoria Basic.", "Advanced Angler": "Capture pelo menos 1 de cada peixe da categoria Advanced.", "Expert Angler": f"Capture um total de {300} peixes de qualquer tipo.", "Fish Encyclopedia": "Descubra 30 espécies de peixes das categorias Basic, Advanced e Expert.", "Master Angler": f"Capture um total de {1500} peixes de qualquer tipo.", "Marine Marvel Master": "Capture pelo menos 1 de cada Maravilha Marinha (excluindo peixes de capítulo).", "Deep Sea Diver": "Capture 5 de cada peixe das categorias Basic, Advanced e Expert.", "Marine Biologist": "Descubra todas as 38 espécies de peixes das categorias Basic, Advanced e Expert." }
+    tier_map = { "Novice Angler": "basic", "Advanced Angler": "basic", "Expert Angler": "advanced", "Fish Encyclopedia": "advanced", "Master Angler": "expert", "Marine Marvel Master": "expert", "Deep Sea Diver": "expert", "Marine Biologist": "expert" }
 
     for ach_name, ach_details in milestone_info.items():
         is_completed = ach_name in player_milestones
         progress = {"current": 0, "total": 1, "percent": 100 if is_completed else 0}
-
         if not is_completed:
-            if ach_name == "Novice Angler":
-                progress = {"current": sum(1 for f in fish_by_type['basic'] if f['player_count'] > 0), "total": len(fish_by_type['basic'])}
-            elif ach_name == "Advanced Angler":
-                progress = {"current": sum(1 for f in fish_by_type['advanced'] if f['player_count'] > 0), "total": len(fish_by_type['advanced'])}
-            elif ach_name == "Expert Angler":
-                progress = {"current": total_fish_caught, "total": 300}
-            elif ach_name == "Fish Encyclopedia":
-                progress = {"current": sum(1 for f in encyclopedia_fish if f['player_count'] > 0), "total": 30}
-            elif ach_name == "Master Angler":
-                progress = {"current": total_fish_caught, "total": 1500}
-            elif ach_name == "Marine Marvel Master":
-                progress = {"current": sum(1 for f in marine_marvels_for_milestone if f['player_count'] > 0), "total": len(marine_marvels_for_milestone)}
-            elif ach_name == "Deep Sea Diver":
-                progress = {"current": sum(1 for f in encyclopedia_fish if f['player_count'] >= 5), "total": len(encyclopedia_fish)}
-            elif ach_name == "Marine Biologist":
-                progress = {"current": sum(1 for f in encyclopedia_fish if f['player_count'] > 0), "total": len(encyclopedia_fish)}
+            if ach_name == "Novice Angler": progress = {"current": sum(1 for f in fish_by_type['basic'] if f['player_count'] > 0), "total": len(fish_by_type['basic'])}
+            elif ach_name == "Advanced Angler": progress = {"current": sum(1 for f in fish_by_type['advanced'] if f['player_count'] > 0), "total": len(fish_by_type['advanced'])}
+            elif ach_name == "Expert Angler": progress = {"current": total_fish_caught, "total": 300}
+            elif ach_name == "Fish Encyclopedia": progress = {"current": sum(1 for f in encyclopedia_fish if f['player_count'] > 0), "total": 30}
+            elif ach_name == "Master Angler": progress = {"current": total_fish_caught, "total": 1500}
+            elif ach_name == "Marine Marvel Master": progress = {"current": sum(1 for f in marine_marvels_for_milestone if f['player_count'] > 0), "total": len(marine_marvels_for_milestone)}
+            elif ach_name == "Deep Sea Diver": progress = {"current": sum(1 for f in encyclopedia_fish if f['player_count'] >= 5), "total": len(encyclopedia_fish)}
+            elif ach_name == "Marine Biologist": progress = {"current": sum(1 for f in encyclopedia_fish if f['player_count'] > 0), "total": len(encyclopedia_fish)}
+            if progress.get('total', 0) > 0: progress["percent"] = min((progress.get('current', 0) / progress['total'] * 100), 100)
+            else: progress["percent"] = 100 if progress.get('current', 0) > 0 else 0
+        if is_completed: progress['current'] = progress.get('total', 1)
+        player_achievements.append({ "name": ach_name, "player_has": is_completed, "task": ach_details["task"], "long_task": long_tasks.get(ach_name, ach_details["task"]), "tier": tier_map.get(ach_name, "basic"), "progress_percent": progress.get('percent', 100), "progress_text": f"{int(progress.get('current', 0))}/{int(progress.get('total', 1))}" })
 
-            if progress.get('total', 0) > 0:
-                progress["percent"] = min((progress.get('current', 0) / progress['total'] * 100), 100)
-            else:
-                progress["percent"] = 100 if progress.get('current', 0) > 0 else 0
-        
-        if is_completed:
-            progress['current'] = progress.get('total', 1)
-
-        player_achievements.append({
-            "name": ach_name, "player_has": is_completed,
-            "task": ach_details["task"], "long_task": long_tasks.get(ach_name, ach_details["task"]),
-            "tier": tier_map.get(ach_name, "basic"),
-            "progress_percent": progress.get('percent', 100),
-            "progress_text": f"{int(progress.get('current', 0))}/{int(progress.get('total', 1))}"
-        })
-
-    # --- Análise de Itens (iscas, tesouros) ---
-    treasure_list = [item for item, details in config.INVENTORY_ITEMS.items() if details.get('type') == 'Treasure']
-    fished_treasures = []
-    for treasure_name in treasure_list:
-        player_count = farm_activity.get(f"{treasure_name} Caught", 0) + farm_activity.get(f"{treasure_name} Dug", 0)
-        if player_count > 0:
-            fished_treasures.append({"name": treasure_name, "player_count": player_count})
-    
-    fishing_items = ["Earthworm", "Grub", "Red Wiggler", "Fishing Lure"]
-    bait_inventory = []
-    for item_name in fishing_items:
-        bait_inventory.append({"name": item_name, "player_quantity": int(inventory.get(item_name, 0))})
-
-    # --- Montagem Final ---
+    # --- 5. Montagem Final dos Dados ---
     codex_total = len(all_fish_static)
-    codex_completed = sum(1 for f in all_fish_list if f['player_count'] > 0)
+    codex_completed = sum(1 for f in all_fish_list if f['player_count'] > 0 and f.get('type') != 'treasure')
     codex_by_tier_display = {
         "Basic Fish": sorted(fish_by_type.get('basic', []), key=lambda x: x['name']),
         "Advanced Fish": sorted(fish_by_type.get('advanced', []), key=lambda x: x['name']),
@@ -317,17 +332,26 @@ def analyze_fishing_data(main_data: dict, secondary_data: dict):
         "Chapter Fish": sorted(fish_by_type.get('chapter', []), key=lambda x: x['name']),
     }
     
-    return {
+    fish_only_list = [f for f in all_fish_list if f.get('type') != 'treasure']
+    most_caught_fish = max(fish_only_list, key=lambda x: x['player_count'], default=None) if fish_only_list else None
+    
+    fishing_stats = {
         "total_casts": farm_activity.get("Rod Casted", 0),
         "total_fish_caught": total_fish_caught,
+        "most_caught_name": most_caught_fish.get("name", "N/A") if most_caught_fish else "N/A",
+        "most_caught_count": most_caught_fish.get("player_count", 0) if most_caught_fish else 0,
+        "total_rods_crafted": farm_activity.get("Rod Crafted", 0)
+    }
+    
+    return {
+        "fishing_stats": fishing_stats,
         "all_fish_sorted": all_fish_list,
         "codex_by_tier": codex_by_tier_display,
         "codex_completed": codex_completed,
         "codex_total": codex_total,
         "codex_progress_percent": (codex_completed / codex_total * 100) if codex_total > 0 else 0,
         "player_achievements": player_achievements,
-        "bait_inventory": bait_inventory, 
-        "fished_treasures": fished_treasures
+        "bait_inventory": bait_inventory,
     }
 # ---> FIM FUNÇÃO PARA ANÁLISE DE PESCA ---
 

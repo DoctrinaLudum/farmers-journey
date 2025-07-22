@@ -20,7 +20,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Configura toda a interatividade do mapa de expansão (filtros e tooltips).
     setupInteractiveMap();
-});
+
+    // Configura o filtro de peixes por temporada.
+    setupFishingFilters();
+
+    // Configura o filtro dos cabeçalhos (no inventario, capturados).
+    setupTableSorters();});
 
 
 /**
@@ -349,6 +354,117 @@ function setupInteractiveMap() {
 
         plot.addEventListener('mouseleave', () => {
             tooltip.style.display = 'none';
+        });
+    });
+}
+
+function setupFishingFilters() {
+    const seasonFilters = document.getElementById('season-filter-buttons');
+    const typeFilters = document.getElementById('fishtype-filter-buttons');
+    
+    // Alvos do filtro
+    const fishRows = document.querySelectorAll('#fishingLogAccordion > tr[data-fishtype]');
+    const codexItems = document.querySelectorAll('.codex-item[data-fishtype]');
+
+    if (!seasonFilters || !typeFilters) return;
+
+    let currentSeasonFilter = 'all';
+    let currentTypeFilter = 'all';
+
+    function applyFilters() {
+        // Filtra o Diário de Pesca
+        fishRows.forEach(rowEl => {
+            const row = rowEl as HTMLElement;
+            const itemSeasons = row.dataset.seasons || '';
+            const itemType = row.dataset.fishtype || '';
+
+            const seasonMatch = currentSeasonFilter === 'all' || itemSeasons.includes(currentSeasonFilter);
+            const typeMatch = currentTypeFilter === 'all' || itemType === currentTypeFilter;
+
+            const shouldShow = seasonMatch && typeMatch;
+            row.style.display = shouldShow ? '' : 'none';
+            const detailsRow = row.nextElementSibling;
+            if (detailsRow) (detailsRow as HTMLElement).style.display = shouldShow ? '' : 'none';
+        });
+
+        // Filtra o Códice Visual
+        codexItems.forEach(itemEl => {
+            const item = itemEl as HTMLElement;
+            const itemSeasons = item.dataset.seasons || '';
+            const itemType = item.dataset.fishtype || '';
+
+            const seasonMatch = currentSeasonFilter === 'all' || itemSeasons.includes(currentSeasonFilter);
+            const typeMatch = currentTypeFilter === 'all' || itemType === currentTypeFilter;
+            
+            item.style.display = (seasonMatch && typeMatch) ? 'flex' : 'none'; // Usar flex para manter o layout
+        });
+    }
+
+    seasonFilters.addEventListener('click', (event) => {
+        const button = (event.target as HTMLElement).closest('button');
+        if (!button) return;
+        currentSeasonFilter = button.dataset.season || 'all';
+        seasonFilters.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        applyFilters();
+    });
+
+    typeFilters.addEventListener('click', (event) => {
+        const button = (event.target as HTMLElement).closest('button');
+        if (!button) return;
+        currentTypeFilter = button.dataset.fishtype || 'all';
+        typeFilters.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        applyFilters();
+    });
+}
+
+function setupTableSorters() {
+    const tableBody = document.getElementById('fishingLogAccordion');
+    // Seleciona os cabeçalhos pela classe que já adicionámos
+    const headers = document.querySelectorAll('.sortable-header');
+
+    if (!tableBody || headers.length === 0) return;
+
+    // Guarda o estado da ordenação para cada coluna
+    const sortState: { [key: string]: boolean } = {};
+
+    headers.forEach(header => {
+        header.addEventListener('click', () => {
+            const sortBy = (header as HTMLElement).dataset.sort;
+            if (!sortBy) return;
+
+            // Inicia ou inverte a direção da ordenação para esta coluna
+            sortState[sortBy] = !sortState[sortBy];
+            const isAscending = sortState[sortBy];
+
+            // 1. Agrupa as linhas em pares (item + detalhes)
+            const rows = Array.from(tableBody.children);
+            const rowPairs: [HTMLElement, HTMLElement][] = [];
+            for (let i = 0; i < rows.length; i += 2) {
+                rowPairs.push([rows[i] as HTMLElement, rows[i + 1] as HTMLElement]);
+            }
+
+            // 2. Ordena os pares com base no data-value
+            rowPairs.sort((pairA, pairB) => {
+                const dataRowA = pairA[0];
+                const dataRowB = pairB[0];
+                
+                // Seletor CORRIGIDO para encontrar a célula pelo seu data-key
+                const cellA = dataRowA.querySelector(`td[data-key="${sortBy}"]`);
+                const cellB = dataRowB.querySelector(`td[data-key="${sortBy}"]`);
+
+                const valueA = parseFloat(cellA?.getAttribute('data-value') || '0');
+                const valueB = parseFloat(cellB?.getAttribute('data-value') || '0');
+                
+                return isAscending ? valueA - valueB : valueB - valueA;
+            });
+
+            // 3. Re-insere as linhas ordenadas no corpo da tabela
+            rowPairs.forEach(pair => {
+                tableBody.appendChild(pair[0]);
+                tableBody.appendChild(pair[1]);
+            });
         });
     });
 }

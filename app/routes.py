@@ -167,9 +167,20 @@ def farm_dashboard(farm_id):
 
     # 7. Processamento da PESCA.
     try:
-        context['fishing_info'] = analysis.analyze_fishing_data(main_farm_data, secondary_farm_data)
+        # Chama a função de análise APENAS UMA VEZ e guarda o resultado.
+        fishing_info = analysis.analyze_fishing_data(main_farm_data, secondary_farm_data)
+
+        # Se a análise foi bem-sucedida, adiciona a informação da estação.
+        if fishing_info:
+            current_season = main_farm_data.get("season", {}).get("season", "spring")
+            fishing_info['current_season'] = current_season
+                
+        # Passa o resultado já modificado para o contexto.
+        context['fishing_info'] = fishing_info
     except Exception as e:
         log.error(f"Falha ao analisar dados de pesca: {e}", exc_info=True)
+    
+
 
     # 8. Processamento do Mini-Mapa de Expansão
     try:

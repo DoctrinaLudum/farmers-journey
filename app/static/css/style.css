@@ -32,6 +32,33 @@
 }
 
 /* =================================
+   SISTEMA GLOBAL DE ÍCONES
+   ================================= */
+.icon {
+    /* Propriedades base para TODOS os ícones */
+    display: inline-block;
+    width: auto; /* Largura automática para manter a proporção */
+    vertical-align: middle;
+    object-fit: contain; /* A propriedade mais importante para evitar distorção */
+}
+
+/* Modificadores de Tamanho */
+.icon.icon-1x {
+    height: 16px; /* Tamanho pequeno, para botões e texto */
+    max-width: 24px;
+}
+
+.icon.icon-2x {
+    height: 24px; /* Tamanho médio, para listas principais */
+    max-width: 48px;
+}
+
+.icon.icon-3x {
+    height: 32px; /* Tamanho grande, para destaque como no Códice */
+    max-width: 64px;
+}
+
+/* =================================
    ESTILOS DOS CARDS DO PAINEL
    ================================= */
 
@@ -166,22 +193,9 @@
     }
 }
 
-.list-icon {
-    height: 30px;  /* Altura base para todos os ícones */
-    width: auto;   /* Largura automática para manter a proporção */
-    max-width: 48px; /* Limite para ícones muito largos como o Flower Bed */
-    vertical-align: middle;
-    
-    object-fit: contain; /* Garante que a imagem não seja distorcida */
-}
 
-/*
-.resource-icon-list {
-    width: 24px;
-    height: 24px;
-    vertical-align: middle;
-}
-*/
+
+
 
 .map-controls {
     display: flex;
@@ -393,16 +407,8 @@
 /* =================================
    PAINEL DE PESCA
    ================================= */
-.fish-icon-inline {
-    width: 1.5em;
-    height: 1.5em;
-    vertical-align: middle;
-}
-.season-icon {
-    width: 20px;
-    height: 20px;
-    margin-right: 4px;
-}
+
+
 .table-success-light,
 .table-success-light > th,
 .table-success-light > td {
@@ -417,12 +423,9 @@
     border-radius: 4px;
     background-color: #f8f9fa;
 }
-.codex-icon {
-    width: 32px;
-    height: 32px;
-    display: block;
-}
-.codex-item.not-caught .codex-icon {
+
+
+.codex-item.not-caught .icon {
     filter: grayscale(100%) opacity(60%);
 }
 .codex-check {
@@ -531,6 +534,35 @@
     background-color: #d0a000;
 }
 
+.current-season-display {
+    text-align: center;
+    line-height: 1.1;
+    background-color: var(--cor-fundo-claro);
+    border-radius: 0.375rem;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid var(--cor-borda);
+}
+.current-season-display small {
+    font-size: 0.7em;
+    text-transform: uppercase;
+    color: var(--bs-secondary-color);
+}
+/* =================================
+   REFINO VISUAL DOS FILTROS DE PESCA
+   ================================= */
+#fishtype-filter-buttons .btn {
+    border-radius: 20px; /* Bordas arredondadas para parecer uma "tag" */
+    border: 1px solid var(--cor-borda);
+    color: var(--bs-secondary-color);
+    padding: 0.1rem 0.6rem;
+    font-size: 0.75rem;
+}
+
+#fishtype-filter-buttons .btn.active {
+    background-color: var(--cor-primaria);
+    color: white;
+    font-weight: bold;
+}
 /* =================================
    MEDIA QUERIES PARA RESPONSIVIDADE
    ================================= */
