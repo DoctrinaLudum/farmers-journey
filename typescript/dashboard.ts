@@ -131,21 +131,18 @@ function renderGoalResults(data: any) {
     const resultsContainer = document.getElementById('goal-results-container');
     const mainTemplate = document.getElementById('goal-list-template') as HTMLTemplateElement;
     const itemTemplate = document.getElementById('goal-list-item-template') as HTMLTemplateElement;
-    
-    // NOVOS templates para a tabela de resumo
     const summaryTableTemplate = document.getElementById('unlocks-summary-table-template') as HTMLTemplateElement;
     const summaryItemTemplate = document.getElementById('unlocks-summary-item-template') as HTMLTemplateElement;
 
-    // Verificação de segurança para garantir que todos os templates existem
     if (!resultsContainer || !mainTemplate || !itemTemplate || !summaryTableTemplate || !summaryItemTemplate) {
         console.error("Um ou mais templates para renderizar os resultados não foram encontrados.");
         return;
     }
 
-    resultsContainer.innerHTML = ''; // Limpa os resultados anteriores
+    resultsContainer.innerHTML = ''; 
     const mainClone = mainTemplate.content.cloneNode(true) as DocumentFragment;
 
-    // --- Parte 2: Preenche as informações gerais do plano (sem alterações aqui) ---
+    // --- Parte 2: Preenche as informações gerais do plano (com modificações) ---
     const goalLevelEl = mainClone.querySelector('[data-template="goal-level"]');
     if (goalLevelEl) goalLevelEl.textContent = data.goal_level_display;
 
@@ -158,13 +155,21 @@ function renderGoalResults(data: any) {
     const totalTimeEl = mainClone.querySelector('[data-template="total-time"]');
     if(totalTimeEl) totalTimeEl.textContent = data.total_time_str;
     
+    // Preenche o Custo Total
     const totalCostEl = mainClone.querySelector('[data-template="total-cost"]');
-    if (totalCostEl) {
+    if (totalCostEl && data.total_sfl_cost) {
         const totalCostFormatted = parseFloat(data.total_sfl_cost).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         totalCostEl.textContent = totalCostFormatted;
     }
 
-    // --- Parte 3: Renderiza a lista de requisitos (sem alterações aqui) ---
+    // Preenche o Custo Relativo
+    const totalRelativeCostEl = mainClone.querySelector('[data-template="total-relative-cost"]');
+    if (totalRelativeCostEl && data.total_relative_sfl_cost) {
+        const totalCostFormatted = parseFloat(data.total_relative_sfl_cost).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        totalRelativeCostEl.textContent = totalCostFormatted;
+    }
+
+    // --- Parte 3: Renderiza a lista de requisitos (com modificações) ---
     const column1 = mainClone.querySelector('[data-column="1"]');
     const column2 = mainClone.querySelector('[data-column="2"]');
 
@@ -196,6 +201,13 @@ function renderGoalResults(data: any) {
                 neededEl.textContent = `de ${neededValue.toLocaleString('pt-BR', { useGrouping: true })}`;
             }
 
+            // NOVO: Preenche o valor individual em SFL
+            const sflValueEl = itemClone.querySelector<HTMLElement>('[data-template="sfl_value"]');
+            if (sflValueEl) {
+                const sflValue = parseFloat(item.sfl_value);
+                sflValueEl.textContent = sflValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+
             if (index % 2 === 0) {
                 column1.appendChild(itemClone);
             } else {
@@ -204,15 +216,13 @@ function renderGoalResults(data: any) {
         });
     }
 
-    // Adiciona a primeira parte (requisitos) ao container
     resultsContainer.appendChild(mainClone);
 
-    // --- Parte 4: Renderiza os Desbloqueios e Ganhos (LÓGICA CORRIGIDA E ATUALIZADA) ---
+    // --- Parte 4: Renderiza os Desbloqueios e Ganhos (sem alterações aqui) ---
     const unlocksData = data.unlocks;
-    const summaryList = unlocksData?.summary; // Usando a nova estrutura de dados 'summary'
+    const summaryList = unlocksData?.summary; 
 
     if (summaryList && summaryList.length > 0) {
-        // Usa os novos templates de tabela
         const tableClone = summaryTableTemplate.content.cloneNode(true) as DocumentFragment;
         const tableBody = tableClone.querySelector('[data-template="summary-table-body"]');
 
@@ -225,21 +235,17 @@ function renderGoalResults(data: any) {
                 const total = itemClone.querySelector<HTMLTableCellElement>('[data-template="total"]');
 
                 if (icon) {
-                    // Determina a pasta do ícone com base no tipo do item
                     const iconType = item.type === 'building' ? 'buildings' : 'nodes';
                     icon.src = `/static/images/${iconType}/${item.name.toLowerCase().replace(/ /g, '_')}.png`;
                 }
                 if (name) name.textContent = item.name;
                 if (total) total.textContent = `+${item.total}`;
 
-                // Cria o texto para o tooltip dinamicamente
                 let tooltipTitle = 'Ganhos por Nível:\n';
-                // Itera sobre os detalhes de cada item
                 for (const [level, count] of Object.entries(item.details)) {
                     tooltipTitle += `- Nível ${level}: +${count}\n`;
                 }
                 
-                // Adiciona o tooltip à linha da tabela (<tr>)
                 if (row) {
                     row.title = tooltipTitle.trim();
                 }
@@ -247,11 +253,9 @@ function renderGoalResults(data: any) {
                 tableBody.appendChild(itemClone);
             });
         }
-        // Adiciona a tabela de ganhos ao container de resultados
         resultsContainer.appendChild(tableClone);
     }
 }
-
 
 /**
  * Propósito: Configurar e gerir o contador regressivo para uma expansão em andamento.

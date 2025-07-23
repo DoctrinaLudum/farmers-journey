@@ -121,11 +121,8 @@ def calculate_total_requirements(current_land_type, current_level, goal_land_typ
     all_expansions = expansions.EXPANSION_DATA 
 
     try:
-        # --- INÍCIO DA CORREÇÃO ---
-        # 1. Garante que os níveis de entrada sejam sempre números inteiros
         current_level = int(current_level)
         goal_level = int(goal_level)
-        # --- FIM DA CORREÇÃO ---
 
         current_island_index = island_order.index(current_land_type)
         goal_island_index = island_order.index(goal_land_type)
@@ -225,8 +222,7 @@ def analyze_fishing_data(main_data: dict, secondary_data: dict):
             item_details = config.INVENTORY_ITEMS.get(like_name, {})
             item_type_raw = item_details.get("type", "")
             
-            # Mapeia o tipo do item para a pasta correta
-            folder = "resources" # Padrão
+            folder = "resources"
             if item_type_raw == "Crop": folder = "crops"
             elif item_type_raw == "Fruit": folder = "fruits"
             elif item_type_raw == "Animal Product": folder = "animal"
@@ -380,7 +376,6 @@ def calculate_total_gains(start_land_type: str, start_level: int, goal_land_type
     for i in range(start_island_index, goal_island_index + 1):
         island_name = island_order[i]
         
-        # CORREÇÃO 1: Usa str(k).isdigit() para lidar com chaves que são int ou str
         island_data = {int(k): v for k, v in expansion_data.get(island_name, {}).items() if str(k).isdigit()}
         if not island_data:
             continue

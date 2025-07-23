@@ -283,6 +283,7 @@ def api_goal_requirements(farm_id, current_land_type, current_level):
         
         processed_reqs = []
         total_sfl_cost = Decimal('0')
+        total_relative_sfl_cost = Decimal('0')
 
         for item, needed_total_dec in goal_data["requirements"].items():
             needed_total = Decimal(str(needed_total_dec))
@@ -290,13 +291,24 @@ def api_goal_requirements(farm_id, current_land_type, current_level):
             shortfall = max(needed_total - have, Decimal('0'))
             
             price = Decimal(str(item_prices.get(item, '0')))
+            
             value_of_needed = needed_total * price
-            total_sfl_cost += value_of_needed
+            value_of_shortfall = shortfall * price
+            
+            total_sfl_cost += value_of_needed          # Acumula o custo total
+            total_relative_sfl_cost += value_of_shortfall # Acumula o custo relativo
+
+            # Define qual valor mostrar no item: o relativo se faltar, ou o total se completo
+            sfl_value = value_of_shortfall if shortfall > 0 else value_of_needed
+
             icon_name = "Flower" if item == "SFL" else item
 
             processed_reqs.append({
-                "name": item, "shortfall": f"{shortfall:.2f}",
-                "needed": f"{needed_total:.2f}", "value_of_needed": f"{value_of_needed:.2f}",
+                "name": item,
+                "shortfall": f"{shortfall:.2f}",
+                "needed": f"{needed_total:.2f}",
+                "value_of_needed": f"{value_of_needed:.2f}",
+                "sfl_value": f"{sfl_value:.2f}", # Valor individual em SFL
                 "icon": url_for('static', filename=f'images/resources/{icon_name}.png')
             })
 
@@ -305,9 +317,9 @@ def api_goal_requirements(farm_id, current_land_type, current_level):
             "max_bumpkin_level": goal_data["max_bumpkin_level"],
             "total_time_str": goal_data["total_time_str"],
             "total_sfl_cost": f"{total_sfl_cost:.2f}",
+            "total_relative_sfl_cost": f"{total_relative_sfl_cost:.2f}",
             "requirements": processed_reqs,
             "unlocks": unlocks_data
-
         }
         return jsonify(response_data)
 
