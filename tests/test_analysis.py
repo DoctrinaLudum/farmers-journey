@@ -1,5 +1,6 @@
 # tests/test_analysis.py
 from decimal import Decimal
+
 from app import analysis
 
 MOCK_FARM_DATA = {

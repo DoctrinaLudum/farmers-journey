@@ -1,13 +1,18 @@
 # app/analysis.py
 import logging
-from decimal import Decimal, InvalidOperation
-import config
 from collections import defaultdict
 from datetime import timedelta
-from .domain import fishing as fishing_data_domain 
-from .domain import expansions, buildings
+from decimal import Decimal, InvalidOperation
 
+import requests
 
+import config
+
+from .domain import buildings
+from .domain import bumpkin as bumpkin_domain
+from .domain import expansions
+from .domain import fishing as fishing_data_domain
+from .domain import flowers as flower_domain
 
 log = logging.getLogger(__name__)
 
@@ -201,6 +206,11 @@ def analyze_fishing_data(main_data: dict, secondary_data: dict):
     all_fish_list = []
     all_seasons = ["spring", "summer", "autumn", "winter"]
     
+    # Extrai todos os tipos de peixe para os filtros dinâmicos
+    all_fish_types_set = set(details.get('type') for details in all_fish_static.values() if details.get('type'))
+    all_fish_types_set.add("treasure")
+    all_fish_types = sorted(list(all_fish_types_set))
+    
     # --- 2. Processamento de Peixes e Tesouros ---
     for fish_name, details in all_fish_static.items():
         fish_type = details.get('type', 'basic')
@@ -348,6 +358,7 @@ def analyze_fishing_data(main_data: dict, secondary_data: dict):
         "codex_progress_percent": (codex_completed / codex_total * 100) if codex_total > 0 else 0,
         "player_achievements": player_achievements,
         "bait_inventory": bait_inventory,
+        "all_fish_types": all_fish_types,
     }
 # ---> FIM FUNÇÃO PARA ANÁLISE DE PESCA ---
 
@@ -442,3 +453,149 @@ def calculate_total_gains(start_land_type: str, start_level: int, goal_land_type
     
     return {"summary": sorted(summary_list, key=lambda x: x['name'])}
 # ---> FIM FUNÇÃO GANHO DA EXPANSÂO ---
+
+# --->  FUNÇÃO MONTAGEM IMG BUMPKIN ---
+def build_bumpkin_image_url(equipped_items: dict) -> str:
+    """
+    Constrói a URL da imagem do Bumpkin com base no dicionário de itens equipados
+    fornecido diretamente pela API principal.
+    """
+    try:
+        log.info(f"Itens equipados recebidos para construir imagem: {equipped_items}")
+
+        # Inicializa a lista de IDs com todos os slots possíveis
+        ids_numericos = [0] * len(bumpkin_domain.PART_ORDER)
+
+        for part_name_api, item_name in equipped_items.items():
+            item_id = bumpkin_domain.ITEM_IDS.get(item_name)
+            
+            try:
+                slot_index = bumpkin_domain.PART_ORDER.index(part_name_api)
+                if item_id is not None:
+                    ids_numericos[slot_index] = item_id
+            except ValueError:
+                log.warning(f"A parte do corpo '{part_name_api}' não foi encontrada na PART_ORDER e será ignorada.")
+
+        # Remove os zeros do final da lista
+        while ids_numericos and ids_numericos[-1] == 0:
+            ids_numericos.pop()
+
+        string_de_ids = "_".join(map(str, ids_numericos))
+        
+        # Monta a URL final com a base correta
+        url_imagem_final = f"https://animations.sunflower-land.com/bumpkin_image/0_v1_{string_de_ids}/100"
+
+        log.info(f"URL da imagem final construída: {url_imagem_final}")
+        
+        return url_imagem_final
+
+    except Exception as e:
+        log.error(f"Falha ao construir URL da imagem do Bumpkin a partir dos itens equipados: {e}")
+        return None
+# ---> FIM FUNÇÃO MONTAGEM IMG BUMPKIN ---
+
+# ---> FUNÇÃO PARA ANÁLISE DE FLORES ---
+def process_flower_info(main_farm_data):
+    """
+    Analisa os dados de flores da fazenda, comparando-os com os dados
+    estáticos para criar um diário de cultivos.
+    """
+    # 1. Obter dados do jogador
+    # CORREÇÃO: Os dados de flores podem estar na raiz do save ou dentro do objeto 'bumpkin'.
+    # Esta lógica verifica ambos os locais para garantir que os dados sejam encontrados.
+    flowers_data = main_farm_data.get("flowers", {})
+    if not flowers_data:
+        flowers_data = main_farm_data.get("bumpkin", {}).get("flowers", {})
+
+    discovered_flowers_data = flowers_data.get("discovered", {})
+    discovered_flower_names = set(discovered_flowers_data.keys())
+    activity_from_root = main_farm_data.get("farmActivity", {})
+    activity_from_bumpkin = main_farm_data.get("bumpkin", {}).get("activity", {})
+    farm_activity = {**activity_from_root, **activity_from_bumpkin}
+    inventory = main_farm_data.get("inventory", {})
+    current_season = main_farm_data.get("season", {}).get("season", "spring")
+    all_flower_types = sorted(list(set(data.get('type') for data in flower_domain.FLOWER_DATA.values() if data.get('type'))))
+
+    processed_flowers = []
+    total_harvested = 0
+
+    # 2. Iterar sobre a nossa base de dados de flores
+    for flower_name, data in flower_domain.FLOWER_DATA.items():
+        
+        # Faz uma cópia para não alterar o dicionário original
+        flower_info = data.copy()
+        flower_info['type'] = data.get('type', 'Unknown').lower()
+        
+        # 3. Contagem de Colheitas
+        harvest_key = f"{flower_name} Harvested"
+        harvest_count = farm_activity.get(harvest_key, 0)
+        flower_info['harvest_count'] = harvest_count
+        total_harvested += harvest_count
+
+        # 3.5. Contagem do Inventário
+        inventory_count = int(Decimal(inventory.get(flower_name, '0')))
+        flower_info['inventory_count'] = inventory_count
+
+        # 3.6. Lógica de Sazonalidade ---
+        seed_name = flower_info.get("seed")
+        if seed_name:
+            seed_data = flower_domain.FLOWER_SEEDS_DATA.get(seed_name, {})
+            flower_info['seasons'] = seed_data.get("seasons", [])
+        else:
+            flower_info['seasons'] = []
+
+        # 4. Status de Descoberta
+        # CORREÇÃO: Considera uma flor descoberta se ela foi colhida ou está no inventário,
+        # além de verificar a lista de descobertas da API. Isso torna a lógica mais robusta
+        # contra inconsistências nos dados do save.
+        is_discovered = (
+            flower_name in discovered_flower_names or
+            harvest_count > 0 or
+            inventory_count > 0
+        )
+        
+        # Adiciona o nome à lista de descobertas se a nova lógica for verdadeira,
+        # garantindo que o contador total de descobertas e a lógica de cross-breed funcionem.
+        if is_discovered:
+            discovered_flower_names.add(flower_name)
+
+        if is_discovered:
+            flower_info['status'] = "Discovered"
+        else:
+            # Verifica se o jogador pode descobrir esta flor
+            if 'cross_breed' in data:
+                parent1, parent2 = data['cross_breed']
+                if parent1 in discovered_flower_names and parent2 in discovered_flower_names:
+                    flower_info['status'] = "Available" # Pode ser descoberta
+                else:
+                    flower_info['status'] = "Locked" # Ainda não pode ser descoberta
+            else:
+                # Flores básicas que vêm de sementes são sempre "Available" para tentar
+                flower_info['status'] = "Available"
+        
+        # Adiciona o caminho do ícone para o template
+        icon_name = flower_name.lower().replace(" ", "_")
+        flower_info['icon'] = f'images/flowers/{icon_name}.webp'
+        
+        processed_flowers.append(flower_info)
+
+    # 5. Agrupar flores por semente para exibição no template
+    flowers_by_seed = {}
+    for seed_name in flower_domain.FLOWER_SEEDS_DATA:
+        flowers_by_seed[seed_name] = [
+            flower for flower in processed_flowers if flower.get("seed") == seed_name
+        ]
+
+    # 6. Preparar o dicionário final para o template
+    return {
+        "flower_info": {
+            "total_discovered": len(discovered_flower_names),
+            "total_flowers": len(flower_domain.FLOWER_DATA),
+            "total_harvested": total_harvested,
+            "flowers_by_seed": flowers_by_seed,
+            "all_flowers_sorted": sorted(processed_flowers, key=lambda x: x['name']),
+            "current_season": current_season,
+            "all_flower_types": all_flower_types,
+        }
+    }
+# ---> FUNÇÃO PARA ANÁLISE DE FLORES ---

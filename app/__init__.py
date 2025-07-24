@@ -1,10 +1,16 @@
-from flask import Flask
-from datetime import datetime
-from flask_caching import Cache
-from . import cache
-import config
 import os
+import logging
+from datetime import datetime
 
+from flask import Flask
+from flask_caching import Cache
+
+import config
+
+from . import cache
+
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
 
 
 def create_app():

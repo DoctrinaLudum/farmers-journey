@@ -1,7 +1,9 @@
 import logging
+
 import requests
 from requests.exceptions import JSONDecodeError
-from .cache import cache 
+
+from .cache import cache
 
 log = logging.getLogger(__name__)
 

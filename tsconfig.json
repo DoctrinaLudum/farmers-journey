@@ -7,7 +7,8 @@
     "rootDir": "./typescript",
     "lib": [
       "ES2017",
-      "DOM"
+      "DOM",
+      "DOM.Iterable"
     ],
       "allowSyntheticDefaultImports": true
 },

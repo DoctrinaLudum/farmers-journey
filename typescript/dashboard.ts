@@ -21,12 +21,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Configura toda a interatividade do mapa de expansão (filtros e tooltips).
     setupInteractiveMap();
 
-    // Configura o filtro de peixes por temporada.
-    setupFishingFilters();
-
-    // Configura o filtro dos cabeçalhos (no inventario, capturados).
-    setupTableSorters();});
-
+    // Configura a interatividade para cada painel de forma genérica
+    setupPanelInteractivity('fishing');
+    setupPanelInteractivity('flowers');
+});
 
 /**
  * Propósito: Configurar o formulário "Meta Final".
@@ -362,99 +360,110 @@ function setupInteractiveMap() {
     });
 }
 
-function setupFishingFilters() {
-    const seasonFilters = document.getElementById('season-filter-buttons');
-    const typeFilters = document.getElementById('fishtype-filter-buttons');
-    
-    // Alvos do filtro
-    const fishRows = document.querySelectorAll('#fishingLogAccordion > tr[data-fishtype]');
-    const codexItems = document.querySelectorAll('.codex-item[data-fishtype]');
+/**
+ * Configura a interatividade de um painel (filtros e ordenação da tabela).
+ * @param panelPrefix O prefixo usado nos IDs dos elementos do painel (ex: 'fishing', 'flowers').
+ */
+function setupPanelInteractivity(panelPrefix: string) {
+    const panel = document.getElementById(`${panelPrefix}-panel`);
+    if (!panel) return;
 
-    if (!seasonFilters || !typeFilters) return;
+    setupPanelFilters(panelPrefix);
+    setupPanelTableSorter(panelPrefix);
+}
 
-    let currentSeasonFilter = 'all';
-    let currentTypeFilter = 'all';
+/**
+ * Configura os botões de filtro para um painel específico.
+ * Funciona para múltiplos grupos de filtros (ex: por estação, por tipo).
+ * @param panelPrefix O prefixo do painel.
+ */
+function setupPanelFilters(panelPrefix: string) {
+    const filterGroups = document.querySelectorAll(`#${panelPrefix}-panel [data-filter-group]`);
+    if (filterGroups.length === 0) return;
 
-    function applyFilters() {
-        // Filtra o Diário de Pesca
-        fishRows.forEach(rowEl => {
-            const row = rowEl as HTMLElement;
-            const itemSeasons = row.dataset.seasons || '';
-            const itemType = row.dataset.fishtype || '';
+    const tableRows = document.querySelectorAll(`#${panelPrefix}-log-accordion > tr[data-seasons]`);
+    const codexItems = document.querySelectorAll(`#${panelPrefix}-codex-container .codex-item`);
+    const activeFilters: { [key: string]: string } = {};
 
-            const seasonMatch = currentSeasonFilter === 'all' || itemSeasons.includes(currentSeasonFilter);
-            const typeMatch = currentTypeFilter === 'all' || itemType === currentTypeFilter;
+    const applyFilters = () => {
+        const allItems = [...tableRows, ...codexItems];
 
-            const shouldShow = seasonMatch && typeMatch;
-            row.style.display = shouldShow ? '' : 'none';
-            const detailsRow = row.nextElementSibling;
-            if (detailsRow) (detailsRow as HTMLElement).style.display = shouldShow ? '' : 'none';
-        });
-
-        // Filtra o Códice Visual
-        codexItems.forEach(itemEl => {
+        allItems.forEach(itemEl => {
             const item = itemEl as HTMLElement;
-            const itemSeasons = item.dataset.seasons || '';
-            const itemType = item.dataset.fishtype || '';
+            let allMatch = true;
 
-            const seasonMatch = currentSeasonFilter === 'all' || itemSeasons.includes(currentSeasonFilter);
-            const typeMatch = currentTypeFilter === 'all' || itemType === currentTypeFilter;
-            
-            item.style.display = (seasonMatch && typeMatch) ? 'flex' : 'none'; // Usar flex para manter o layout
+            for (const attribute in activeFilters) {
+                const filterValue = activeFilters[attribute];
+                const itemValue = item.dataset[attribute] || '';
+
+                if (filterValue !== 'all' && !itemValue.includes(filterValue)) {
+                    allMatch = false;
+                    break;
+                }
+            }
+
+            // Lógica para mostrar/esconder
+            const isTableRow = item.matches('tr');
+            const shouldShow = allMatch;
+
+            item.style.display = shouldShow ? (isTableRow ? '' : 'flex') : 'none';
+            if (isTableRow) {
+                const detailsRow = item.nextElementSibling;
+                if (detailsRow) (detailsRow as HTMLElement).style.display = shouldShow ? '' : 'none';
+            }
         });
-    }
+    };
 
-    seasonFilters.addEventListener('click', (event) => {
-        const button = (event.target as HTMLElement).closest('button');
-        if (!button) return;
-        currentSeasonFilter = button.dataset.season || 'all';
-        seasonFilters.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
-        button.classList.add('active');
-        applyFilters();
-    });
+    filterGroups.forEach(group => {
+        const filterAttribute = (group as HTMLElement).dataset.filterAttribute;
+        if (!filterAttribute) return;
 
-    typeFilters.addEventListener('click', (event) => {
-        const button = (event.target as HTMLElement).closest('button');
-        if (!button) return;
-        currentTypeFilter = button.dataset.fishtype || 'all';
-        typeFilters.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
-        button.classList.add('active');
-        applyFilters();
+        activeFilters[filterAttribute] = 'all'; // Estado inicial
+
+        group.addEventListener('click', (event) => {
+            const button = (event.target as HTMLElement).closest('button');
+            if (!button) return;
+
+            const filterValue = button.dataset.filterValue || 'all';
+            activeFilters[filterAttribute] = filterValue;
+
+            group.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+
+            applyFilters();
+        });
     });
 }
 
-function setupTableSorters() {
-    const tableBody = document.getElementById('fishingLogAccordion');
-    // Seleciona os cabeçalhos pela classe que já adicionámos
-    const headers = document.querySelectorAll('.sortable-header');
+/**
+ * Configura a ordenação para a tabela de um painel específico.
+ * @param panelPrefix O prefixo do painel.
+ */
+function setupPanelTableSorter(panelPrefix: string) {
+    const tableBody = document.getElementById(`${panelPrefix}-log-accordion`);
+    const headers = document.querySelectorAll(`#${panelPrefix}-table .sortable-header`);
 
     if (!tableBody || headers.length === 0) return;
 
-    // Guarda o estado da ordenação para cada coluna
     const sortState: { [key: string]: boolean } = {};
 
     headers.forEach(header => {
         header.addEventListener('click', () => {
             const sortBy = (header as HTMLElement).dataset.sort;
             if (!sortBy) return;
-
-            // Inicia ou inverte a direção da ordenação para esta coluna
+            
             sortState[sortBy] = !sortState[sortBy];
             const isAscending = sortState[sortBy];
 
-            // 1. Agrupa as linhas em pares (item + detalhes)
             const rows = Array.from(tableBody.children);
             const rowPairs: [HTMLElement, HTMLElement][] = [];
             for (let i = 0; i < rows.length; i += 2) {
                 rowPairs.push([rows[i] as HTMLElement, rows[i + 1] as HTMLElement]);
             }
 
-            // 2. Ordena os pares com base no data-value
             rowPairs.sort((pairA, pairB) => {
                 const dataRowA = pairA[0];
                 const dataRowB = pairB[0];
-                
-                // Seletor CORRIGIDO para encontrar a célula pelo seu data-key
                 const cellA = dataRowA.querySelector(`td[data-key="${sortBy}"]`);
                 const cellB = dataRowB.querySelector(`td[data-key="${sortBy}"]`);
 
@@ -464,7 +473,6 @@ function setupTableSorters() {
                 return isAscending ? valueA - valueB : valueB - valueA;
             });
 
-            // 3. Re-insere as linhas ordenadas no corpo da tabela
             rowPairs.forEach(pair => {
                 tableBody.appendChild(pair[0]);
                 tableBody.appendChild(pair[1]);

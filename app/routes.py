@@ -1,12 +1,18 @@
 # app/routes.py
-from flask import Blueprint, render_template, request, redirect, url_for, jsonify, json
-from decimal import Decimal, InvalidOperation
 import logging
 from datetime import datetime
-from .domain import expansions
-from . import sunflower_api
-from . import analysis
+from decimal import Decimal, InvalidOperation
+
+from flask import (Blueprint, json, jsonify, redirect, render_template, request, url_for)
+
 import config
+
+from . import analysis, sunflower_api
+from .domain import expansions
+from .analysis import build_bumpkin_image_url
+from .domain import flowers as flower_domain, fruits as fruit_domain
+
+
 
 log = logging.getLogger(__name__)
 bp = Blueprint('main', __name__)
@@ -38,7 +44,11 @@ def farm_dashboard(farm_id):
         "sfl": 0, "coins": 0, "bumpkin_level": 0, "current_land_level": 0,
         "current_land_type": "basic", "expansion_progress": None,
         "expansion_goals": {}, "fishing_info": None,
-        "expansion_construction_info": None, "current_level_nodes": None
+        "expansion_construction_info": None, "current_level_nodes": None,
+        "bumpkin_image_url": None,
+        "flower_domain": flower_domain,
+        "fruit_domain": fruit_domain
+   
     }
 
     # 2. Busca dos dados das APIs.
@@ -79,6 +89,21 @@ def farm_dashboard(farm_id):
             }
     except Exception as e:
         log.error(f"Erro ao processar dados gerais: {e}")
+
+    # 3.5. Processamento da Imagem do Bumpkin
+    try:
+        bumpkin_data = main_farm_data.get("bumpkin", {})
+        equipped_items = bumpkin_data.get("equipped")
+            
+        if equipped_items:
+            # Passa o dicionário de itens para a função de construção
+            context['bumpkin_image_url'] = analysis.build_bumpkin_image_url(equipped_items)
+            log.info(f"URL da imagem do Bumpkin gerada para a fazenda #{farm_id}")
+        else:
+            log.warning(f"Dicionário 'equipped' não encontrado para a fazenda #{farm_id}.")
+            
+    except Exception as e:
+        log.error(f"Erro ao processar a imagem do Bumpkin para a fazenda #{farm_id}: {e}", exc_info=True)  
 
     # 4. Processamento dos NODES (recursos por nível) da Expansão Atual.
     try:
@@ -228,6 +253,12 @@ def farm_dashboard(farm_id):
         context['map_plots'] = map_plots
     except Exception as e:
         log.error(f"Erro ao processar o mapa de expansão: {e}")
+
+    # 9. Processamento das FLORES.
+    try:
+        context.update(analysis.process_flower_info(main_farm_data))
+    except Exception as e:
+        log.error(f"Falha ao analisar dados de flores: {e}", exc_info=True)
 
     return render_template('dashboard.html', title=f"Painel de {context['username']}", **context)
 

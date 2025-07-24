@@ -1,8 +1,9 @@
 # app/database.py
 import logging
+
+from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import firestore
 from google.cloud.firestore_v1 import SERVER_TIMESTAMP, FieldFilter
-from google.auth.exceptions import DefaultCredentialsError
 
 log = logging.getLogger(__name__)
 
