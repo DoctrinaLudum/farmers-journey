@@ -7,6 +7,7 @@ combinando informações dos arquivos fruits.ts, seeds.ts e dados legados.
 FRUIT_DATA = {
     "Tomato": {
         "name": "Tomato",
+        "type": "Fruit",
         "sell_price": 2,                   
         "seed_name": "Tomato Seed",        
         "seed_price": 5,                   
@@ -17,6 +18,7 @@ FRUIT_DATA = {
     },
     "Lemon": {
         "name": "Lemon",
+        "type": "Fruit",
         "sell_price": 6,                   
         "seed_name": "Lemon Seed",         
         "seed_price": 15,                  
@@ -27,6 +29,7 @@ FRUIT_DATA = {
     },
     "Blueberry": {
         "name": "Blueberry",
+        "type": "Fruit",
         "sell_price": 12,                  
         "seed_name": "Blueberry Seed",     
         "seed_price": 30,                  
@@ -37,6 +40,7 @@ FRUIT_DATA = {
     },
     "Orange": {
         "name": "Orange",
+        "type": "Fruit",
         "sell_price": 18,                  
         "seed_name": "Orange Seed",        
         "seed_price": 50,                  
@@ -47,6 +51,7 @@ FRUIT_DATA = {
     },
     "Apple": {
         "name": "Apple",
+        "type": "Fruit",
         "sell_price": 25,                  
         "seed_name": "Apple Seed",         
         "seed_price": 70,                  
@@ -57,6 +62,7 @@ FRUIT_DATA = {
     },
     "Banana": {
         "name": "Banana",
+        "type": "Fruit",
         "sell_price": 25,                  
         "seed_name": "Banana Plant",       
         "seed_price": 70,                  
@@ -67,6 +73,7 @@ FRUIT_DATA = {
     },
     "Celestine": {
         "name": "Celestine",
+        "type": "Fruit",
         "sell_price": 200,                 
         "seed_name": "Celestine Seed",     
         "seed_price": 300,                 
@@ -77,6 +84,7 @@ FRUIT_DATA = {
     },
     "Lunara": {
         "name": "Lunara",
+        "type": "Fruit",
         "sell_price": 500,                 
         "seed_name": "Lunara Seed",        
         "seed_price": 750,                 
@@ -87,6 +95,7 @@ FRUIT_DATA = {
     },
     "Duskberry": {
         "name": "Duskberry",
+        "type": "Fruit",
         "sell_price": 1000,                
         "seed_name": "Duskberry Seed",     
         "seed_price": 1250,                
@@ -98,6 +107,7 @@ FRUIT_DATA = {
     # Frutas da Estufa (Greenhouse)
     "Grape": {
         "name": "Grape",
+        "type": "Fruit",
         "sell_price": 240,                 
         "seed_name": "Grape Seed",         
         "seed_price": 160,                 

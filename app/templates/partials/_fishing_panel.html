@@ -16,7 +16,7 @@
                     <div class="current-season-display">
                         <small>Estação Atual</small>
                         <div class="d-flex align-items-center">
-                            <img src="{{ url_for('static', filename='images/seasons/' + fishing_info.current_season + '.png') }}" class="icon icon-2x me-1">
+                            <img src="{{ url_for('static', filename='images/seasons/' + fishing_info.current_season + '.webp') }}" class="icon icon-2x me-1">
                             <span class="fw-bold {{ season_color }}">{{ fishing_info.current_season|title }}</span>
                         </div>
                     </div>
@@ -26,10 +26,10 @@
                         <!-- Atributos de dados padronizados para o filtro de estação -->
                         <div class="btn-group btn-group-sm" id="fishing-season-filter" role="group" data-filter-group="season" data-filter-attribute="seasons">
                             <button type="button" class="btn btn-outline-secondary active" data-filter-value="all" title="Todas"><i class="bi bi-x"></i></button>
-                            <button type="button" class="btn btn-outline-secondary" data-filter-value="spring" title="Spring"><img src="{{ url_for('static', filename='images/seasons/spring.png') }}" class="icon icon-1x"></button>
-                            <button type="button" class="btn btn-outline-secondary" data-filter-value="summer" title="Summer"><img src="{{ url_for('static', filename='images/seasons/summer.png') }}" class="icon icon-1x"></button>
-                            <button type="button" class="btn btn-outline-secondary" data-filter-value="autumn" title="Autumn"><img src="{{ url_for('static', filename='images/seasons/autumn.png') }}" class="icon icon-1x"></button>
-                            <button type="button" class="btn btn-outline-secondary" data-filter-value="winter" title="Winter"><img src="{{ url_for('static', filename='images/seasons/winter.png') }}" class="icon icon-1x"></button>
+                            <button type="button" class="btn btn-outline-secondary" data-filter-value="spring" title="Spring"><img src="{{ url_for('static', filename='images/seasons/spring.webp') }}" class="icon icon-1x"></button>
+                            <button type="button" class="btn btn-outline-secondary" data-filter-value="summer" title="Summer"><img src="{{ url_for('static', filename='images/seasons/summer.webp') }}" class="icon icon-1x"></button>
+                            <button type="button" class="btn btn-outline-secondary" data-filter-value="autumn" title="Autumn"><img src="{{ url_for('static', filename='images/seasons/autumn.webp') }}" class="icon icon-1x"></button>
+                            <button type="button" class="btn btn-outline-secondary" data-filter-value="winter" title="Winter"><img src="{{ url_for('static', filename='images/seasons/winter.webp') }}" class="icon icon-1x"></button>
                         </div>
                     </div>
                     <div class="w-100">
@@ -60,13 +60,13 @@
                         {% for item in fishing_info.all_fish_sorted %}
                             <tr class="clickable-header {% if item.player_count > 0 %}table-success-light{% endif %}" data-bs-toggle="collapse" data-bs-target="#collapse-{{ item.name|replace(' ', '-')|lower }}" data-seasons="{{ item.seasons|join(',') }}" data-type="{{ item.type }}">
                                 <td class="align-middle">
-                                    <img src="{{ url_for('static', filename='images/' + item.image_path) }}" alt="{{ item.name }}" class="icon icon-2x me-2">
+                                    <img src="{{ url_for('static', filename=get_item_image_path(item.name)) }}" alt="{{ item.name }}" class="icon icon-2x me-2">
                                     <span>{{ item.name }}</span>
                                 </td>
                                 <td class="align-middle text-center">
                                     {% if item.seasons %}
                                         {% for season in item.seasons %}
-                                            <img src="{{ url_for('static', filename='images/seasons/' + season + '.png') }}" title="{{ season|title }}" class="icon icon-1x">
+                                            <img src="{{ url_for('static', filename='images/seasons/' + season + '.webp') }}" title="{{ season|title }}" class="icon icon-1x">
                                         {% endfor %}
                                     {% endif %}
                                 </td>
@@ -78,20 +78,20 @@
                                     <div id="collapse-{{ item.name|replace(' ', '-')|lower }}" class="accordion-collapse collapse" data-bs-parent="#fishing-log-accordion">
                                         <div class="p-2 bg-light-subtle d-flex justify-content-between small">
                                             <span class="d-flex align-items-center flex-wrap gap-1">
-                                                <strong class="me-1">Iscas:</strong> 
-                                                {% for bait in item.baits %}
+                                                <strong class="me-1">Iscas:</strong>
+                                                {% for bait_name in item.baits %}
                                                     <span class="badge bg-secondary fw-normal d-flex align-items-center">
-                                                        <img src="{{ url_for('static', filename='images/' + bait.image_path) }}" class="icon icon-1x me-1">
-                                                        {{ bait.name }}
+                                                        <img src="{{ url_for('static', filename=get_item_image_path(bait_name)) }}" class="icon icon-1x me-1">
+                                                        {{ bait_name }}
                                                     </span>
                                                 {% endfor %}
                                             </span>
                                             <span class="d-flex align-items-center flex-wrap gap-1">
-                                                <strong class="me-1">Gostos:</strong> 
-                                                {% for like in item.likes %}
+                                                <strong class="me-1">Gostos:</strong>
+                                                {% for like_name in item.likes %}
                                                     <span class="badge bg-info fw-normal d-flex align-items-center">
-                                                        <img src="{{ url_for('static', filename='images/' + like.image_path) }}" class="icon icon-1x me-1">
-                                                        {{ like.name }}
+                                                        <img src="{{ url_for('static', filename=get_item_image_path(like_name)) }}" class="icon icon-1x me-1">
+                                                        {{ like_name }}
                                                     </span>
                                                 {% else %}
                                                     <span class="badge bg-secondary fw-normal">N/A</span>
@@ -151,7 +151,21 @@
             </div>
             <ul class="list-group list-group-flush collapse show" id="statsCollapse">
                 <li class="list-group-item d-flex justify-content-between"><span><i class="bi bi-water me-2 text-primary"></i>Total de Peixes Capturados:</span><strong>{{ fishing_info.fishing_stats.total_fish_caught }}</strong></li>
-                <li class="list-group-item d-flex justify-content-between"><span><i class="bi bi-trophy me-2 text-warning"></i>Peixe Mais Capturado:</span><strong>{{ fishing_info.fishing_stats.most_caught_name }} (x{{ fishing_info.fishing_stats.most_caught_count }})</strong></li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-trophy me-2 text-warning"></i>Peixe Mais Capturado:</span>
+                    {% set most_caught = fishing_info.fishing_stats.most_caught_fish %}
+                    {% if most_caught and most_caught.name != 'N/A' %}
+                        <div class="d-flex align-items-center">
+                            <img src="{{ url_for('static', filename=most_caught.icon) }}" alt="{{ most_caught.name }}" class="icon icon-2x me-2">
+                            <div class="text-end">
+                                <strong class="d-block">{{ most_caught.name }}</strong>
+                                <small class="text-muted">{{ most_caught.count }} capturas</small>
+                            </div>
+                        </div>
+                    {% else %}
+                        <strong>N/A</strong>
+                    {% endif %}
+                </li>
                 <li class="list-group-item d-flex justify-content-between"><span><i class="bi bi-bullseye me-2 text-muted"></i>Lançamentos de Vara:</span><strong>{{ fishing_info.fishing_stats.total_casts }}</strong></li>
                 <li class="list-group-item d-flex justify-content-between"><span><i class="bi bi-hammer me-2 text-muted"></i>Varas de Pesca Criadas:</span><strong>{{ fishing_info.fishing_stats.total_rods_crafted }}</strong></li>
             </ul>
@@ -163,7 +177,7 @@
             <ul class="list-group list-group-flush collapse show" id="baitsCollapse">
                 {% for item in fishing_info.bait_inventory %}
                 <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <span><img src="{{ url_for('static', filename='images/' + item.image_path) }}" class="icon icon-2x me-2">{{ item.name }}</span>
+                    <span><img src="{{ url_for('static', filename=get_item_image_path(item.original_name)) }}" class="icon icon-2x me-2">{{ item.name }}</span>
                     <span class="badge bg-primary rounded-pill">{{ item.player_quantity }}</span>
                 </li>
                 {% endfor %}
@@ -190,7 +204,7 @@
                             <div class="d-flex flex-wrap gap-1">
                                 {% for fish in fishes %}
                                     <div class="codex-item {% if fish.player_count == 0 %}not-caught{% endif %}" title="{{ fish.name }}" data-seasons="{{ fish.seasons|join(',') }}" data-type="{{ fish.type }}">
-                                        <img src="{{ url_for('static', filename='images/' + fish.image_path) }}" alt="{{ fish.name }}" class="icon icon-3x">
+                                        <img src="{{ url_for('static', filename=get_item_image_path(fish.name)) }}" alt="{{ fish.name }}" class="icon icon-3x">
                                         {% if fish.player_count > 0 %}<i class="bi bi-check-circle-fill codex-check"></i>{% endif %}
                                     </div>
                                 {% endfor %}

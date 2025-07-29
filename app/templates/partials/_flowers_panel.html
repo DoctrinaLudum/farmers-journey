@@ -4,7 +4,7 @@
     <!-- Adicionado ID ao painel principal para o script genérico -->
     <div class="col-lg-5" id="flowers-panel">
         <div class="card shadow-sm h-100">
-            <div class="card-header bg-light">
+            <div class="card-header bg-light">Vanmos 
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <h5 class="mb-0">Diário de Cultivos</h5>
                     {% set season_color = 'text-success' if 'spring' in flower_info.current_season else
@@ -14,7 +14,7 @@
                     <div class="current-season-display">
                         <small>Estação Atual</small>
                         <div class="d-flex align-items-center">
-                            <img src="{{ url_for('static', filename='images/seasons/' + flower_info.current_season + '.png') }}" class="icon icon-2x me-1">
+                            <img src="{{ url_for('static', filename='images/seasons/' + flower_info.current_season + '.webp') }}" class="icon icon-2x me-1">
                             <span class="fw-bold {{ season_color }}" >{{ flower_info.current_season|title }}</span>
                         </div>
                     </div>
@@ -24,10 +24,10 @@
                         <!-- Atributos de dados padronizados para o filtro de estação -->
                         <div class="btn-group btn-group-sm" id="flowers-season-filter" role="group" data-filter-group="season" data-filter-attribute="seasons">
                             <button type="button" class="btn btn-outline-secondary active" data-filter-value="all" title="Todas"><i class="bi bi-x"></i></button>
-                            <button type="button" class="btn btn-outline-secondary" data-filter-value="spring" title="Spring"><img src="{{ url_for('static', filename='images/seasons/spring.png') }}" class="icon icon-1x"></button>
-                            <button type="button" class="btn btn-outline-secondary" data-filter-value="summer" title="Summer"><img src="{{ url_for('static', filename='images/seasons/summer.png') }}" class="icon icon-1x"></button>
-                            <button type="button" class="btn btn-outline-secondary" data-filter-value="autumn" title="Autumn"><img src="{{ url_for('static', filename='images/seasons/autumn.png') }}" class="icon icon-1x"></button>
-                            <button type="button" class="btn btn-outline-secondary" data-filter-value="winter" title="Winter"><img src="{{ url_for('static', filename='images/seasons/winter.png') }}" class="icon icon-1x"></button>
+                            <button type="button" class="btn btn-outline-secondary" data-filter-value="spring" title="Spring"><img src="{{ url_for('static', filename='images/seasons/spring.webp') }}" class="icon icon-1x"></button>
+                            <button type="button" class="btn btn-outline-secondary" data-filter-value="summer" title="Summer"><img src="{{ url_for('static', filename='images/seasons/summer.webp') }}" class="icon icon-1x"></button>
+                            <button type="button" class="btn btn-outline-secondary" data-filter-value="autumn" title="Autumn"><img src="{{ url_for('static', filename='images/seasons/autumn.webp') }}" class="icon icon-1x"></button>
+                            <button type="button" class="btn btn-outline-secondary" data-filter-value="winter" title="Winter"><img src="{{ url_for('static', filename='images/seasons/winter.webp') }}" class="icon icon-1x"></button>
                         </div>
                     </div>
                     <div class="w-100">
@@ -49,7 +49,6 @@
                             <tr>
                                 <th>Flores</th>
                                 <th class="text-center">Estações</th>
-                                <th class="text-center sortable-header" data-sort="gift_value" style="white-space: nowrap;">Pontos <i class="bi bi-arrow-down-up small"></i></th>
                                 <th class="text-center sortable-header" data-sort="harvest_count" style="white-space: nowrap;">Colhidas <i class="bi bi-arrow-down-up small"></i></th>
                                 <th class="text-center sortable-header" data-sort="inventory_count" style="white-space: nowrap;">Inventário <i class="bi bi-arrow-down-up small"></i></th>
                             </tr>
@@ -66,17 +65,16 @@
                                 <td class="align-middle text-center">
                                     {% if flower.seasons %}
                                         {% for season in flower.seasons %}
-                                            <img src="{{ url_for('static', filename='images/seasons/' + season + '.png') }}" title="{{ season|title }}" class="icon icon-1x">
+                                            <img src="{{ url_for('static', filename='images/seasons/' + season + '.webp') }}" title="{{ season|title }}" class="icon icon-1x">
                                         {% endfor %}
                                     {% endif %}
                                 </td>
-                                <td class="text-center align-middle" data-key="gift_value" data-value="{{ flower.gift_value }}">{{ flower.gift_value }}</td>
                                 <td class="text-center align-middle" data-key="harvest_count" data-value="{{ flower.harvest_count }}">{{ flower.harvest_count }}</td>
                                 <td class="text-center align-middle fw-bold" data-key="inventory_count" data-value="{{ flower.inventory_count }}">{{ flower.inventory_count }}</td>
                             </tr>
                             {# Linha expansível com os detalhes da receita #}
                             <tr>
-                                <td colspan="5" class="p-0 border-0">
+                                <td colspan="4" class="p-0 border-0">
                                     <div id="collapse-{{ flower.name|replace(' ', '-')|lower }}" class="accordion-collapse collapse" data-bs-parent="#flowers-log-accordion">
                                         <div class="p-2 bg-light-subtle d-flex justify-content-between small">
                                             <div class="d-flex align-items-center flex-wrap gap-2">
@@ -84,9 +82,14 @@
                                                 <span class="d-flex align-items-center">
                                                     <strong class="me-2">Semente:</strong> 
                                                     <span class="badge bg-secondary fw-normal d-flex align-items-center">
-                                                        <img src="{{ url_for('static', filename='images/seeds/' + flower.seed.lower().replace(' ', '_') + '.webp') }}" class="icon icon-1x me-1">
+                                                        <img src="{{ url_for('static', filename=get_item_image_path(flower.seed)) }}" class="icon icon-1x me-1">
                                                         {{ flower.seed }}
                                                     </span>
+                                                </span>
+                                                {# Mostra os pontos de presente #}
+                                                <span class="d-flex align-items-center">
+                                                    <strong class="me-2">Pontos de Amizade:</strong> 
+                                                    <span class="badge bg-primary fw-normal">{{ flower.gift_value }}</span>
                                                 </span>
                                                 
                                                 {# Mostra a lista de receitas garantidas, se existirem #}
@@ -95,20 +98,7 @@
                                                     <strong class="me-2">Receitas:</strong> 
                                                     {% for item, amount in flower.recipes.items() %}
                                                     <span class="badge bg-info fw-normal d-flex align-items-center" title="{{ item }} ({{ amount }})">
-                                                        
-                                                        {% if item in flower_domain.FLOWER_DATA %}
-                                                            {# Se o item for uma flor, usa a pasta /flowers/ #}
-                                                            <img src="{{ url_for('static', filename='images/flowers/' + item.lower().replace(' ', '_') + '.webp') }}" class="icon icon-1x me-1">
-                                                        
-                                                        {% elif item in fruit_domain.FRUIT_DATA %}
-                                                            {# Se for uma fruta, usa a pasta /fruits/ #}
-                                                            <img src="{{ url_for('static', filename='images/fruits/' + item.lower().replace(' ', '_') + '.png') }}" class="icon icon-1x me-1">
-                                                        
-                                                        {% else %}
-                                                            {# Caso contrário, assume que é uma colheita #}
-                                                            <img src="{{ url_for('static', filename='images/crops/' + item.lower().replace(' ', '_') + '.png') }}" class="icon icon-1x me-1">
-                                                        {% endif %}
-
+                                                        <img src="{{ url_for('static', filename=get_item_image_path(item)) }}" class="icon icon-1x me-1">
                                                         {{ item }} ({{ amount }})
                                                     </span>
                                                     {% endfor %}
@@ -132,19 +122,176 @@
             <div class="card-header bg-light"><h5 class="mb-0"><i class="bi bi-bar-chart-line-fill me-2"></i>Estatísticas</h5></div>
             <ul class="list-group list-group-flush">
                 <li class="list-group-item d-flex justify-content-between"><span><i class="bi bi-flower1 me-2 text-primary"></i>Total de Colheitas:</span><strong>{{ flower_info.total_harvested }}</strong></li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-trophy-fill me-2 text-warning"></i>Flor Mais Colhida:</span>
+                    {% if flower_info.most_harvested_flower.name != 'N/A' %}
+                        <div class="d-flex align-items-center">
+                            <img src="{{ url_for('static', filename=flower_info.most_harvested_flower.icon) }}" alt="{{ flower_info.most_harvested_flower.name }}" class="icon icon-2x me-2">
+                            <div class="text-end">
+                                <strong class="d-block">{{ flower_info.most_harvested_flower.name }}</strong>
+                                <small class="text-muted">{{ flower_info.most_harvested_flower.count }} colheitas</small>
+                            </div>
+                        </div>
+                    {% else %}
+                        <strong>N/A</strong>
+                    {% endif %}
+                </li>
             </ul>
         </div>
         <div class="card shadow-sm">
             <div class="card-header bg-light"><h5 class="mb-0"><i class="bi bi-gift-fill me-2"></i>Presentes</h5></div>
-            <div class="card-body">
-                <ul class="list-group list-group-flush">
-                {% for npc, flowers in flower_domain.NPC_FLOWER_GIFTS.items() %}
-                    <li class="list-group-item px-0">
-                        <div class="d-flex align-items-center">
-                            <img src="{{ url_for('static', filename='images/npcs/' + npc + '.png') }}" alt="{{ npc|capitalize }}" class="icon icon-2x me-3 rounded-circle">
-                            <div>
-                                <h6 class="mb-0">{{ npc|capitalize }}</h6>
-                                <small class="text-muted">{{ flowers|join(', ') }}</small>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush" id="npc-gift-accordion">
+                {% for npc in npc_gift_info %}
+                    <li class="list-group-item">
+                        <div class="d-flex align-items-center justify-content-between clickable-header" data-bs-toggle="collapse" data-bs-target="#collapse-npc-{{ npc.name|replace(' ', '-')|lower }}">
+                            <div class="d-flex align-items-center">
+                                <img src="{{ url_for('static', filename='images/npcs/' + npc.image_filename) }}" alt="{{ npc.name }}" class="icon npc-avatar me-3">
+                                <div class="w-100">
+                                    <h6 class="mb-1">{{ npc.name }}</h6>
+                                    {% if npc.friendship_next_reward > 0 %}
+                                        <div class="progress progress-thin mb-1" role="progressbar" aria-label="Progresso de Amizade" aria-valuenow="{{ npc.friendship_progress_percent }}" aria-valuemin="0" aria-valuemax="100">
+                                            <div class="progress-bar" style="--progress-percent: {{ npc.friendship_progress_percent }}%"></div>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <small class="text-muted" style="font-size: 0.75em;">
+                                                {{ npc.friendship_points_in_level|int }} / {{ npc.friendship_total_for_level|int }} pts
+                                            </small>
+                                            <div class="next-reward-preview d-flex align-items-center flex-wrap justify-content-end gap-1">
+                                                {% if npc.friendship_is_repeat_reward %}<i class="bi bi-arrow-repeat text-primary" title="Próxima recompensa (repetível)"></i>
+                                                {% else %}<i class="bi bi-arrow-right-short text-muted" title="Próxima recompensa"></i>{% endif %}
+                                                
+                                                {% set reward = npc.friendship_next_reward_info %}
+                                                {% if reward %}
+                                                    {# Moedas #}
+                                                    {% if reward.get('coins', 0) > 0 %}
+                                                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle fw-normal d-flex align-items-center" title="{{ reward.coins }} Moedas">
+                                                            <img src="{{ url_for('static', filename=get_item_image_path('Coins')) }}" class="icon icon-1x me-1">
+                                                            {{ reward.coins }}
+                                                        </span>
+                                                    {% endif %}
+                                                    {# Itens (Chaves, Iscas, Recursos) #}
+                                                    {% for item, amount in reward.get('items', {}).items() %}
+                                                        {% set item_path = get_item_image_path(item) %}
+                                                        <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle fw-normal d-flex align-items-center" title="{{ item }} x{{ amount }}">
+                                                            <img src="{{ url_for('static', filename=item_path) }}" class="icon icon-1x me-1">
+                                                            {{ item }}{% if amount > 1 %}&nbsp;x{{ amount }}{% endif %}
+                                                        </span>
+                                                    {% endfor %}
+                                                    {# Vestíveis #}
+                                                    {% for wearable, amount in reward.get('wearables', {}).items() %}
+                                                        <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle fw-normal d-flex align-items-center" title="{{ wearable }}">
+                                                            <img src="{{ url_for('static', filename='images/wearables/' + wearable.lower().replace(' ', '_') + '.webp') }}" class="icon icon-1x me-1">
+                                                            {{ wearable }}
+                                                        </span>
+                                                    {% endfor %}
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <small class="text-muted">
+                                            <i class="bi bi-check-all"></i> Amizade maximizada!
+                                        </small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <i class="bi bi-chevron-down"></i>
+                        </div>
+                        <div class="collapse" id="collapse-npc-{{ npc.name|replace(' ', '-')|lower }}" data-bs-parent="#npc-gift-accordion" >
+                            <div class="p-3 pt-2 bg-light-subtle small">
+                                {% if npc.friendship_total_possible_points > 0 %}
+                                <div class="total-progress-summary mb-3 text-center">
+                                    <small class="text-muted">Progresso Total (Recompensas Planejadas)</small>
+                                    <div class="progress progress-thin mt-1" role="progressbar" aria-label="Progresso Total de Amizade" aria-valuenow="{{ npc.friendship_total_progress_percent|int }}" aria-valuemin="0" aria-valuemax="100">
+                                        <div class="progress-bar bg-secondary" style="--progress-percent: {{ npc.friendship_total_progress_percent|int }}%"></div>
+                                    </div>
+                                    <small class="text-muted d-flex justify-content-end" style="font-size: 0.75em;">
+                                        <span>{{ npc.friendship_current|int }} / {{ npc.friendship_total_possible_points|int }} pts</span>
+                                    </small>
+                                </div>
+                                {% endif %}
+                                <div class="row g-3">
+                                    <!-- Coluna de Flores -->
+                                    <div class="col-md-6 border-end">
+                                        <h6 class="mb-2 small text-uppercase fw-bold text-muted">Flores Preferidas</h6>
+                                        <ul class="list-unstyled mb-0">
+                                            {% for flower_name, points in npc.flowers.items() %}
+                                                <li class="d-flex justify-content-between align-items-center mb-1">
+                                                    <span><img src="{{ url_for('static', filename='images/flowers/' + flower_name.lower().replace(' ', '_') + '.webp') }}" class="icon icon-1x me-2">{{ flower_name }}</span>
+                                                    <span class="badge bg-primary rounded-pill">{{ points }} pts</span>
+                                                </li>
+                                            {% else %}
+                                                <li><small class="text-muted">Nenhuma flor específica.</small></li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                    <!-- Coluna de Recompensas -->
+                                    <div class="col-md-6">
+                                        <h6 class="mb-2 small text-uppercase fw-bold text-muted">Recompensas de Amizade</h6>
+                                        <ul class="list-unstyled mb-0">
+                                            {% if npc.rewards.planned %}
+                                                {% for reward_info in npc.rewards.planned|sort(attribute='points_required') %}
+                                                {% set is_claimed = reward_info.points_required <= npc.friendship_last_claimed %}
+                                                <li class="d-flex justify-content-between align-items-center mb-2 {% if is_claimed %}opacity-50{% endif %}">
+                                                    <span class="badge {% if is_claimed %}bg-success{% else %}bg-secondary{% endif %} rounded-pill d-flex align-items-center">
+                                                        {% if is_claimed %}<i class="bi bi-check-circle-fill me-1"></i>{% endif %}
+                                                        {{ reward_info.points_required }} pts
+                                                    </span>
+                                                    <div class="d-inline-flex align-items-center flex-wrap justify-content-end gap-1">
+                                                        {% set reward = reward_info.reward %}
+                                                        {% if reward.get('coins', 0) > 0 %}
+                                                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle fw-normal d-flex align-items-center" title="{{ reward.coins }} Moedas">
+                                                                <img src="{{ url_for('static', filename=get_item_image_path('Coins')) }}" class="icon icon-1x me-1"> {{ reward.coins }}
+                                                            </span>
+                                                        {% endif %}
+                                                        {% for item, amount in reward.get('items', {}).items() %}
+                                                            {% set item_path = get_item_image_path(item) %}
+                                                            <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle fw-normal d-flex align-items-center" title="{{ item }} x{{ amount }}">
+                                                                <img src="{{ url_for('static', filename=item_path) }}" class="icon icon-1x me-1"> {{ item }}{% if amount > 1 %}&nbsp;x{{ amount }}{% endif %}
+                                                            </span>
+                                                        {% endfor %}
+                                                        {% for wearable, amount in reward.get('wearables', {}).items() %}
+                                                            <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle fw-normal d-flex align-items-center" title="{{ wearable }}">
+                                                                <img src="{{ url_for('static', filename='images/wearables/' + wearable.lower().replace(' ', '_') + '.webp') }}" class="icon icon-1x me-1"> {{ wearable }}
+                                                            </span>
+                                                        {% endfor %}
+                                                    </div>
+                                                </li>
+                                                {% endfor %}
+                                            {% endif %}
+
+                                            {% if npc.rewards.repeats %}
+                                                <li class="d-flex justify-content-between align-items-center pt-2 mt-2 border-top">
+                                                    <div class="text-start">
+                                                        <span class="badge bg-primary rounded-pill d-flex align-items-center">
+                                                            <i class="bi bi-arrow-repeat me-1"></i>
+                                                            A cada {{ npc.rewards.repeats.points_required }} pts
+                                                        </span>
+                                                    </div>
+                                                    <div class="d-inline-flex align-items-center flex-wrap justify-content-end gap-1 text-end">
+                                                        {% set reward = npc.rewards.repeats.reward %}
+                                                        {% if reward.get('coins', 0) > 0 %}
+                                                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle fw-normal d-flex align-items-center" title="{{ reward.coins }} Moedas">
+                                                                <img src="{{ url_for('static', filename=get_item_image_path('Coins')) }}" class="icon icon-1x me-1"> {{ reward.coins }}
+                                                            </span>
+                                                        {% endif %}
+                                                        {% for item, amount in reward.get('items', {}).items() %}
+                                                            {% set item_path = get_item_image_path(item) %}
+                                                            <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle fw-normal d-flex align-items-center" title="{{ item }} x{{ amount }}">
+                                                                <img src="{{ url_for('static', filename=item_path) }}" class="icon icon-1x me-1"> {{ item }}{% if amount > 1 %}&nbsp;x{{ amount }}{% endif %}
+                                                            </span>
+                                                        {% endfor %}
+                                                        {% for wearable, amount in reward.get('wearables', {}).items() %}
+                                                            <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle fw-normal d-flex align-items-center" title="{{ wearable }}">
+                                                                <img src="{{ url_for('static', filename='images/wearables/' + wearable.lower().replace(' ', '_') + '.webp') }}" class="icon icon-1x me-1"> {{ wearable }}
+                                                            </span>
+                                                        {% endfor %}
+                                                    </div>
+                                                </li>
+                                            {% endif %}
+                                        </ul>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </li>
@@ -165,16 +312,19 @@
                 </div>
                 {% for seed_name, flowers in flower_info.flowers_by_seed.items() %}
                 <div class="mt-2">
-                    <h6 class="d-flex justify-content-between align-items-center mb-1">
+                    <h6 class="d-flex justify-content-between align-items-center mb-1 clickable-header" data-bs-toggle="collapse" data-bs-target="#codex-{{ seed_name|replace(' ', '-')|lower }}">
                         <span>{{ seed_name.replace(" Seed", "") }}</span>
+                        <i class="bi bi-chevron-down"></i>
                     </h6>
-                    <div class="d-flex flex-wrap gap-1">
-                        {% for flower in flowers %}
-                        <div class="codex-item {% if flower.status != 'Discovered' %}not-caught{% endif %}" title="{{ flower.name }}" data-seasons="{{ flower.seasons|join(',') }}" data-type="{{ flower.type|lower }}">
-                            <img src="{{ url_for('static', filename=flower.icon) }}" alt="{{ flower.name }}" class="icon icon-3x {% if flower.status != 'Discovered' %}grayscale{% endif %}">
-                            {% if flower.status == 'Discovered' %}<i class="bi bi-check-circle-fill codex-check"></i>{% endif %}
+                    <div class="collapse show" id="codex-{{ seed_name|replace(' ', '-')|lower }}">
+                        <div class="d-flex flex-wrap gap-1">
+                            {% for flower in flowers %}
+                            <div class="codex-item {% if flower.status != 'Discovered' %}not-caught{% endif %}" title="{{ flower.name }}" data-seasons="{{ flower.seasons|join(',') }}" data-type="{{ flower.type|lower }}">
+                                <img src="{{ url_for('static', filename=flower.icon) }}" alt="{{ flower.name }}" class="icon icon-3x {% if flower.status != 'Discovered' %}grayscale{% endif %}">
+                                {% if flower.status == 'Discovered' %}<i class="bi bi-check-circle-fill codex-check"></i>{% endif %}
+                            </div>
+                            {% endfor %}
                         </div>
-                        {% endfor %}
                     </div>
                 </div>
                 {% endfor %}

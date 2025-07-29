@@ -59,80 +59,13 @@ INVENTORY_ITEMS = {
     "Artichoke":   {"type": "Crop", "sell_price": 12, "season": ["Autumn"], "growtime": 129600},    # 36 hours
     "Barley":      {"type": "Crop", "sell_price": 12, "season": ["Spring", "Autumn"], "growtime": 172800},    # 48 hours
 
-    # --- Fruits (from Fruit Patches) ---
-    "Tomato":    {"type": "Fruit", "sell_price": 2, "season": ["Spring", "Autumn"], "growtime": 7200},      # 2 hours
-    "Lemon":     {"type": "Fruit", "sell_price": 6, "season": ["Summer", "Winter"], "growtime": 14400},     # 4 hours
-    "Blueberry": {"type": "Fruit", "sell_price": 12, "season": ["Spring", "Winter"], "growtime": 21600},     # 6 hours
-    "Orange":    {"type": "Fruit", "sell_price": 18, "season": ["Spring", "Summer"], "growtime": 28800},     # 8 hours
-    "Apple":     {"type": "Fruit", "sell_price": 25, "season": ["Autumn", "Winter"], "growtime": 43200},     # 12 hours
-    "Banana":    {"type": "Fruit", "sell_price": 25, "season": ["Summer", "Autumn"], "growtime": 43200},     # 12 hours
-    "Celestine": {"type": "Fruit", "sell_price": 200, "season": ["Spring", "Summer", "Autumn", "Winter"], "growtime": 21600},     # 6 hours
-    "Lunara":    {"type": "Fruit", "sell_price": 500, "season": ["Spring", "Summer", "Autumn", "Winter"], "growtime": 43200},     # 12 hours
-    "Duskberry": {"type": "Fruit", "sell_price": 1000, "season": ["Spring", "Summer", "Autumn", "Winter"], "growtime": 86400},     # 24 hours
 
     # --- Greenhouse Produce (Crops & Fruits) ---
     "Rice":  {"type": "GreenhouseCrop", "sell_price": 320, "season": ["Spring", "Summer", "Autumn", "Winter"], "growtime": 115200}, # 32 hours
     "Olive": {"type": "GreenhouseCrop", "sell_price": 400, "season": ["Spring", "Summer", "Autumn", "Winter"], "growtime": 158400}, # 44 hours
     "Grape": {"type": "GreenhouseFruit", "sell_price": 240, "season": ["Spring", "Summer", "Autumn", "Winter"], "growtime": 43200}, # 12 hours
 
-    # --- Flowers ---
-    "Red Pansy":             {"type": "Flower", "source_seed": "Sunpetal Seed"},
-    "Yellow Pansy":          {"type": "Flower", "source_seed": "Sunpetal Seed"},
-    "Purple Pansy":          {"type": "Flower", "source_seed": "Sunpetal Seed"},
-    "White Pansy":           {"type": "Flower", "source_seed": "Sunpetal Seed"},
-    "Blue Pansy":            {"type": "Flower", "source_seed": "Sunpetal Seed"},
-    "Red Cosmos":            {"type": "Flower", "source_seed": "Sunpetal Seed"},
-    "Yellow Cosmos":         {"type": "Flower", "source_seed": "Sunpetal Seed"},
-    "Purple Cosmos":         {"type": "Flower", "source_seed": "Sunpetal Seed"},
-    "White Cosmos":          {"type": "Flower", "source_seed": "Sunpetal Seed"},
-    "Blue Cosmos":           {"type": "Flower", "source_seed": "Sunpetal Seed"},
-    "Prism Petal":           {"type": "Flower", "source_seed": "Sunpetal Seed"},
-    "Red Balloon Flower":    {"type": "Flower", "source_seed": "Bloom Seed"},
-    "Yellow Balloon Flower": {"type": "Flower", "source_seed": "Bloom Seed"},
-    "Purple Balloon Flower": {"type": "Flower", "source_seed": "Bloom Seed"},
-    "White Balloon Flower":  {"type": "Flower", "source_seed": "Bloom Seed"},
-    "Blue Balloon Flower":   {"type": "Flower", "source_seed": "Bloom Seed"},
-    "Red Daffodil":          {"type": "Flower", "source_seed": "Bloom Seed"},
-    "Yellow Daffodil":       {"type": "Flower", "source_seed": "Bloom Seed"},
-    "Purple Daffodil":       {"type": "Flower", "source_seed": "Bloom Seed"},
-    "White Daffodil":        {"type": "Flower", "source_seed": "Bloom Seed"},
-    "Blue Daffodil":         {"type": "Flower", "source_seed": "Bloom Seed"},
-    "Celestial Frostbloom":  {"type": "Flower", "source_seed": "Bloom Seed"},
-    "Red Carnation":         {"type": "Flower", "source_seed": "Lily Seed"},
-    "Yellow Carnation":      {"type": "Flower", "source_seed": "Lily Seed"},
-    "Purple Carnation":      {"type": "Flower", "source_seed": "Lily Seed"},
-    "White Carnation":       {"type": "Flower", "source_seed": "Lily Seed"},
-    "Blue Carnation":        {"type": "Flower", "source_seed": "Lily Seed"},
-    "Red Lotus":             {"type": "Flower", "source_seed": "Lily Seed"},
-    "Yellow Lotus":          {"type": "Flower", "source_seed": "Lily Seed"},
-    "Purple Lotus":          {"type": "Flower", "source_seed": "Lily Seed"},
-    "White Lotus":           {"type": "Flower", "source_seed": "Lily Seed"},
-    "Blue Lotus":            {"type": "Flower", "source_seed": "Lily Seed"},
-    "Primula Enigma":        {"type": "Flower", "source_seed": "Lily Seed"},
-    "Red Edelweiss":         {"type": "Flower", "source_seed": "Edelweiss Seed"},
-    "Yellow Edelweiss":      {"type": "Flower", "source_seed": "Edelweiss Seed"},
-    "Purple Edelweiss":      {"type": "Flower", "source_seed": "Edelweiss Seed"},
-    "White Edelweiss":       {"type": "Flower", "source_seed": "Edelweiss Seed"},
-    "Blue Edelweiss":        {"type": "Flower", "source_seed": "Edelweiss Seed"},
-    "Red Gladiolus":         {"type": "Flower", "source_seed": "Gladiolus Seed"},
-    "Yellow Gladiolus":      {"type": "Flower", "source_seed": "Gladiolus Seed"},
-    "Purple Gladiolus":      {"type": "Flower", "source_seed": "Gladiolus Seed"},
-    "White Gladiolus":       {"type": "Flower", "source_seed": "Gladiolus Seed"},
-    "Blue Gladiolus":        {"type": "Flower", "source_seed": "Gladiolus Seed"},
-    "Red Lavender":          {"type": "Flower", "source_seed": "Lavender Seed"},
-    "Yellow Lavender":       {"type": "Flower", "source_seed": "Lavender Seed"},
-    "Purple Lavender":       {"type": "Flower", "source_seed": "Lavender Seed"},
-    "White Lavender":        {"type": "Flower", "source_seed": "Lavender Seed"},
-    "Blue Lavender":         {"type": "Flower", "source_seed": "Lavender Seed"},
-    "Red Clover":            {"type": "Flower", "source_seed": "Clover Seed"},
-    "Yellow Clover":         {"type": "Flower", "source_seed": "Clover Seed"},
-    "Purple Clover":         {"type": "Flower", "source_seed": "Clover Seed"},
-    "White Clover":          {"type": "Flower", "source_seed": "Clover Seed"},
-    "Blue Clover":           {"type": "Flower", "source_seed": "Clover Seed"},
-    "Chamomile":             {"type": "Flower"},
-    "Chicory":               {"type": "Flower"},    
-    "Desert Rose":           {"type": "Flower"},
-    "Lunalist":              {"type": "Flower"},
+    
     
     # --- Exotic Crops (from Magic Beans) ---
     "Black Magic":          {"type": "ExoticCrop", "sell_price": 32000},
@@ -189,13 +122,7 @@ INVENTORY_ITEMS = {
     "Barn Delight": {"type": "AnimalMedicine", "ingredients": {"Lemon": 5, "Honey": 3}},
     "Omnifeed":     {"type": "AnimalFood", "ingredients": {"Gem": 1}},
 
-    # --- Compost & Fertiliser ---
-    "Earthworm":      {"type": "CompostWorm"},
-    "Grub":           {"type": "CompostWorm"},
-    "Red Wiggler":    {"type": "CompostWorm"},
-    "Sprout Mix":     {"type": "Fertiliser", "composter": "Compost Bin"},
-    "Fruitful Blend": {"type": "Fertiliser", "composter": "Turbo Composter"},
-    "Rapid Root":     {"type": "Fertiliser", "composter": "Premium Composter"},
+    
 
     # --- Seeds (The items you plant) ---
     "Sunflower Seed":   {"type": "Seed", "yields": "Sunflower", "cost_coins": 0.01, "bumpkin_level": 1, "planting_spot": "Crop Plot"},

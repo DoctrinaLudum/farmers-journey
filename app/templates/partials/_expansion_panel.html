@@ -47,7 +47,7 @@
                             {% for node in current_level_nodes %}
                             <tr>
                                 <td style="width: 40px;" class="text-center">
-                                    <img src="{{ node.icon }}" alt="{{ node.name }}" class="list-icon" onerror="this.style.display='none'">
+                                    <img src="{{ url_for('static', filename=get_item_image_path(node.name)) }}" alt="{{ node.name }}" class="list-icon" onerror="this.style.display='none'">
                                 </td>
                                 <td class="small align-middle">{{ node.name }}</td>
                                 <td class="text-end" style="width: 40px;">

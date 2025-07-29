@@ -114,10 +114,6 @@ TREASURES = {
         "sell_price": None,
         "type": "BoostTreasure",  #
     },
-    "Gold": {
-        "sell_price": None,
-        "type": "ResourceTreasure",  #
-    },
 }
 
 # ------------------------------------------------------------------------------

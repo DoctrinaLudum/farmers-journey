@@ -81,6 +81,20 @@
 }
 
 /* =================================
+   PAINEL DE PRESENTES (NPCs)
+   ================================= */
+
+#npc-gift-accordion .progress-bar {
+    width: var(--progress-percent);
+}
+
+/* Aumenta o tamanho do avatar do NPC na lista */
+#npc-gift-accordion .npc-avatar {
+    height: 40px;
+    width: 40px;
+    object-fit: cover; /* Garante que a imagem preencha o círculo, cortando se necessário */
+}
+/* =================================
    PAINEL DE EXPANSÃO
    ================================= */
 

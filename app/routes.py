@@ -8,9 +8,10 @@ from flask import (Blueprint, json, jsonify, redirect, render_template, request,
 import config
 
 from . import analysis, sunflower_api
-from .domain import expansions
+from .domain import expansions, npcs as npc_domain
 from .analysis import build_bumpkin_image_url
-from .domain import flowers as flower_domain, fruits as fruit_domain
+from .domain import flowers as flower_domain, fruits as fruit_domain, foods as foods_domain
+
 
 
 
@@ -44,11 +45,11 @@ def farm_dashboard(farm_id):
         "sfl": 0, "coins": 0, "bumpkin_level": 0, "current_land_level": 0,
         "current_land_type": "basic", "expansion_progress": None,
         "expansion_goals": {}, "fishing_info": None,
-        "expansion_construction_info": None, "current_level_nodes": None,
-        "bumpkin_image_url": None,
-        "flower_domain": flower_domain,
-        "fruit_domain": fruit_domain
-   
+        "expansion_construction_info": None, "current_level_nodes": None, "bumpkin_image_url": None,
+        # Domínios de dados para uso nos templates
+        "flower_domain": flower_domain, "fruit_domain": fruit_domain, "foods_domain": foods_domain,
+        # Funções helper para os templates
+        "get_item_image_path": analysis.get_item_image_path
     }
 
     # 2. Busca dos dados das APIs.
@@ -113,10 +114,7 @@ def farm_dashboard(farm_id):
             processed_nodes = []
             for node_name, count in nodes_data.items():
                 if count > 0:
-                    processed_nodes.append({
-                        "name": node_name, "count": count,
-                        "icon": url_for('static', filename=f'images/nodes/{node_name.lower().replace(" ", "_")}.png')
-                    })
+                    processed_nodes.append({"name": node_name, "count": count})
             context['current_level_nodes'] = sorted(processed_nodes, key=lambda x: x['name'])
     except Exception as e:
         log.error(f"Erro ao processar nodes da expansão atual: {e}")
@@ -260,6 +258,13 @@ def farm_dashboard(farm_id):
     except Exception as e:
         log.error(f"Falha ao analisar dados de flores: {e}", exc_info=True)
 
+    # 10. Processamento de Presentes de NPCs
+    try:
+        context['npc_gift_info'] = analysis.process_npc_gifts(main_farm_data)
+    except Exception as e:
+        log.error(f"Falha ao processar dados de presentes de NPCs: {e}", exc_info=True)
+        context['npc_gift_info'] = [] # Garante que a chave exista no contexto
+
     return render_template('dashboard.html', title=f"Painel de {context['username']}", **context)
 
 
@@ -308,7 +313,7 @@ def api_goal_requirements(farm_id, current_land_type, current_level):
 
         # O resto da função permanece igual, pois já está a funcionar corretamente.
         inventory = main_farm_data.get('inventory', {})
-        sfl_balance = Decimal(main_farm_data.get('bal   ance', '0'))
+        sfl_balance = Decimal(main_farm_data.get('balance', '0'))
         coins_balance = Decimal(main_farm_data.get('coins', '0'))
         item_prices = prices_data.get("data", {}).get("p2p", {})
         
@@ -332,15 +337,14 @@ def api_goal_requirements(farm_id, current_land_type, current_level):
             # Define qual valor mostrar no item: o relativo se faltar, ou o total se completo
             sfl_value = value_of_shortfall if shortfall > 0 else value_of_needed
 
-            icon_name = "Flower" if item == "SFL" else item
-
             processed_reqs.append({
                 "name": item,
                 "shortfall": f"{shortfall:.2f}",
                 "needed": f"{needed_total:.2f}",
                 "value_of_needed": f"{value_of_needed:.2f}",
                 "sfl_value": f"{sfl_value:.2f}", # Valor individual em SFL
-                "icon": url_for('static', filename=f'images/resources/{icon_name}.png')
+                # CORREÇÃO: Remover url_for para enviar apenas o caminho relativo.
+                "icon": analysis.get_item_image_path(item)
             })
 
         response_data = {

@@ -16,61 +16,6 @@ NPC_FLOWER_GIFTS = {
     "tango": ["Red Daffodil", "Yellow Daffodil", "Purple Daffodil", "White Daffodil", "Blue Daffodil"],
 }
 
-# Dados completos sobre as sementes de flores.
-# Fonte: FLOWER_SEEDS em flowers.ts
-FLOWER_SEEDS_DATA = {
-    "Sunpetal Seed": {
-        "price": 16,
-        "bumpkinLevel": 13,
-        "plantSeconds": 1 * 24 * 60 * 60, # 1 dia
-        "plantingSpot": "Flower Bed",
-        "seasons": ["spring", "summer", "autumn", "winter"],
-
-    },
-    "Bloom Seed": {
-        "price": 32,
-        "bumpkinLevel": 22,
-        "plantSeconds": 2 * 24 * 60 * 60, # 2 dias
-        "plantingSpot": "Flower Bed",
-        "seasons": ["spring", "summer", "autumn", "winter"],
-    },
-    "Lily Seed": {
-        "price": 48,
-        "bumpkinLevel": 27,
-        "plantSeconds": 5 * 24 * 60 * 60, # 5 dias
-        "plantingSpot": "Flower Bed",
-        "seasons": ["spring", "summer", "autumn", "winter"],
-    },
-    "Edelweiss Seed": {
-        "price": 96,
-        "bumpkinLevel": 35,
-        "plantSeconds": 3 * 24 * 60 * 60, # 3 dias
-        "plantingSpot": "Flower Bed",
-        "seasons": ["winter"],
-    },
-    "Gladiolus Seed": {
-        "price": 96,
-        "bumpkinLevel": 35,
-        "plantSeconds": 3 * 24 * 60 * 60, # 3 dias
-        "plantingSpot": "Flower Bed",
-        "seasons": ["summer"],
-    },
-    "Lavender Seed": {
-        "price": 96,
-        "bumpkinLevel": 35,
-        "plantSeconds": 3 * 24 * 60 * 60, # 3 dias
-        "plantingSpot": "Flower Bed",
-        "seasons": ["spring"],
-    },
-    "Clover Seed": {
-        "price": 96,
-        "bumpkinLevel": 35,
-        "plantSeconds": 3 * 24 * 60 * 60, # 3 dias
-        "plantingSpot": "Flower Bed",
-        "seasons": ["autumn"],
-    },
-}
-
 # Base de dados completa das flores, com a nova estrutura de receitas
 # e valores exatos dos arquivos do jogo.
 FLOWER_DATA = {

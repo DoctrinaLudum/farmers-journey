@@ -8,11 +8,10 @@ import requests
 
 import config
 
-from .domain import buildings
 from .domain import bumpkin as bumpkin_domain
-from .domain import expansions
-from .domain import fishing as fishing_data_domain
-from .domain import flowers as flower_domain
+from .domain import (buildings, expansions, fishing as fishing_data_domain,
+                     flowers as flower_domain, foods as foods_domain, seeds as seeds_domain,
+                     fruits as fruit_domain, item_map, npcs as npc_domain)
 
 log = logging.getLogger(__name__)
 
@@ -216,46 +215,16 @@ def analyze_fishing_data(main_data: dict, secondary_data: dict):
         fish_type = details.get('type', 'basic')
         seasons_for_item = all_seasons if fish_type == 'chapter' else details.get('seasons', [])
 
-        # Lógica para processar Iscas e Gostos com ícones
-        baits_with_icons = []
-        for bait_name in details.get('baits', []):
-            item_details = config.INVENTORY_ITEMS.get(bait_name, {})
-            item_type = item_details.get("type", "Resource").lower()
-            folder = "composters" if item_type == "compostworm" or bait_name == "Fishing Lure" else "resources"
-            baits_with_icons.append({
-                "name": bait_name,
-                "image_path": f"{folder}/{bait_name.lower().replace(' ', '_')}.png"
-            })
-
-        likes_with_icons = []
-        for like_name in details.get('likes', []):
-            item_details = config.INVENTORY_ITEMS.get(like_name, {})
-            item_type_raw = item_details.get("type", "")
-            
-            folder = "resources"
-            if item_type_raw == "Crop": folder = "crops"
-            elif item_type_raw == "Fruit": folder = "fruits"
-            elif item_type_raw == "Animal Product": folder = "animal"
-            elif item_type_raw == "Treasure": folder = "treasure"
-            elif item_type_raw in ["basic", "advanced", "expert", "marine marvel", "chapter"] or fishing_data_domain.FISHING_DATA.get(like_name):
-                folder = "fish"
-            if "Chicken" in like_name:
-                folder = "animals/chickens"
-            
-            likes_with_icons.append({
-                "name": like_name,
-                "image_path": f"{folder}/{like_name.lower().replace(' ', '_')}.png"
-            })
-
         all_fish_list.append({
             "name": fish_name,
             "type": fish_type,
             "seasons": seasons_for_item,
-            "baits": baits_with_icons,      
-            "likes": likes_with_icons,    
+            # Simplificado: Passa apenas a lista de nomes. O template resolverá o caminho da imagem.
+            "baits": details.get('baits', []),
+            "likes": details.get('likes', []),
             "player_count": farm_activity.get(f"{fish_name} Caught", 0),
             "inventory_count": int(inventory.get(fish_name, 0)),
-            "image_path": f"fish/{fish_name.lower().replace(' ', '_')}.png"
+            # A chave 'image_path' foi removida.
         })
 
     treasure_list = [item for item, details in config.INVENTORY_ITEMS.items() if details.get('type') == 'Treasure']
@@ -270,7 +239,6 @@ def analyze_fishing_data(main_data: dict, secondary_data: dict):
                 "likes": [], 
                 "player_count": player_count,
                 "inventory_count": int(inventory.get(treasure_name, 0)),
-                "image_path": f"treasure/{treasure_name.lower().replace(' ', '_')}.png"
             })
 
     all_fish_list.sort(key=lambda x: x['name'])
@@ -279,20 +247,12 @@ def analyze_fishing_data(main_data: dict, secondary_data: dict):
     consumable_items = ["Rod", "Earthworm", "Grub", "Red Wiggler", "Fishing Lure"]
     bait_inventory = []
     for item_name in consumable_items:
-        item_details = config.INVENTORY_ITEMS.get(item_name, {})
-        item_type = item_details.get("type", "Resource").lower()
-        folder = "resources"
-        if item_type == "tool":
-            folder = "tools"
-        elif item_type == "compostworm":
-            folder = "composters"
-        if item_name == "Fishing Lure":
-            folder = "composters"
         display_name = "Varas de Pesca" if item_name == "Rod" else item_name
         bait_inventory.append({
             "name": display_name,
+            # Adicionado para que o template possa usar o nome original para encontrar a imagem.
+            "original_name": item_name,
             "player_quantity": int(inventory.get(item_name, 0)),
-            "image_path": f"{folder}/{item_name.lower().replace(' ', '_')}.png"
         })
 
     # --- 4. Lógica de Análise das Conquistas ---
@@ -339,13 +299,24 @@ def analyze_fishing_data(main_data: dict, secondary_data: dict):
     }
     
     fish_only_list = [f for f in all_fish_list if f.get('type') != 'treasure']
-    most_caught_fish = max(fish_only_list, key=lambda x: x['player_count'], default=None) if fish_only_list else None
+    most_caught_fish_data = max(fish_only_list, key=lambda x: x['player_count'], default=None) if fish_only_list else None
+    
+    # Prepara um dicionário detalhado para o peixe mais capturado, similar ao das flores.
+    most_caught_fish_details = {
+        "name": "N/A",
+        "count": 0,
+        "icon": None
+    }
+    if most_caught_fish_data:
+        most_caught_fish_details["name"] = most_caught_fish_data.get("name", "N/A")
+        most_caught_fish_details["count"] = most_caught_fish_data.get("player_count", 0)
+        if most_caught_fish_details["name"] != "N/A":
+            most_caught_fish_details["icon"] = get_item_image_path(most_caught_fish_details["name"])
     
     fishing_stats = {
         "total_casts": farm_activity.get("Rod Casted", 0),
         "total_fish_caught": total_fish_caught,
-        "most_caught_name": most_caught_fish.get("name", "N/A") if most_caught_fish else "N/A",
-        "most_caught_count": most_caught_fish.get("player_count", 0) if most_caught_fish else 0,
+        "most_caught_fish": most_caught_fish_details,
         "total_rods_crafted": farm_activity.get("Rod Crafted", 0)
     }
     
@@ -448,7 +419,8 @@ def calculate_total_gains(start_land_type: str, start_level: int, goal_land_type
             "name": name,
             "total": data["total"],
             "details": dict(sorted(data["details"].items())),
-            "type": data["type"]
+            "type": data["type"],
+            "icon": get_item_image_path(name)
         })
     
     return {"summary": sorted(summary_list, key=lambda x: x['name'])}
@@ -517,6 +489,21 @@ def process_flower_info(main_farm_data):
     all_flower_types = sorted(list(set(data.get('type') for data in flower_domain.FLOWER_DATA.values() if data.get('type'))))
 
     processed_flowers = []
+    
+    # --- Novas Estatísticas ---
+    most_harvested_flower = {"name": "N/A", "count": 0}
+    for key, value in farm_activity.items():
+        if " Harvested" in key and key.replace(" Harvested", "") in flower_domain.FLOWER_DATA:
+            if value > most_harvested_flower["count"]:
+                most_harvested_flower["name"] = key.replace(" Harvested", "")
+                most_harvested_flower["count"] = value
+
+    # Adiciona o caminho do ícone para a flor mais colhida
+    if most_harvested_flower["name"] != "N/A":
+        most_harvested_flower["icon"] = get_item_image_path(most_harvested_flower["name"])
+    else:
+        most_harvested_flower["icon"] = None
+
     total_harvested = 0
 
     # 2. Iterar sobre a nossa base de dados de flores
@@ -539,7 +526,8 @@ def process_flower_info(main_farm_data):
         # 3.6. Lógica de Sazonalidade ---
         seed_name = flower_info.get("seed")
         if seed_name:
-            seed_data = flower_domain.FLOWER_SEEDS_DATA.get(seed_name, {})
+            # CORREÇÃO: Busca os dados da semente na fonte centralizada (seeds.py)
+            seed_data = seeds_domain.SEEDS_DATA.get(seed_name, {})
             flower_info['seasons'] = seed_data.get("seasons", [])
         else:
             flower_info['seasons'] = []
@@ -580,11 +568,23 @@ def process_flower_info(main_farm_data):
         processed_flowers.append(flower_info)
 
     # 5. Agrupar flores por semente para exibição no template
+    # Filtra o dicionário de sementes para obter apenas as de flores
+    flower_seeds_data = {name: data for name, data in seeds_domain.SEEDS_DATA.items() if data.get("planting_spot") == "Flower Bed"}
+
     flowers_by_seed = {}
-    for seed_name in flower_domain.FLOWER_SEEDS_DATA:
+    for seed_name in flower_seeds_data:
         flowers_by_seed[seed_name] = [
             flower for flower in processed_flowers if flower.get("seed") == seed_name
         ]
+
+    # Define a ordem de ordenação das sementes com base na sua definição
+    seed_order = list(flower_seeds_data.keys())
+    
+    # Ordena as flores primeiro pela ordem da semente, depois pelo nome
+    all_flowers_sorted = sorted(
+        processed_flowers,
+        key=lambda x: (seed_order.index(x['seed']) if x.get('seed') in seed_order else len(seed_order), x['name'])
+    )
 
     # 6. Preparar o dicionário final para o template
     return {
@@ -593,9 +593,151 @@ def process_flower_info(main_farm_data):
             "total_flowers": len(flower_domain.FLOWER_DATA),
             "total_harvested": total_harvested,
             "flowers_by_seed": flowers_by_seed,
-            "all_flowers_sorted": sorted(processed_flowers, key=lambda x: x['name']),
+            # Adiciona as novas estatísticas ao contexto
+            "most_harvested_flower": most_harvested_flower,
+            "all_flowers_sorted": all_flowers_sorted,
             "current_season": current_season,
             "all_flower_types": all_flower_types,
         }
     }
 # ---> FUNÇÃO PARA ANÁLISE DE FLORES ---
+
+# ---> FUNÇÃO PARA ANÁLISE DE PRESENTES DE NPCS ---
+def process_npc_gifts(main_farm_data: dict):
+    """
+    Prepara os dados de presentes dos NPCs para exibição, incluindo o progresso
+    de amizade do jogador com base nos dados da API.
+    """
+    npc_list = []
+    player_npcs_data = main_farm_data.get("npcs", {})
+
+    # Itera sobre os dados brutos dos NPCs
+    for npc_id, npc_data in npc_domain.NPC_DATA.items():
+        # Formata o nome do arquivo da imagem de forma segura
+        image_filename = npc_id.replace("'", "").replace(" ", "_") + '.webp'
+        
+        # Junta os nomes das flores em uma única string
+        flowers_text = ", ".join(npc_data.get("flowers", {}).keys())
+
+        # --- Lógica de Progresso de Amizade (Refinada) ---
+        player_friendship = player_npcs_data.get(npc_id, {}).get("friendship", {})
+        current_points = player_friendship.get("points", 0)
+        last_claimed_points = player_friendship.get("giftClaimedAtPoints", 0)
+
+        # Encontra a próxima recompensa para calcular a barra de progresso
+        all_planned_rewards = sorted(npc_data.get("rewards", {}).get("planned", []), key=lambda r: r['points_required'])
+        next_reward_points = 0
+        next_reward_info = None
+        is_repeat_reward = False
+
+        # 1. Tenta encontrar a próxima recompensa na lista 'planned'
+        for reward in all_planned_rewards:
+            if reward['points_required'] > last_claimed_points:
+                next_reward_points = reward['points_required']
+                next_reward_info = reward.get('reward')
+                break
+        
+        # 2. Se não encontrou (entrou no loop de repetição), calcula a próxima meta repetível
+        if not next_reward_points and npc_data.get("rewards", {}).get("repeats"):
+            repeats_data = npc_data["rewards"]["repeats"]
+            repeat_points_needed = repeats_data.get('points_required', 0)
+            if repeat_points_needed > 0:
+                # A próxima meta é a última recompensa resgatada + os pontos de repetição
+                next_reward_points = last_claimed_points + repeat_points_needed
+                next_reward_info = repeats_data.get('reward')
+                is_repeat_reward = True
+
+        # 3. Calcula o progresso para o nível/loop atual
+        progress_percent = 0
+        points_in_level = 0
+        total_for_level = 0
+        if next_reward_points > 0:
+            total_for_level = next_reward_points - last_claimed_points
+            if total_for_level > 0:
+                accumulated_points = current_points - last_claimed_points
+                points_in_level = max(0, min(accumulated_points, total_for_level))
+                progress_percent = (points_in_level / total_for_level) * 100
+            elif current_points >= next_reward_points:
+                progress_percent = 100
+                points_in_level = total_for_level
+
+        # 4. Calcula o progresso total em relação a todas as recompensas planejadas
+        total_possible_points = all_planned_rewards[-1]['points_required'] if all_planned_rewards else 0
+        total_progress_percent = 0
+        if total_possible_points > 0:
+            total_progress_percent = min((current_points / total_possible_points) * 100, 100)
+
+        npc_list.append({
+            "name": npc_data["name"],
+            "image_filename": image_filename,
+            "flowers_text": flowers_text,
+            "flowers": npc_data.get("flowers", {}), # Passa o dicionário completo de flores
+            "rewards": npc_data.get("rewards", {}),  # Passa o dicionário completo de recompensas
+            # Novos dados de progresso para o template
+            "friendship_current": current_points,
+            "friendship_last_claimed": last_claimed_points,
+            "friendship_next_reward": next_reward_points,
+            "friendship_progress_percent": progress_percent,
+            "friendship_points_in_level": points_in_level,
+            "friendship_total_for_level": total_for_level,
+            "friendship_total_possible_points": total_possible_points,
+            "friendship_total_progress_percent": total_progress_percent,
+            "friendship_next_reward_info": next_reward_info,
+            "friendship_is_repeat_reward": is_repeat_reward,
+        })
+    
+    # Retorna a lista ordenada por nome para uma exibição consistente
+    return sorted(npc_list, key=lambda x: x['name'])
+# ---> FIM DA FUNÇÃO PARA ANÁLISE DE PRESENTES DE NPCS ---
+
+# ---> FUNÇÃO PARA CRIAÇÃO DE CAMINHOS DINAMICOS DE IMAGENS ---
+def get_item_image_path(item_name: str) -> str:
+    """
+    Determina o caminho da imagem para um item consultando o mapa mestre de itens.
+    Esta abordagem é performática e robusta, pois o mapa é construído uma única vez.
+    """
+    if not item_name:
+        return "images/resources/unknown.webp"
+
+    # 1. Casos especiais que não se encaixam no mapeamento padrão
+    if item_name == "SFL":
+        return "images/resources/flower.webp"
+    # Adiciona casos para moedas, que não estão em domínios padrão
+    if item_name == "Coins":
+        return "images/resources/coins.webp"
+    if item_name == "Gem":
+        return "images/resources/gem.webp"
+
+    path_name = item_name.lower().replace(" ", "_")
+
+    # 2. Mapeamento centralizado de categoria para a pasta de imagens correspondente
+    CATEGORY_TO_FOLDER = {
+        "Resource": "resources", "Crop": "crops", "Nodes": "nodes",
+        "Fish": "fish", "Flower": "flowers", "Seed": "seeds", "Fruit": "fruits",
+        "Tool": "tools", "Treasure": "treasure", "Building": "buildings",
+        "Food": "food", "Cake": "food/cakes", "Animal Product": "animal",
+        "Mushroom": "resources", "CompostWorm": "composters",
+        "AnimalFood": "animal_food", "AnimalMedicine": "animal_food",
+        "Fertiliser": "fertilisers", "GreenhouseCrop": "crops", "ExoticCrop": "crops",
+        "Misc": "misc",
+    }
+
+    # 3. Consulta ao mapa mestre para encontrar a categoria do item
+    category = item_map.MASTER_ITEM_MAP.get(item_name)
+
+    if category:
+        # Caso especial para bolos, que ficam numa subpasta de 'food'
+        if category == "Food" and ("Cake" in item_name or foods_domain.CONSUMABLES_DATA.get(item_name, {}).get("building") == "Bakery"):
+            folder = CATEGORY_TO_FOLDER["Cake"]
+        else:
+            folder = CATEGORY_TO_FOLDER.get(category, "resources") # Usa 'resources' como fallback
+        
+        return f"images/{folder}/{path_name}.webp"
+
+    # 4. Fallbacks para itens não encontrados no mapa
+    if "Key" in item_name: return f"images/{CATEGORY_TO_FOLDER['Misc']}/{path_name}.webp"
+    if "Seed" in item_name: return f"images/{CATEGORY_TO_FOLDER['Seed']}/{path_name}.webp"
+
+    # 5. Default final para itens completamente desconhecidos
+    return f"images/resources/{path_name}.webp"
+# ---> FIM FUNÇÃO PARA CRIAÇÃO DE CAMINHOS DINAMICOS DE IMAGENS ---

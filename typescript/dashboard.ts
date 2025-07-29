@@ -176,7 +176,11 @@ function renderGoalResults(data: any) {
             const itemClone = itemTemplate.content.cloneNode(true) as DocumentFragment;
             
             const iconEl = itemClone.querySelector<HTMLImageElement>('[data-template="icon"]');
-            if (iconEl) iconEl.src = item.icon;
+            if (iconEl && item.icon) {
+                // Lógica simplificada: O backend sempre envia um caminho relativo.
+                // O frontend apenas adiciona o prefixo /static/.
+                iconEl.src = `/static/${item.icon}`;
+            }
             
             const nameEl = itemClone.querySelector('[data-template="name"]');
             if (nameEl) nameEl.textContent = item.name;
@@ -233,8 +237,9 @@ function renderGoalResults(data: any) {
                 const total = itemClone.querySelector<HTMLTableCellElement>('[data-template="total"]');
 
                 if (icon) {
-                    const iconType = item.type === 'building' ? 'buildings' : 'nodes';
-                    icon.src = `/static/images/${iconType}/${item.name.toLowerCase().replace(/ /g, '_')}.png`;
+                    // CORREÇÃO: O backend agora fornece o caminho relativo correto no campo 'item.icon'.
+                    // O frontend apenas precisa adicionar o prefixo '/static/'.
+                    icon.src = `/static/${item.icon}`;
                 }
                 if (name) name.textContent = item.name;
                 if (total) total.textContent = `+${item.total}`;
