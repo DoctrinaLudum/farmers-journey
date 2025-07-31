@@ -24,7 +24,7 @@
                 <div class="d-flex flex-wrap gap-2">
                     <div class="w-100">
                         <!-- Atributos de dados padronizados para o filtro de estação -->
-                        <div class="btn-group btn-group-sm" id="fishing-season-filter" role="group" data-filter-group="season" data-filter-attribute="seasons">
+                        <div class="btn-group btn-group-sm" id="fishing-season-filter" role="group" data-filter-group="season" data-filter-attribute="seasons" data-filter-target="#fishing-log-accordion > tr, #fishing-codex-container .codex-item">
                             <button type="button" class="btn btn-outline-secondary active" data-filter-value="all" title="Todas"><i class="bi bi-x"></i></button>
                             <button type="button" class="btn btn-outline-secondary" data-filter-value="spring" title="Spring"><img src="{{ url_for('static', filename='images/seasons/spring.webp') }}" class="icon icon-1x"></button>
                             <button type="button" class="btn btn-outline-secondary" data-filter-value="summer" title="Summer"><img src="{{ url_for('static', filename='images/seasons/summer.webp') }}" class="icon icon-1x"></button>
@@ -34,7 +34,7 @@
                     </div>
                     <div class="w-100">
                         <!-- Atributos de dados padronizados para o filtro de tipo -->
-                        <div class="d-flex flex-wrap gap-1" id="fishing-type-filter" data-filter-group="type" data-filter-attribute="type">
+                        <div class="d-flex flex-wrap gap-1" id="fishing-type-filter" data-filter-group="type" data-filter-attribute="type" data-filter-target="#fishing-log-accordion > tr, #fishing-codex-container .codex-item">
                             <button type="button" class="btn btn-sm btn-outline-secondary active" data-filter-value="all">Tipos</button>
                             {% for type in fishing_info.all_fish_types %}
                             <button type="button" class="btn btn-sm btn-outline-secondary" data-filter-value="{{ type|lower }}">{{ type|title }}</button>

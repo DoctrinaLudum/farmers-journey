@@ -1,0 +1,168 @@
+<div id="treasure-dig-panel-wrapper">
+{% if treasure_dig_info and treasure_dig_info.stats.total_digs > 0 %}
+<div class="row g-4 mt-4">
+    <!-- Coluna da Esquerda: Estatísticas -->
+    <div class="col-lg-4">
+        <div class="card dashboard-card h-100">
+            <div class="card-header"><i class="bi bi-bar-chart-line-fill me-1"></i> Estatísticas</div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li><strong>Total de Escavações:</strong> {{ treasure_dig_info.stats.total_digs }}</li>
+                    <li><strong>Sequência Atual:</strong> {{ treasure_dig_info.stats.streak.count | default('N/A', true) }}</li>
+                </ul>
+
+                <h6>Itens Encontrados</h6>
+                <ul class="list-group list-group-flush bg-dark-subtle-item-list">
+                    {% for item, count in treasure_dig_info.stats.items_found.items() %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-secondary py-1">
+                        <span>
+                            <img src="{{ url_for('static', filename=get_item_image_path(item)) }}" class="item-icon-sm me-2" alt="{{ item }}">
+                            {{ item }}
+                        </span>
+                        <span class="badge bg-secondary rounded-pill">{{ count }}</span>
+                    </li>
+                    {% else %}
+                    <li class="list-group-item bg-transparent border-secondary py-1">Nenhum item encontrado.</li>
+                    {% endfor %}
+                </ul>
+
+                <h6 class="mt-3">Ferramentas Usadas</h6>
+                <ul class="list-group list-group-flush bg-dark-subtle-item-list">
+                     {% for tool, count in treasure_dig_info.stats.tool_usage.items() %}
+                     <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-secondary py-1">
+                         <span>
+                             <img src="{{ url_for('static', filename=get_item_image_path(tool)) }}" class="item-icon-sm me-2" alt="{{ tool }}">
+                             {{ tool }}
+                         </span>
+                         <span class="badge bg-secondary rounded-pill">{{ count }}</span>
+                     </li>
+                     {% else %}
+                     <li class="list-group-item bg-transparent border-secondary py-1">Nenhuma ferramenta usada.</li>
+                     {% endfor %}
+                 </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Coluna Central: Grid de Escavação -->
+    <div class="col-lg-4">
+        <div class="card dashboard-card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-grid-3x3-gap-fill me-1"></i> Grid de Escavação</span>
+                <div class="btn-group btn-group-sm">
+                    <button id="update-treasure-dig-btn" class="btn btn-outline-secondary" title="Atualizar dados" data-farm-id="{{ farm_id }}">
+                        <i class="bi bi-arrow-clockwise"></i>
+                        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                        <span class="cooldown-timer d-none ms-1"></span>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body d-flex flex-column justify-content-start align-items-center">
+                <div class="treasure-grid-wrapper">
+                    <!-- Eixo Y (vertical) -->
+                    <div class="treasure-grid-axis treasure-grid-axis-y">
+                        {% for i in range(10) %}<span>{{ i }}</span>{% endfor %}
+                    </div>
+                    <!-- Eixo X (horizontal) -->
+                    <div class="treasure-grid-axis treasure-grid-axis-x">
+                        {% for i in range(10) %}<span>{{ i }}</span>{% endfor %}
+                    </div>
+                    <!-- Grid de Escavação -->
+                    <div class="treasure-grid">
+                        {% for y, row in enumerate(treasure_dig_info.grid_mirror) %}
+                            {% for x, cell in enumerate(row) %}
+                            <div class="treasure-grid-cell" data-x="{{ x }}" data-y="{{ y }}">
+                                {% if cell %}
+                                <img src="{{ url_for('static', filename=cell.image) }}" alt="{{ cell.item_name }}" title="{{ cell.item_name }}" class="treasure-grid-item-icon">
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        {% endfor %}
+                        </div>
+                </div>
+                <!-- Seção de Dicas e Pistas (Refatorada) -->
+                {# Filtra a lista para encontrar padrões não concluídos, resolvendo um problema de escopo do Jinja. #}
+                {% set uncompleted_patterns = treasure_dig_info.patterns.current | rejectattr('is_completed') | list %}
+                {% if uncompleted_patterns %}
+                <div class="mt-3 w-100">
+                    <h6 class="mb-2">Dicas e Pistas</h6>
+                    {% if treasure_dig_info.hints %}
+                    <div class="accordion accordion-flush" id="hints-accordion">
+                        {% for hint_group in treasure_dig_info.hints %}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="heading-{{ loop.index }}">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ loop.index }}" aria-expanded="false" aria-controls="collapse-{{ loop.index }}">
+                                        {{ hint_group.pattern_name }}
+                                    </button>
+                                </h2>
+                                <div id="collapse-{{ loop.index }}" class="accordion-collapse collapse" aria-labelledby="heading-{{ loop.index }}" data-bs-parent="#hints-accordion">
+                                    <div class="accordion-body">
+                                        <ul class="list-group list-group-flush small">
+                                            {% for hint in hint_group.possible_locations %}
+                                                <li class="list-group-item bg-transparent border-secondary py-1 d-flex align-items-start" data-highlight-coords="{{ hint.highlight_coords | safe }}">
+                                                    <i class="bi bi-pin-map-fill text-success me-2 mt-1"></i>
+                                                    <span>{{ hint.text }}</span>
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info small py-2 mt-2">
+                        <i class="bi bi-search me-1"></i>
+                        Nenhuma correspondência de padrão encontrada ainda. Continue cavando para revelar mais pistas!
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Coluna da Direita: Padrões -->
+    <div class="col-lg-4">
+        <div class="card dashboard-card h-100">
+            <div class="card-header"><i class="bi bi-bullseye me-1"></i> Objetivos</div>
+            <div class="card-body">
+                <h6>Padrões Atuais</h6>
+                {% if treasure_dig_info.patterns.current %}
+                <div class="treasure-patterns-container">
+                    {# Loop através dos padrões atuais para desenhar os mini-grids #}
+                    {% for pattern in treasure_dig_info.patterns.current %}
+                    {# Adiciona a classe 'is-completed' se o padrão estiver concluído #}
+                    <div class="treasure-pattern-item {% if pattern.is_completed %}is-completed{% endif %}" title="{{ pattern.name }}">
+                        {% if pattern.grid_data.mini_grid %}
+                        {# Define uma variável CSS com o tamanho do grid, mantendo o CSS separado #}
+                        <div class="pattern-mini-grid">
+                            {% for row in pattern.grid_data.mini_grid %}
+                                {% for cell in row %}
+                                    <div class="pattern-mini-grid-cell">
+                                        {% if cell %}
+                                            <img src="{{ url_for('static', filename=cell.image) }}" alt="{{ cell.item_name }}" title="{{ cell.item_name }}" class="pattern-mini-grid-icon">
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            {% endfor %}
+                        </div>
+                                    <span class="pattern-mini-grid-name">{{ pattern.name }}</span>
+                        {% else %}
+                        {# Fallback para imagem se o padrão não estiver definido no backend #}
+                        <img src="{{ url_for('static', filename=pattern.image) }}" alt="{{ pattern.name }}">
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted small">Nenhum padrão ativo.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+    <div class="alert alert-info mt-4">Ainda não há dados de escavação para analisar. Jogue um pouco e clique no botão de atualizar no painel de Objetivos!</div>
+{% endif %}

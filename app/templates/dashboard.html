@@ -40,6 +40,11 @@
             </button>
         </li>
         <li class="nav-item" role="presentation">
+            <button class="nav-link" id="treasure_dig-tab" data-bs-toggle="tab" data-bs-target="#treasure_dig-pane" type="button" role="tab" aria-controls="treasure_dig-pane" aria-selected="false">
+                <i class="bi bi-unlock-fill me-1"></i> Escavação de Tesouros
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
             <button class="nav-link" id="test-tab" data-bs-toggle="tab" data-bs-target="#test-pane" type="button" role="tab" aria-controls="test-pane" aria-selected="false">
                 <i class="bi bi-bug-fill me-1"></i> Área de testes futuros
             </button>
@@ -65,6 +70,10 @@
 
         <div class="tab-pane fade" id="flowers-pane" role="tabpanel" aria-labelledby="flowers-tab">
             {% include 'partials/_flowers_panel.html' %}
+        </div>
+
+        <div class="tab-pane fade" id="treasure_dig-pane" role="tabpanel" aria-labelledby="treasure_dig-tab">
+            {% include 'partials/_treasuredig_panel.html' %}
         </div>
 
         <div class="tab-pane fade" id="test-pane" role="tabpanel" aria-labelledby="test-tab">

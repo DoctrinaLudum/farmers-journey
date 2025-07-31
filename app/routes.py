@@ -8,6 +8,7 @@ from flask import (Blueprint, json, jsonify, redirect, render_template, request,
 import config
 
 from . import analysis, sunflower_api
+from .cache import cache  # Importa o objeto 'cache' diretamente
 from .domain import expansions, npcs as npc_domain
 from .analysis import build_bumpkin_image_url
 from .domain import flowers as flower_domain, fruits as fruit_domain, foods as foods_domain
@@ -49,7 +50,8 @@ def farm_dashboard(farm_id):
         # Domínios de dados para uso nos templates
         "flower_domain": flower_domain, "fruit_domain": fruit_domain, "foods_domain": foods_domain,
         # Funções helper para os templates
-        "get_item_image_path": analysis.get_item_image_path
+        "get_item_image_path": analysis.get_item_image_path,
+        "enumerate": enumerate
     }
 
     # 2. Busca dos dados das APIs.
@@ -265,8 +267,20 @@ def farm_dashboard(farm_id):
         log.error(f"Falha ao processar dados de presentes de NPCs: {e}", exc_info=True)
         context['npc_gift_info'] = [] # Garante que a chave exista no contexto
 
-    return render_template('dashboard.html', title=f"Painel de {context['username']}", **context)
+    # 11. Processamento de Escavação de Tesouros (Desert Digging)
+    try:
+        context['treasure_dig_info'] = analysis.analyze_desert_digging_data(main_farm_data)
+    except Exception as e:
+        log.error(f"Falha ao processar dados de digitação de tesouros: {e}", exc_info=True)
+        # Garante que a estrutura padrão exista em caso de erro para evitar que o template quebre
+        context['treasure_dig_info'] = {
+            'grid_mirror': [],
+            'stats': {},
+            'patterns': {'current': [], 'completed': []}
+        }
 
+    return render_template('dashboard.html', title=f"Painel de {context['username']}", **context)
+    
 
 @bp.route('/api/goal_requirements/<int:farm_id>/<string:current_land_type>/<int:current_level>')
 def api_goal_requirements(farm_id, current_land_type, current_level):
@@ -342,8 +356,7 @@ def api_goal_requirements(farm_id, current_land_type, current_level):
                 "shortfall": f"{shortfall:.2f}",
                 "needed": f"{needed_total:.2f}",
                 "value_of_needed": f"{value_of_needed:.2f}",
-                "sfl_value": f"{sfl_value:.2f}", # Valor individual em SFL
-                # CORREÇÃO: Remover url_for para enviar apenas o caminho relativo.
+                "sfl_value": f"{sfl_value:.2f}",
                 "icon": analysis.get_item_image_path(item)
             })
 
@@ -363,3 +376,37 @@ def api_goal_requirements(farm_id, current_land_type, current_level):
     except Exception as e:
         log.error("Erro inesperado no endpoint da API de metas para a fazenda %s: %s", farm_id, e, exc_info=True)
         return jsonify({"error": "Um erro inesperado ocorreu."}), 500
+
+@bp.route('/api/farm/<int:farm_id>/treasure_dig_update')
+def api_treasure_dig_update(farm_id):
+    """
+    Endpoint da API para atualizar os dados do painel de escavação de tesouros.
+    """
+    try:
+        # 1. Limpa o cache para forçar a busca de novos dados
+        cache.delete(f"farm_data_{farm_id}")
+        cache.delete(f"sfl_world_{farm_id}_land") # Limpa também o cache da API secundária
+        log.info(f"Cache para a fazenda #{farm_id} foi limpo para atualização.")
+
+        # 2. Busca os dados mais recentes
+        main_farm_data, _, api_error = sunflower_api.get_farm_data(farm_id)
+        if api_error or not main_farm_data:
+            return jsonify({"error": f"Não foi possível buscar dados atualizados: {api_error}"}), 500
+
+        # 3. Analisa os dados de escavação
+        treasure_dig_info = analysis.analyze_desert_digging_data(main_farm_data)
+
+        # 4. Renderiza apenas o painel parcial com os novos dados
+        updated_html = render_template(
+            'partials/_treasuredig_panel.html',
+            treasure_dig_info=treasure_dig_info,
+            farm_id=farm_id, # Passa o farm_id para que o botão continue a funcionar
+            get_item_image_path=analysis.get_item_image_path,
+            enumerate=enumerate
+        )
+
+        return jsonify({"success": True, "html": updated_html})
+
+    except Exception as e:
+        log.error(f"Erro inesperado ao atualizar dados de escavação para a fazenda {farm_id}: {e}", exc_info=True)
+        return jsonify({"error": "Um erro inesperado ocorreu no servidor."}), 500

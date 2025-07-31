@@ -1,5 +1,4 @@
 // typescript/dashboard.ts
-
 /**
  * Ponto de entrada principal do script.
  * Executa quando todo o conteúdo HTML da página foi carregado.
@@ -24,6 +23,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Configura a interatividade para cada painel de forma genérica
     setupPanelInteractivity('fishing');
     setupPanelInteractivity('flowers');
+
+    // NOVO: Configura todos os filtros genéricos da página (incluindo o de NPCs)
+    setupGenericFilters();
+
+    // NOVO: Configura o botão de atualização do painel de tesouros.
+    setupTreasureDigUpdater();
+
+    // NOVO: Configura o realce do grid de tesouros ao passar o mouse sobre as dicas.
+    setupHintHighlighter();
+    
 });
 
 /**
@@ -105,6 +114,144 @@ function setupMilestoneInteraction() {
     });
 }
 
+/**
+ * Configura o botão de atualização para o painel de escavação de tesouros.
+ * Usa delegação de evento para funcionar mesmo após o painel ser recarregado via AJAX.
+ */
+function setupTreasureDigUpdater() {
+    const COOLDOWN_SECONDS = 10;
+
+    /**
+     * Desativa um botão e exibe um contador regressivo.
+     * @param button O elemento do botão para aplicar o cooldown.
+     */
+    const startCooldown = (button: HTMLButtonElement) => {
+        button.disabled = true;
+        const icon = button.querySelector<HTMLElement>('i.bi-arrow-clockwise');
+        const spinner = button.querySelector<HTMLElement>('.spinner-border');
+        const timerSpan = button.querySelector<HTMLSpanElement>('.cooldown-timer');
+
+        if (!timerSpan) return;
+
+        // Esconde outros elementos e mostra o timer
+        icon?.classList.add('d-none');
+        spinner?.classList.add('d-none');
+        timerSpan.classList.remove('d-none');
+
+        let secondsLeft = COOLDOWN_SECONDS;
+        timerSpan.textContent = `(${secondsLeft}s)`;
+
+        const interval = setInterval(() => {
+            secondsLeft--;
+            if (timerSpan) timerSpan.textContent = `(${secondsLeft}s)`;
+            
+            if (secondsLeft <= 0) {
+                clearInterval(interval);
+                button.disabled = false;
+                timerSpan?.classList.add('d-none');
+                icon?.classList.remove('d-none');
+            }
+        }, 1000);
+    };
+
+    // Cooldown inicial ao carregar a página
+    const initialButton = document.querySelector<HTMLButtonElement>('#update-treasure-dig-btn');
+    if (initialButton) {
+        startCooldown(initialButton);
+    }
+
+    // Ouvinte de evento para cliques
+    document.addEventListener('click', async (event) => {
+        const target = event.target as HTMLElement;
+        // Encontra o botão de atualização, mesmo que o clique seja em um ícone dentro dele
+        const updateButton = target.closest<HTMLButtonElement>('#update-treasure-dig-btn');
+
+        if (!updateButton || updateButton.disabled) return;
+
+        const farmId = updateButton.dataset.farmId;
+        const icon = updateButton.querySelector<HTMLElement>('i.bi-arrow-clockwise');
+        const spinner = updateButton.querySelector<HTMLElement>('.spinner-border');
+        const timerSpan = updateButton.querySelector<HTMLSpanElement>('.cooldown-timer');
+        const panelWrapper = document.getElementById('treasure-dig-panel-wrapper');
+
+        if (!farmId || !panelWrapper) {
+            console.error("Botão de atualização ou painel wrapper não encontrado.");
+            return;
+        }
+
+        // Mostra o estado de carregamento (spinner)
+        updateButton.disabled = true;
+        icon?.classList.add('d-none');
+        timerSpan?.classList.add('d-none');
+        spinner?.classList.remove('d-none');
+
+        try {
+            const response = await fetch(`/api/farm/${farmId}/treasure_dig_update`);
+            if (!response.ok) {
+                throw new Error(`A resposta da rede não foi OK (${response.status}).`);
+            }
+            const data = await response.json();
+
+            if (data.success) {
+                panelWrapper.innerHTML = data.html;
+                // Após a atualização, encontra o novo botão e inicia seu cooldown
+                const newButton = document.querySelector<HTMLButtonElement>('#update-treasure-dig-btn');
+                if (newButton) {
+                    startCooldown(newButton);
+                }
+                // Dispara um evento customizado para notificar outros scripts que o painel foi atualizado
+                panelWrapper.dispatchEvent(new CustomEvent('panelUpdated'));
+            } else {
+                console.error('Erro ao atualizar:', data.error);
+                alert('Falha ao buscar dados atualizados. Tente novamente.');
+                startCooldown(updateButton); // Inicia cooldown mesmo em caso de falha
+            }
+        } catch (error) {
+            console.error('Erro na requisição fetch:', error);
+            alert('Ocorreu um erro de rede. Verifique sua conexão e tente novamente.');
+            startCooldown(updateButton); // Inicia cooldown em caso de erro de rede
+        }
+    });
+}
+
+/**
+ * Configura o realce no grid de escavação quando o usuário passa o mouse
+ * sobre uma dica de padrão.
+ */
+function setupHintHighlighter() {
+    // Usa delegação de evento no wrapper do painel, pois o conteúdo é dinâmico.
+    const panelWrapper = document.getElementById('treasure-dig-panel-wrapper');
+    if (!panelWrapper) return;
+
+    const clearHighlights = () => {
+        document.querySelectorAll('.treasure-grid-cell.hint-highlight').forEach(cell => {
+            cell.classList.remove('hint-highlight');
+        });
+    };
+
+    panelWrapper.addEventListener('mouseover', (event) => {
+        const target = event.target as HTMLElement;
+        const hintLi = target.closest<HTMLElement>('[data-highlight-coords]');
+
+        if (hintLi) {
+            // Limpa destaques anteriores para evitar sobreposição se o mouse se mover rápido
+            clearHighlights();
+            try {
+                const coordsToHighlight: [number, number][] = JSON.parse(hintLi.dataset.highlightCoords || '[]');
+                
+                coordsToHighlight.forEach(([x, y]) => {
+                    const cell = document.querySelector(`.treasure-grid-cell[data-x='${x}'][data-y='${y}']`);
+                    cell?.classList.add('hint-highlight');
+                });
+            } catch (e) {
+                console.error("Falha ao analisar as coordenadas de realce:", e);
+            }
+        }
+    });
+
+    // Limpa os destaques quando o mouse sai da área do painel que contém as dicas
+    panelWrapper.addEventListener('mouseout', clearHighlights);
+}
 
 /**
  * Propósito: Ler o valor de progresso de todas as barras e definir a sua largura visual.
@@ -372,72 +519,8 @@ function setupInteractiveMap() {
 function setupPanelInteractivity(panelPrefix: string) {
     const panel = document.getElementById(`${panelPrefix}-panel`);
     if (!panel) return;
-
-    setupPanelFilters(panelPrefix);
+    // A filtragem agora é tratada pelo setupGenericFilters global.
     setupPanelTableSorter(panelPrefix);
-}
-
-/**
- * Configura os botões de filtro para um painel específico.
- * Funciona para múltiplos grupos de filtros (ex: por estação, por tipo).
- * @param panelPrefix O prefixo do painel.
- */
-function setupPanelFilters(panelPrefix: string) {
-    const filterGroups = document.querySelectorAll(`#${panelPrefix}-panel [data-filter-group]`);
-    if (filterGroups.length === 0) return;
-
-    const tableRows = document.querySelectorAll(`#${panelPrefix}-log-accordion > tr[data-seasons]`);
-    const codexItems = document.querySelectorAll(`#${panelPrefix}-codex-container .codex-item`);
-    const activeFilters: { [key: string]: string } = {};
-
-    const applyFilters = () => {
-        const allItems = [...tableRows, ...codexItems];
-
-        allItems.forEach(itemEl => {
-            const item = itemEl as HTMLElement;
-            let allMatch = true;
-
-            for (const attribute in activeFilters) {
-                const filterValue = activeFilters[attribute];
-                const itemValue = item.dataset[attribute] || '';
-
-                if (filterValue !== 'all' && !itemValue.includes(filterValue)) {
-                    allMatch = false;
-                    break;
-                }
-            }
-
-            // Lógica para mostrar/esconder
-            const isTableRow = item.matches('tr');
-            const shouldShow = allMatch;
-
-            item.style.display = shouldShow ? (isTableRow ? '' : 'flex') : 'none';
-            if (isTableRow) {
-                const detailsRow = item.nextElementSibling;
-                if (detailsRow) (detailsRow as HTMLElement).style.display = shouldShow ? '' : 'none';
-            }
-        });
-    };
-
-    filterGroups.forEach(group => {
-        const filterAttribute = (group as HTMLElement).dataset.filterAttribute;
-        if (!filterAttribute) return;
-
-        activeFilters[filterAttribute] = 'all'; // Estado inicial
-
-        group.addEventListener('click', (event) => {
-            const button = (event.target as HTMLElement).closest('button');
-            if (!button) return;
-
-            const filterValue = button.dataset.filterValue || 'all';
-            activeFilters[filterAttribute] = filterValue;
-
-            group.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-
-            applyFilters();
-        });
-    });
 }
 
 /**
@@ -481,6 +564,112 @@ function setupPanelTableSorter(panelPrefix: string) {
             rowPairs.forEach(pair => {
                 tableBody.appendChild(pair[0]);
                 tableBody.appendChild(pair[1]);
+            });
+        });
+    });
+}
+
+/**
+ * NOVO: Configura todos os grupos de filtros genéricos na página.
+ * Um grupo de filtro é um elemento com `data-filter-group` e `data-filter-target`.
+ * Ele filtra os elementos alvo com base nos botões clicados dentro dele.
+ */
+function setupGenericFilters() {
+    // Mapa para agrupar filtros pelo seu seletor de alvo.
+    // Chave: seletor CSS (ex: '#npc-gift-accordion > .list-group-item')
+    // Valor: { elements: NodeListOf<Element>, activeFilters: { [key: string]: string } }
+    const filterTargets = new Map<string, { elements: NodeListOf<Element>, activeFilters: { [key: string]: string } }>();
+
+    const filterGroups = document.querySelectorAll('[data-filter-group]');
+
+    // 1. Agrupar todos os filtros e seus alvos
+    filterGroups.forEach(groupEl => {
+        const group = groupEl as HTMLElement;
+        const targetSelector = group.dataset.filterTarget;
+        if (!targetSelector) return;
+
+        // Se este seletor de alvo ainda não foi visto, inicialize-o no mapa.
+        if (!filterTargets.has(targetSelector)) {
+            const elements = document.querySelectorAll(targetSelector);
+            if (elements.length > 0) {
+                filterTargets.set(targetSelector, {
+                    elements: elements,
+                    activeFilters: {}
+                });
+            }
+        }
+    });
+
+    // 2. Adicionar ouvintes de evento a cada grupo de filtro
+    filterGroups.forEach(groupEl => {
+        const group = groupEl as HTMLElement;
+        const targetSelector = group.dataset.filterTarget;
+        if (!targetSelector) return;
+
+        const targetData = filterTargets.get(targetSelector);
+        if (!targetData) return;
+        
+        group.addEventListener('click', (event) => {
+            const button = (event.target as HTMLElement).closest('button');
+            if (!button) return;
+
+            const isAlreadyActive = button.classList.contains('active');
+            let filterValue = button.dataset.filterValue || 'all';
+            // O atributo a ser filtrado (ex: 'seasons', 'type', 'key-reward')
+            // Usa o atributo do botão se existir, senão o do grupo.
+            const filterAttribute = button.dataset.filterAttribute || group.dataset.filterAttribute || '';
+
+            if (!filterAttribute) return;
+
+            // LÓGICA DE TOGGLE: Se clicar em um filtro já ativo (que não seja o 'todos'),
+            // desativa esse filtro e volta para a visualização 'todos'.
+            if (isAlreadyActive && filterValue !== 'all') {
+                delete targetData.activeFilters[filterAttribute];
+                button.classList.remove('active');
+                const allButton = group.querySelector('button[data-filter-value="all"]');
+                if (allButton) allButton.classList.add('active');
+            } else {
+                // Lógica original: define o filtro com base no botão clicado.
+                if (filterValue === 'all') {
+                    delete targetData.activeFilters[filterAttribute];
+                } else {
+                    targetData.activeFilters[filterAttribute] = filterValue;
+                }
+                // Atualiza a classe 'active' nos botões do grupo atual
+                group.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+            }
+
+            // Aplica a lógica de filtragem para os elementos alvo
+            targetData.elements.forEach(itemEl => {
+                const item = itemEl as HTMLElement;
+                let isVisible = true;
+
+                // Verifica se o item corresponde a TODOS os filtros ativos para este alvo
+                for (const attr in targetData.activeFilters) {
+                    // CORREÇÃO: Converte o nome do atributo de kebab-case (ex: 'key-reward')
+                    // para camelCase (ex: 'keyReward') para acessar o DOM dataset corretamente.
+                    const camelCaseAttr = attr.replace(/-./g, x => x.toUpperCase()[1]);
+
+                    const filter = targetData.activeFilters[attr];
+                    const itemValue = item.dataset[camelCaseAttr] || '';
+                    
+                    // A lógica de `includes` é mais flexível para atributos com múltiplos valores (ex: data-seasons="spring,summer")
+                    if (!itemValue.includes(filter)) {
+                        isVisible = false;
+                        break;
+                    }
+                }
+                
+                // Lógica para mostrar/esconder
+                const isTableRow = item.matches('tr');
+                item.style.display = isVisible ? '' : 'none';
+                
+                // Se for uma linha de tabela, também esconde a linha de detalhes seguinte
+                if (isTableRow) {
+                    const detailsRow = item.nextElementSibling;
+                    if (detailsRow) (detailsRow as HTMLElement).style.display = isVisible ? '' : 'none';
+                }
             });
         });
     });

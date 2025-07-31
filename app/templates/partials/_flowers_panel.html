@@ -22,7 +22,7 @@
                 <div class="d-flex flex-wrap gap-2">
                     <div class="w-100">
                         <!-- Atributos de dados padronizados para o filtro de estação -->
-                        <div class="btn-group btn-group-sm" id="flowers-season-filter" role="group" data-filter-group="season" data-filter-attribute="seasons">
+                        <div class="btn-group btn-group-sm" id="flowers-season-filter" role="group" data-filter-group="season" data-filter-attribute="seasons" data-filter-target="#flowers-log-accordion > tr.flower-row, #flowers-codex-container .codex-item">
                             <button type="button" class="btn btn-outline-secondary active" data-filter-value="all" title="Todas"><i class="bi bi-x"></i></button>
                             <button type="button" class="btn btn-outline-secondary" data-filter-value="spring" title="Spring"><img src="{{ url_for('static', filename='images/seasons/spring.webp') }}" class="icon icon-1x"></button>
                             <button type="button" class="btn btn-outline-secondary" data-filter-value="summer" title="Summer"><img src="{{ url_for('static', filename='images/seasons/summer.webp') }}" class="icon icon-1x"></button>
@@ -32,7 +32,7 @@
                     </div>
                     <div class="w-100">
                         <!-- Atributos de dados padronizados para o filtro de tipo -->
-                        <div class="d-flex flex-wrap gap-1" id="flowers-type-filter" data-filter-group="type" data-filter-attribute="type">
+                        <div class="d-flex flex-wrap gap-1" id="flowers-type-filter" data-filter-group="type" data-filter-attribute="type" data-filter-target="#flowers-log-accordion > tr.flower-row, #flowers-codex-container .codex-item">
                             <button type="button" class="btn btn-sm btn-outline-secondary active" data-filter-value="all">Tipos</button>
                             {% for type in flower_info.all_flower_types %}
                             <button type="button" class="btn btn-sm btn-outline-secondary" data-filter-value="{{ type|lower }}">{{ type }}</button>
@@ -118,38 +118,30 @@
     </div>
 
     <div class="col-lg-4">
-            <div class="card shadow-sm mb-3">
-            <div class="card-header bg-light"><h5 class="mb-0"><i class="bi bi-bar-chart-line-fill me-2"></i>Estatísticas</h5></div>
-            <ul class="list-group list-group-flush">
-                <li class="list-group-item d-flex justify-content-between"><span><i class="bi bi-flower1 me-2 text-primary"></i>Total de Colheitas:</span><strong>{{ flower_info.total_harvested }}</strong></li>
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <span><i class="bi bi-trophy-fill me-2 text-warning"></i>Flor Mais Colhida:</span>
-                    {% if flower_info.most_harvested_flower.name != 'N/A' %}
-                        <div class="d-flex align-items-center">
-                            <img src="{{ url_for('static', filename=flower_info.most_harvested_flower.icon) }}" alt="{{ flower_info.most_harvested_flower.name }}" class="icon icon-2x me-2">
-                            <div class="text-end">
-                                <strong class="d-block">{{ flower_info.most_harvested_flower.name }}</strong>
-                                <small class="text-muted">{{ flower_info.most_harvested_flower.count }} colheitas</small>
-                            </div>
-                        </div>
-                    {% else %}
-                        <strong>N/A</strong>
-                    {% endif %}
-                </li>
-            </ul>
-        </div>
-        <div class="card shadow-sm">
-            <div class="card-header bg-light"><h5 class="mb-0"><i class="bi bi-gift-fill me-2"></i>Presentes</h5></div>
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-gift-fill me-2"></i>Presentes</h5>
+                <div id="npc-filter" data-filter-group="npc-properties" data-filter-target="#npc-gift-accordion > .list-group-item" data-filter-attribute="repeating-key-reward">
+                    <div class="btn-group btn-group-sm">
+                        <button type="button" class="btn btn-outline-secondary active" data-filter-value="all" title="Mostrar todos os NPCs">
+                            <i class="bi bi-people-fill"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" data-filter-value="true" title="Mostrar apenas NPCs em loop de repetição de chaves (clique novamente para remover)">
+                            <i class="bi bi-key-fill"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
             <div class="card-body p-0">
                 <ul class="list-group list-group-flush" id="npc-gift-accordion">
                 {% for npc in npc_gift_info %}
-                    <li class="list-group-item">
-                        <div class="d-flex align-items-center justify-content-between clickable-header" data-bs-toggle="collapse" data-bs-target="#collapse-npc-{{ npc.name|replace(' ', '-')|lower }}">
+                    <li class="list-group-item" data-repeating-key-reward="{{ 'true' if npc.gives_repeating_key else 'false' }}" data-npc-name="{{ npc.name|lower }}">
+                        <div class="d-flex align-items-center justify-content-between clickable-header" data-bs-toggle="collapse" data-bs-target="#collapse-npc-{{ npc.name|replace("'", '')|replace(' ', '-')|lower }}">
                             <div class="d-flex align-items-center">
                                 <img src="{{ url_for('static', filename='images/npcs/' + npc.image_filename) }}" alt="{{ npc.name }}" class="icon npc-avatar me-3">
                                 <div class="w-100">
                                     <h6 class="mb-1">{{ npc.name }}</h6>
-                                    {% if npc.friendship_next_reward > 0 %}
+                                    {% if npc.friendship_next_reward > 0 or npc.friendship_is_repeat_reward %}
                                         <div class="progress progress-thin mb-1" role="progressbar" aria-label="Progresso de Amizade" aria-valuenow="{{ npc.friendship_progress_percent }}" aria-valuemin="0" aria-valuemax="100">
                                             <div class="progress-bar" style="--progress-percent: {{ npc.friendship_progress_percent }}%"></div>
                                         </div>
@@ -181,7 +173,7 @@
                                                     {# Vestíveis #}
                                                     {% for wearable, amount in reward.get('wearables', {}).items() %}
                                                         <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle fw-normal d-flex align-items-center" title="{{ wearable }}">
-                                                            <img src="{{ url_for('static', filename='images/wearables/' + wearable.lower().replace(' ', '_') + '.webp') }}" class="icon icon-1x me-1">
+                                                            <img src="{{ url_for('static', filename=get_item_image_path(wearable)) }}" class="icon icon-1x me-1">
                                                             {{ wearable }}
                                                         </span>
                                                     {% endfor %}
@@ -197,7 +189,7 @@
                             </div>
                             <i class="bi bi-chevron-down"></i>
                         </div>
-                        <div class="collapse" id="collapse-npc-{{ npc.name|replace(' ', '-')|lower }}" data-bs-parent="#npc-gift-accordion" >
+                        <div class="collapse" id="collapse-npc-{{ npc.name|replace("'", '')|replace(' ', '-')|lower }}" data-bs-parent="#npc-gift-accordion" >
                             <div class="p-3 pt-2 bg-light-subtle small">
                                 {% if npc.friendship_total_possible_points > 0 %}
                                 <div class="total-progress-summary mb-3 text-center">
@@ -252,7 +244,7 @@
                                                         {% endfor %}
                                                         {% for wearable, amount in reward.get('wearables', {}).items() %}
                                                             <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle fw-normal d-flex align-items-center" title="{{ wearable }}">
-                                                                <img src="{{ url_for('static', filename='images/wearables/' + wearable.lower().replace(' ', '_') + '.webp') }}" class="icon icon-1x me-1"> {{ wearable }}
+                                                                <img src="{{ url_for('static', filename=get_item_image_path(wearable)) }}" class="icon icon-1x me-1"> {{ wearable }}
                                                             </span>
                                                         {% endfor %}
                                                     </div>
@@ -283,7 +275,7 @@
                                                         {% endfor %}
                                                         {% for wearable, amount in reward.get('wearables', {}).items() %}
                                                             <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle fw-normal d-flex align-items-center" title="{{ wearable }}">
-                                                                <img src="{{ url_for('static', filename='images/wearables/' + wearable.lower().replace(' ', '_') + '.webp') }}" class="icon icon-1x me-1"> {{ wearable }}
+                                                                <img src="{{ url_for('static', filename=get_item_image_path(wearable)) }}" class="icon icon-1x me-1"> {{ wearable }}
                                                             </span>
                                                         {% endfor %}
                                                     </div>
@@ -298,6 +290,27 @@
                 {% endfor %}
                 </ul>
             </div>
+        </div>
+        <!-- O painel de Estatísticas foi movido para baixo e não precisa mais da margem -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-light"><h5 class="mb-0"><i class="bi bi-bar-chart-line-fill me-2"></i>Estatísticas</h5></div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between"><span><i class="bi bi-flower1 me-2 text-primary"></i>Total de Colheitas:</span><strong>{{ flower_info.total_harvested }}</strong></li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-trophy-fill me-2 text-warning"></i>Flor Mais Colhida:</span>
+                    {% if flower_info.most_harvested_flower.name != 'N/A' %}
+                        <div class="d-flex align-items-center">
+                            <img src="{{ url_for('static', filename=flower_info.most_harvested_flower.icon) }}" alt="{{ flower_info.most_harvested_flower.name }}" class="icon icon-2x me-2">
+                            <div class="text-end">
+                                <strong class="d-block">{{ flower_info.most_harvested_flower.name }}</strong>
+                                <small class="text-muted">{{ flower_info.most_harvested_flower.count }} colheitas</small>
+                            </div>
+                        </div>
+                    {% else %}
+                        <strong>N/A</strong>
+                    {% endif %}
+                </li>
+            </ul>
         </div>
     </div>
 

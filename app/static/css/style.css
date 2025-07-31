@@ -27,6 +27,14 @@
     transform: rotate(180deg);
 }
 
+/* Classe de utilitário para ícones pequenos em listas */
+.item-icon-sm {
+    height: 24px;
+    width: 24px;
+    vertical-align: middle;
+    object-fit: contain;
+}
+
 .progress-thin {
     height: 6px;
 }
@@ -203,6 +211,13 @@
 /* --- Card: Planejador de Expansão --- */
 @media (min-width: 992px) {
     .border-end-lg-custom {
+        border-right: 1px solid var(--cor-borda);
+    }
+}
+
+/* Classe customizada para borda em breakpoints específicos, usada nos painéis */
+@media (min-width: 768px) { /* md breakpoint */
+    .border-end-md-custom {
         border-right: 1px solid var(--cor-borda);
     }
 }
@@ -577,6 +592,184 @@
     color: white;
     font-weight: bold;
 }
+
+/* =================================
+   PAINEL DE ESCAVAÇÃO DE TESOUROS
+   ================================= */
+.treasure-grid-wrapper {
+    display: grid;
+    /* Define um grid com uma coluna para o eixo Y e uma para o grid principal */
+    grid-template-columns: auto 1fr;
+    /* Define uma linha para o eixo X e uma para o grid principal */
+    grid-template-rows: auto 1fr;
+    gap: 4px; /* Espaçamento entre os eixos e o grid */
+    width: 100%;
+    max-width: 450px; /* Um pouco maior para acomodar os eixos */
+}
+
+/* Posiciona o grid principal na área correta do wrapper */
+.treasure-grid {
+    grid-column: 2 / 3;
+    grid-row: 2 / 3;
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    grid-template-rows: repeat(10, 1fr); /* Garante que as linhas também sejam de tamanho igual */
+    gap: 2px; /* Espaçamento entre as células */
+    width: 100%;
+    aspect-ratio: 1 / 1; /* Mantém o grid quadrado */
+    background-color: #a37b4e;
+    padding: 8px;
+    border-radius: 5px;
+    border: 2px solid #7c5c3a;
+    /* Remove margens e max-width que agora são controlados pelo wrapper */
+    max-width: none;
+    margin: 0;
+}
+.treasure-grid-axis {
+    display: grid;
+    position: relative; /* Contexto para os pseudo-elementos ::before */
+    font-size: 0.7rem;
+    font-weight: bold;
+    color: #7c5c3a;
+}
+.treasure-grid-axis span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.treasure-grid-axis-x {
+    grid-column: 2 / 3;
+    grid-row: 1 / 2;
+    grid-template-columns: repeat(10, 1fr);
+}
+.treasure-grid-axis-x::before {
+    content: 'X';
+    position: absolute;
+    left: -1px;
+    /* Alinha na parte de baixo da célula do eixo para evitar sobreposição */
+    bottom: -1px;
+    font-size: 0.8rem;
+}
+.treasure-grid-axis-y {
+    grid-column: 1 / 2;
+    grid-row: 2 / 3;
+    grid-template-rows: repeat(10, 1fr);
+}
+.treasure-grid-axis-y::before {
+    content: 'Y';
+    position: absolute;
+    top: -5px;
+    /* Alinha na parte direita da célula do eixo para evitar sobreposição */
+    right: 0;
+    font-size: 0.8rem;
+}
+.treasure-grid-cell {
+    position: relative; /* Necessário para o posicionamento absoluto do ícone filho */
+    border: 1px solid #7c5c3a;
+    background-color: #c9a37d;
+}
+.treasure-grid-cell.hint-highlight::after {
+    content: '';
+    position: absolute;
+    top: -1px; /* Ajusta para alinhar com a borda da célula */
+    left: -1px;
+    width: calc(100% + 2px);
+    height: calc(100% + 2px);
+    background-color: rgba(255, 255, 0, 0.35); /* Amarelo semi-transparente */
+    border: 2px solid #ffc107; /* Borda amarela sólida */
+    border-radius: 1px;
+    pointer-events: none; /* Permite cliques através do overlay */
+    box-sizing: border-box;
+}
+.treasure-grid-item-icon {
+    position: absolute; /* Retira o ícone do fluxo de layout, fixando o tamanho da célula. */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    image-rendering: pixelated; /* Para imagens pixel art */
+    padding: 2px; /* Adiciona o espaçamento dentro da imagem, não na célula */
+}
+.treasure-patterns-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    background-color: #00000033;
+    padding: 10px;
+    border-radius: 5px;
+}
+.treasure-pattern-item {
+    position: relative; /* Necessário para o posicionamento do overlay de conclusão */
+    background-color: rgba(255,255,255,0.1);
+    border-radius: 5px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px; /* Espaço entre o grid e o nome */
+}
+.treasure-pattern-item.is-completed {
+    opacity: 0.65; /* Suaviza a cor do item concluído */
+}
+.treasure-pattern-item.is-completed::after {
+    content: '\f26a'; /* Bootstrap Icons: check-circle-fill */
+    font-family: 'bootstrap-icons';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2.5rem;
+    color: #198754; /* Cor de sucesso do Bootstrap */
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    line-height: 1;
+}
+.treasure-pattern-item img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    image-rendering: pixelated;
+}
+.pattern-mini-grid {
+    display: grid;
+    width: 100%;
+    aspect-ratio: 1 / 1; /* Garante que o grid seja quadrado */
+    gap: 2px;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+}
+.pattern-mini-grid-name {
+    font-size: 0.7rem;
+    color: #00000096;
+    text-align: center;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.pattern-mini-grid-cell {
+    position: relative; /* Torna a célula o ponto de referência para o ícone */
+    background-color: rgba(0,0,0,0.2);
+    border-radius: 2px;
+}
+.pattern-mini-grid-icon {
+    position: absolute; /* Remove o ícone do fluxo de layout */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    image-rendering: pixelated;
+    padding: 1px; /* Adiciona um pequeno espaçamento interno */
+}
+
+.bg-dark-subtle-item-list {
+    background-color: rgba(0,0,0,0.15);
+    border-radius: 5px;
+}
+
 /* =================================
    MEDIA QUERIES PARA RESPONSIVIDADE
    ================================= */
