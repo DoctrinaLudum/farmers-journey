@@ -27,20 +27,20 @@ WEARABLES_ITEM_BUFFS = {
         ],
         "enabled": True
     },
-    "Carrot Amulet": {
-        "id": 28,
-        "part": "Necklace",
-        "boost_category": "Crop",
-        "boosts": [
-            {
-                "type": "GROWTH_TIME",
-                "operation": "percentage",
-                "value": -0.20,
-                "conditions": {"crop": "Carrot"}
-            }
-        ],
-        "enabled": True
-    },
+        "Carrot Amulet": {
+            "id": 28,
+            "part": "Necklace",
+            "boost_category": "Crop",
+            "boosts": [
+                {
+                    "type": "GROWTH_TIME",
+                    "operation": "percentage",
+                    "value": -0.20,
+                    "conditions": {"crop": "Carrot"}
+                }
+            ],
+            "enabled": True
+        },
     "Beetroot Amulet": {
         "id": 29,
         "part": "Necklace",
@@ -457,10 +457,13 @@ WEARABLES_ITEM_BUFFS = {
         "boost_category": "Resource",
         "boosts": [
             {
-                "type": "CRIMSTONE_YIELD_ON_5TH_MINE",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 2,
-                "conditions": {}
+                "conditions": {
+                    "resource": "Crimstone", 
+                    "minesLeft":1
+                }
             }
         ],
         "enabled": True
@@ -471,10 +474,10 @@ WEARABLES_ITEM_BUFFS = {
         "boost_category": "Resource",
         "boosts": [
             {
-                "type": "COOLDOWN",
+                "type": "RECOVERY_TIME",
                 "operation": "percentage",
                 "value": -0.20,
-                "conditions": {"resource": "Crimstone"}
+                "conditions": {"resource": "Crimstone Rock"}
             }
         ],
         "enabled": True
@@ -925,10 +928,10 @@ WEARABLES_ITEM_BUFFS = {
         "boost_category": "Resource",
         "boosts": [
             {
-                "type": "COOLDOWN_REDUCTION",
+                "type": "RECOVERY_TIME",
                 "operation": "percentage",
                 "value": -0.50,
-                "conditions": {"resource": "Oil"}
+                "conditions": {"resource": "Oil Reserve"}
             }
         ],
         "enabled": True
@@ -1127,16 +1130,16 @@ WEARABLES_ITEM_BUFFS = {
         "boost_category": "Resource",
         "boosts": [
             {
-                "type": "WOOD_DROPS",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 0.25,
-                "conditions": {"faction": "Bumpkins"}
+                "conditions": {"resource": "Wood", "faction": "Bumpkins"}
             },
             {
-                "type": "MINERAL_DROPS",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 0.25,
-                "conditions": {"faction": "Bumpkins"}
+                "conditions": {"resource": ["Stone", "Iron", "Gold"], "faction": "Bumpkins"}
             }
         ],
         "enabled": True
@@ -1147,16 +1150,16 @@ WEARABLES_ITEM_BUFFS = {
         "boost_category": "Resource",
         "boosts": [
             {
-                "type": "WOOD_DROPS",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 0.25,
-                "conditions": {"faction": "Goblins"}
+                "conditions": {"resource": "Wood", "faction": "Goblins"}
             },
             {
-                "type": "MINERAL_DROPS",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 0.25,
-                "conditions": {"faction": "Goblins"}
+                "conditions": {"resource": ["Stone", "Iron", "Gold"], "faction": "Goblins"}
             }
         ],
         "enabled": True
@@ -1167,16 +1170,16 @@ WEARABLES_ITEM_BUFFS = {
         "boost_category": "Resource",
         "boosts": [
             {
-                "type": "WOOD_DROPS",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 0.25,
-                "conditions": {"faction": "Nightshades"}
+                "conditions": {"resource": "Wood", "faction": "Nightshades"}
             },
             {
-                "type": "MINERAL_DROPS",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 0.25,
-                "conditions": {"faction": "Nightshades"}
+                "conditions": {"resource": ["Stone", "Iron", "Gold"], "faction": "Nightshades"}
             }
         ],
         "enabled": True
@@ -1187,16 +1190,16 @@ WEARABLES_ITEM_BUFFS = {
         "boost_category": "Resource",
         "boosts": [
             {
-                "type": "WOOD_DROPS",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 0.25,
-                "conditions": {"faction": "Sunflorians"}
+                "conditions": {"resource": "Wood", "faction": "Sunflorians"}
             },
             {
-                "type": "MINERAL_DROPS",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 0.25,
-                "conditions": {"faction": "Sunflorians"}
+                "conditions": {"resource": ["Stone", "Iron", "Gold"], "faction": "Sunflorians"}
             }
         ],
         "enabled": True

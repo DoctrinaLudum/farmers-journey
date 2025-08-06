@@ -1,6 +1,7 @@
 import os
 import sys
 
+
 def rename_files_to_webp(directory_path):
     """
     Itera sobre um diretório e altera a extensão de todos os arquivos para .webp.

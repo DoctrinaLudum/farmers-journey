@@ -1,0 +1,199 @@
+<div class="p-3">
+    {% if mining_analysis %}
+    <!-- Cartões de Resumo -->
+    <div class="row mb-4 text-center">
+        {% for resource_name, data in mining_analysis.summary.items() %}
+        <div class="col-md-4 col-lg-2 mb-3">
+            <div class="card h-100">
+                <div class="card-header p-2 small text-muted">{{ resource_name }}</div>
+                <div class="card-body p-2">
+                    <p class="card-text fs-5 fw-bold mb-1">{{ data.total }}</p>
+                    <span class="badge bg-success-subtle text-success-emphasis me-1">{{ data.ready }}</span>
+                    <span class="badge bg-warning-subtle text-warning-emphasis">{{ data.recovering }}</span>
+                </div>
+                <div class="card-footer p-2 small text-muted">
+                    Rendimento: <strong>{{ "%.2f"|format(data.total_yield) }}</strong>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Tabela de Previsão por Nó -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h6 class="mb-0"><i class="bi bi-bar-chart-line-fill me-2"></i>Status dos Nós de Mineração</h6>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Recurso</th>
+                            <th>ID</th>
+                            <th>Status</th>
+                            <th class="text-nowrap">Pronto em</th>
+                            <th class="text-nowrap">Rendimento Previsto</th>
+                            <th class="text-center" style="width: 180px;">Detalhes (Rendimento / Tempo)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for node in mining_analysis.node_status.values() %}
+                        <tr>
+                            <td>
+                                <img src="{{ url_for('static', filename=get_item_image_path(node.resource_name)) }}" class="icon icon-2x me-2" alt="{{ node.resource_name }}">
+                                {{ node.resource_name }}
+                                {% if node.has_aoe_buff %}
+                                    <span class="badge bg-info-subtle text-info-emphasis rounded-pill ms-1 small">AOE</span>
+                                {% endif %}
+                            </td>
+                            <td>#{{ node.id }}</td>
+                            <td>
+                                {% if node.status == 'Ready' %}
+                                    <span class="badge bg-success">{{ node.status }}</span>
+                                {% else %}
+                                    <span class="badge bg-warning">{{ node.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-nowrap">{{ node.ready_at_timestamp_ms | time_remaining }}</td>
+                            <td class="text-nowrap"><strong>{{ "%.2f"|format(node.calculations.yield.final_deterministic) }}</strong></td>
+                            <td class="text-center d-flex justify-content-center gap-1">
+                                <!-- Popover para Bônus de Rendimento -->
+                                {% set popover_content %}
+                                    <ul class='list-unstyled mb-0 small'>
+                                    {% for buff in node.calculations.yield.applied_buffs %}
+                                        <li>
+                                            <i class='bi bi-arrow-right-short'></i>
+                                            <strong>{{ buff.source_item }}:</strong> 
+                                            {% if buff.operation == 'add' %}
+                                                +{{ "%.2f"|format(buff.value|float) }}
+                                            {% elif buff.operation == 'subtract' %}
+                                                -{{ "%.2f"|format(buff.value|float) }}
+                                            {% elif buff.operation == 'percentage' %}
+                                                {{ "{:+.0%}".format(buff.value) }}
+                                            {% elif buff.operation == 'multiply' %}
+                                                x{{ buff.value }}
+                                            {% else %}
+                                                {{ buff.value }}
+                                            {% endif %}
+                                        </li>
+                                    {% else %}
+                                        <li>Nenhum bônus aplicado.</li>
+                                    {% endfor %}
+                                    </ul>
+                                {% endset %}
+                                <button type="button" class="btn btn-outline-info btn-sm py-0 px-2"
+                                        data-bs-toggle="popover" data-bs-trigger="focus" tabindex="0"
+                                        title="Bônus de Rendimento" data-bs-html="true"
+                                        data-bs-content="{{ popover_content | e }}">
+                                    <i class="bi bi-info-circle"></i>
+                                </button>
+
+                                <!-- Popover para Bônus de Tempo de Recuperação -->
+                                {% set recovery_popover_content %}
+                                    <ul class='list-unstyled mb-0 small'>
+                                    {% for buff in node.calculations.recovery.applied_buffs %}
+                                        <li>
+                                            <i class='bi bi-arrow-right-short'></i>
+                                            <strong>{{ buff.source_item }}:</strong>
+                                            {# Lógica de formatação unificada, espelhando o painel de madeira para consistência. #}
+                                            {% if buff.operation == 'add' %}
+                                                <span class="text-danger">+{{ buff.value }}s</span> {# Adicionar tempo é ruim #}
+                                            {% elif buff.operation == 'subtract' %}
+                                                <span class="text-success">-{{ buff.value }}s</span> {# Subtrair tempo é bom #}
+                                            {% elif buff.operation == 'percentage' %}
+                                                <span class="text-success">{{ "{:+.0%}".format(buff.value) }}</span> {# O sinal já está incluído #}
+                                            {% elif buff.operation == 'multiply' %}
+                                                x{{ buff.value }}
+                                            {% else %}
+                                                {{ buff.value }}
+                                            {% endif %}
+                                        </li>
+                                    {% else %}
+                                        <li>Nenhum bônus aplicado.</li>
+                                    {% endfor %}
+                                    </ul>
+                                {% endset %}
+                                <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2"
+                                        data-bs-toggle="popover" data-bs-trigger="focus" tabindex="0"
+                                        title="Bônus de Recuperação" data-bs-html="true"
+                                        data-bs-content="{{ recovery_popover_content | e }}">
+                                    <i class="bi bi-clock-history"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Análise Geral de Bônus -->
+    <h5 class="card-title mb-3">Análise Geral de Bônus de Mineração</h5>
+    <div class="row">
+        <div class="col-lg-4">
+            <h6><i class="bi bi-person-check-fill text-success me-2"></i>Bônus Ativos</h6>
+            <p class="small text-muted">Itens e habilidades que o jogador possui e que afetam a mineração.</p>
+            {% if mining_analysis.active_boost_items %}
+                <ul class="list-group list-group-flush">
+                    {% for item in mining_analysis.active_boost_items %}
+                        <li class="list-group-item ps-0">{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="alert alert-info small" role="alert">Nenhum bônus de mineração ativo.</div>
+            {% endif %}
+        </div>
+        <div class="col-lg-4">
+            <h6><i class="bi bi-book-fill text-primary me-2"></i>Bônus Reconhecidos</h6>
+            <p class="small text-muted">Todos os itens que o sistema reconhece como bônus de mineração.</p>
+            {% if mining_analysis.all_catalogued_items %}
+                <ul class="list-group list-group-flush">
+                    {% for item in mining_analysis.all_catalogued_items %}
+                        <li class="list-group-item ps-0">{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="alert alert-warning small" role="alert">O catálogo de bônus de mineração está vazio.</div>
+            {% endif %}
+        </div>
+        <!-- Coluna 3: Estatísticas de Golpes Críticos -->
+        <div class="col-lg-4">
+            <h6><i class="bi bi-graph-up-arrow text-warning me-2"></i>Histórico de Golpes Críticos</h6>
+            <p class="small text-muted">Contagem de bônus ativados nos últimos nós minerados.</p>
+            {% if mining_analysis.critical_hit_stats %}
+                <ul class="list-group list-group-flush">
+                    {% for hit_name, count in mining_analysis.critical_hit_stats.items() %}
+                        <li class="list-group-item ps-0 d-flex justify-content-between align-items-center">
+                            {{ hit_name }}
+                            <span class="badge bg-warning rounded-pill">{{ count }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="alert alert-info small" role="alert">
+                    Nenhum golpe crítico registrado no histórico.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Seção de JSON para depuração -->
+    <div class="mt-4">
+        <p>
+            <a class="btn btn-outline-secondary btn-sm" data-bs-toggle="collapse" href="#miningJsonCollapse" role="button" aria-expanded="false" aria-controls="miningJsonCollapse">
+                <i class="bi bi-filetype-json me-1"></i> Ver Dados Brutos (JSON)
+            </a>
+        </p>
+        <div class="collapse" id="miningJsonCollapse">
+            <pre class="bg-light p-3 rounded"><code>{{ mining_analysis | tojson(indent=2) }}</code></pre>
+        </div>
+    </div>
+
+    {% else %}
+    <div class="alert alert-secondary" role="alert">
+        Nenhuma análise de mineração disponível.
+    </div>
+    {% endif %}
+</div>

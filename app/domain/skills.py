@@ -135,10 +135,22 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "Increases Basic Scarecrow's area of effect (AOE) to a 7x7 area; Additional -10% basic crop growth time",
         "effects": [
             {
-                "type": "SCARECROW_AOE",
-                "operation": "set",
-                "value": "7x7",
-                "conditions": {"item": "Basic Scarecrow"},
+                "name": "MODIFY_ITEM_AOE",
+                "type": "ITEM_MODIFICATION",
+                "operation": "override",
+                "target_item": "Laurie the Chuckle Crow",
+                "new_aoe": {
+                    # A nova AOE é uma área de 7x7, mas ainda direcional (abaixo)
+                    "shape": "custom",
+                    "plots": [
+                        # Lista de 49 células para uma área 7x7,
+                        # começando na linha imediatamente abaixo do item (Y-1).
+                        # Coordenadas relativas à posição (X, Y) do espantalho.
+                        
+                        # Gera as 49 coordenadas (de x=-3 a x=3 e de y=-1 a y=-7)
+                        *[{ "x": dx, "y": dy } for dy in range(-1, -8, -1) for dx in range(-3, 4)]
+                    ]
+                }
             },
             {
                 "type": "CROP_GROWTH_TIME",
@@ -155,10 +167,22 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "Increases Scary Mike's area of effect (AOE) to a 7x7 area; Additional +0.1 medium crop yield",
         "effects": [
             {
-                "type": "SCARECROW_AOE",
-                "operation": "set",
-                "value": "7x7",
-                "conditions": {"item": "Scary Mike"},
+                "name": "MODIFY_ITEM_AOE",
+                "type": "ITEM_MODIFICATION",
+                "operation": "override",
+                "target_item": "Laurie the Chuckle Crow",
+                "new_aoe": {
+                    # A nova AOE é uma área de 7x7, mas ainda direcional (abaixo)
+                    "shape": "custom",
+                    "plots": [
+                        # Lista de 49 células para uma área 7x7,
+                        # começando na linha imediatamente abaixo do item (Y-1).
+                        # Coordenadas relativas à posição (X, Y) do espantalho.
+                        
+                        # Gera as 49 coordenadas (de x=-3 a x=3 e de y=-1 a y=-7)
+                        *[{ "x": dx, "y": dy } for dy in range(-1, -8, -1) for dx in range(-3, 4)]
+                    ]
+                }
             },
             {
                 "type": "CROP_YIELD",
@@ -175,10 +199,22 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "Increases Laurie the Chuckle Crow's area of effect (AOE) to a 7x7 area; Additional +0.1 advanced crop yield",
         "effects": [
             {
-                "type": "SCARECROW_AOE",
-                "operation": "set",
-                "value": "7x7",
-                "conditions": {"item": "Laurie the Chuckle Crow"},
+                "name": "MODIFY_ITEM_AOE",
+                "type": "ITEM_MODIFICATION",
+                "operation": "override",
+                "target_item": "Laurie the Chuckle Crow",
+                "new_aoe": {
+                    # A nova AOE é uma área de 7x7, mas ainda direcional (abaixo)
+                    "shape": "custom",
+                    "plots": [
+                        # Lista de 49 células para uma área 7x7,
+                        # começando na linha imediatamente abaixo do item (Y-1).
+                        # Coordenadas relativas à posição (X, Y) do espantalho.
+                        
+                        # Gera as 49 coordenadas (de x=-3 a x=3 e de y=-1 a y=-7)
+                        *[{ "x": dx, "y": dy } for dy in range(-1, -8, -1) for dx in range(-3, 4)]
+                    ]
+                }
             },
             {
                 "type": "CROP_YIELD",
@@ -216,8 +252,8 @@ BUMPKIN_REVAMP_SKILLS = {
             },
             {
                 "type": "CROP_YIELD",
-                "operation": "add",
-                "value": -0.5,
+                "operation": "subtract",
+                "value": 0.5,
                 "conditions": {"crop_tier": ["basic", "medium"]},
             },
         ],
@@ -236,8 +272,8 @@ BUMPKIN_REVAMP_SKILLS = {
             },
             {
                 "type": "CROP_YIELD",
-                "operation": "add",
-                "value": -0.5,
+                "operation": "subtract",
+                "value": 0.5,
                 "conditions": {"crop_tier": "advanced"},
             },
         ],
@@ -455,12 +491,12 @@ BUMPKIN_REVAMP_SKILLS = {
         "tier": 1,
         "island": "basic",
         "description": "+0.1 wood yield",
-        "effects": [
+        "boosts": [
             {
-                "type": "RESOURCE_YIELD",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 0.1,
-                "conditions": {"item": "Wood"},
+                "conditions": {"resource": "Wood"},
             },
         ],
     },
@@ -469,12 +505,13 @@ BUMPKIN_REVAMP_SKILLS = {
         "tier": 1,
         "island": "basic",
         "description": "-10% tree growth time",
-        "effects": [
+        "boosts": [
             {
-                "type": "TREE_RECOVERY_TIME",
-                "operation": "multiply",
-                "value": 0.90,
-            },
+                "type": "RECOVERY_TIME",
+                "operation": "percentage",
+                "value": -0.10,
+                "conditions": {"resource": "Tree"}
+            }
         ],
     },
     "More Axes": {
@@ -505,20 +542,25 @@ BUMPKIN_REVAMP_SKILLS = {
         ],
     },
     "Tough Tree": {
-        "tree": "Trees",
-        "tier": 2,
-        "island": "basic",
-        "description": "1/10 chance of x3 wood yield",
-        "effects": [
-            {
-                "type": "BONUS_YIELD_CHANCE",
-                "operation": "set_chance",
+         "tree": "Trees",
+         "tier": 2,
+         "island": "basic",
+         "description": "1/10 chance of x3 wood yield",
+         "effects": [
+             {
+                 "type": "YIELD",
+                 "operation": "multiply",
+                 "value": 3,
+                 "conditions": {"resource": "Wood"},
+             },
+             {
+                "type": "CRITICAL_CHANCE",
+                "operation": "percentage",
                 "value": 0.10,
-                "bonus_multiplier": 3,
-                "conditions": {"item": "Wood"},
-            },
-        ],
-    },
+                "conditions": {"resource": "Wood"},
+             }
+         ],
+     },
     "Feller's Discount": {
         "tree": "Trees",
         "tier": 2,
@@ -575,6 +617,25 @@ BUMPKIN_REVAMP_SKILLS = {
                 "cooldown_hours": 24,
             },
         ],
+    },
+    "Native": {
+        "tier": 1,
+        "island": "basic",
+        "description": "1/5 chance of +1 Wood, Stone, Iron or Gold",
+        "effects": [
+            {
+                "type": "YIELD",
+                "operation": "add",
+                "value": 1,
+                "conditions": {"resource": ["Wood", "Stone", "Iron", "Gold"]},
+            },
+            {
+                "type": "CRITICAL_CHANCE",
+                "operation": "percentage",
+                "value": 0.20,
+                "conditions": {"resource": ["Wood", "Stone", "Iron", "Gold"]},
+            }
+        ]
     },
 
     # --- Fishing ---
@@ -1172,7 +1233,7 @@ BUMPKIN_REVAMP_SKILLS = {
                 "type": "RESOURCE_YIELD",
                 "operation": "add",
                 "value": 0.1,
-                "conditions": {"item": "Stone"},
+                "conditions": {"resource": "Stone"},
             },
         ],
     },
@@ -1186,7 +1247,7 @@ BUMPKIN_REVAMP_SKILLS = {
                 "type": "RESOURCE_YIELD",
                 "operation": "add",
                 "value": 0.1,
-                "conditions": {"item": "Iron"},
+                "conditions": {"resource": "Iron"},
             },
         ],
     },
@@ -1197,10 +1258,10 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-20% Stone recovery time",
         "effects": [
             {
-                "type": "ROCK_RECOVERY_TIME",
-                "operation": "multiply",
-                "value": 0.80,
-                "conditions": {"item": "Stone Rock"},
+                "type": "RECOVERY_TIME",
+                "operation": "percentage",
+                "value": -0.20,
+                "conditions": {"resource": "Stone Rock"},
             },
         ],
     },
@@ -1239,10 +1300,10 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-30% Iron recovery time",
         "effects": [
             {
-                "type": "ROCK_RECOVERY_TIME",
-                "operation": "multiply",
-                "value": 0.70,
-                "conditions": {"item": "Iron Rock"},
+                "type": "RECOVERY_TIME",
+                "operation": "percentage",
+                "value": -0.30,
+                "conditions": {"resource": "Iron Rock"},
             },
         ],
     },
@@ -1270,13 +1331,13 @@ BUMPKIN_REVAMP_SKILLS = {
                 "type": "RESOURCE_YIELD",
                 "operation": "add",
                 "value": 1,
-                "conditions": {"item": "Stone"},
+                "conditions": {"resource": "Stone"},
             },
             {
                 "type": "RESOURCE_YIELD",
-                "operation": "add",
-                "value": -0.5,
-                "conditions": {"item": "Iron"},
+                "operation": "subtract",
+                "value": 0.5,
+                "conditions": {"resource": "Iron"},
             },
         ],
     },
@@ -1290,13 +1351,13 @@ BUMPKIN_REVAMP_SKILLS = {
                 "type": "RESOURCE_YIELD",
                 "operation": "add",
                 "value": 1,
-                "conditions": {"item": "Iron"},
+                "conditions": {"resource": "Iron"},
             },
             {
                 "type": "RESOURCE_YIELD",
-                "operation": "add",
-                "value": -0.5,
-                "conditions": {"item": "Stone"},
+                "operation": "subtract",
+                "value": 0.5,
+                "conditions": {"resource": "Stone"},
             },
         ],
     },
@@ -1307,10 +1368,10 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-10% Gold recovery time",
         "effects": [
             {
-                "type": "ROCK_RECOVERY_TIME",
-                "operation": "multiply",
-                "value": 0.90,
-                "conditions": {"item": "Gold Rock"},
+                "type": "RECOVERY_TIME",
+                "operation": "percentage",
+                "value": -0.10,
+                "conditions": {"resource": "Gold Rock"},
             },
         ],
     },
@@ -1321,10 +1382,10 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-20% Gold recovery time",
         "effects": [
             {
-                "type": "ROCK_RECOVERY_TIME",
-                "operation": "multiply",
-                "value": 0.80,
-                "conditions": {"item": "Gold Rock"},
+                "type": "RECOVERY_TIME",
+                "operation": "percentage",
+                "value": -0.20,
+                "conditions": {"resource": "Gold Rock"},
             },
         ],
     },
@@ -1338,7 +1399,7 @@ BUMPKIN_REVAMP_SKILLS = {
                 "type": "RESOURCE_YIELD",
                 "operation": "add",
                 "value": 0.5,
-                "conditions": {"item": "Gold"},
+                "conditions": {"resource": "Gold"},
             },
         ],
     },
@@ -1361,9 +1422,13 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+1 Crimstone yield on 5th consecutive mine",
         "effects": [
             {
-                "type": "CONSECUTIVE_MINING_BONUS",
-                "operation": "set",
-                "value": { "consecutive_count": 5, "item": "Crimstone", "bonus_yield": 1 },
+                "type": "YIELD",
+                "operation": "add",
+                "value": 1,
+                "conditions": {
+                    "resource": "Crimstone", 
+                    "minesLeft":1
+                }
             },
         ],
     },
@@ -1374,10 +1439,10 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-15% Crimstone recovery time",
         "effects": [
             {
-                "type": "ROCK_RECOVERY_TIME",
-                "operation": "multiply",
-                "value": 0.85,
-                "conditions": {"item": "Crimstone Rock"},
+                "type": "RECOVERY_TIME",
+                "operation": "percentage",
+                "value": -0.15,
+                "conditions": {"resource": "Crimstone Rock"},
             },
         ],
     },
@@ -1767,10 +1832,10 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+1 Oil when collecting from reserves",
         "effects": [
             {
-                "type": "RESOURCE_YIELD",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 1,
-                "conditions": {"item": "Oil", "source": "Oil Reserve"},
+                "conditions": {"resource": "Oil", "source": "Oil Reserve"},
             },
         ],
     },
@@ -1851,10 +1916,10 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-20% Oil refill time",
         "effects": [
             {
-                "type": "ROCK_RECOVERY_TIME",
-                "operation": "multiply",
-                "value": 0.80,
-                "conditions": {"item": "Oil Reserve"},
+                "type": "RECOVERY_TIME",
+                "operation": "percentage",
+                "value": -0.20,
+                "conditions": {"resource": "Oil Reserve"},
             },
         ],
     },
@@ -2170,7 +2235,7 @@ LEGACY_BADGES = {
                 "type": "RESOURCE_YIELD",
                 "operation": "multiply",
                 "value": 1.10,
-                "conditions": {"item": "Wood"},
+                "conditions": {"resource": "Wood"},
             },
         ],
     },
@@ -2183,9 +2248,9 @@ LEGACY_BADGES = {
         "effects": [
             {
                 "type": "RESOURCE_YIELD",
-                "operation": "multiply",
-                "value": 1.20,
-                "conditions": {"item": "Stone"},
+                "operation": "add",
+                "value": 0.20,
+                "conditions": {"resource": "Stone"},
             },
         ],
     },
@@ -2215,7 +2280,7 @@ LEGACY_BADGES = {
                 "type": "RESOURCE_YIELD",
                 "operation": "multiply",
                 "value": 1.50,
-                "conditions": {"item": "Gold"},
+                "conditions": {"resource": "Gold"},
             },
         ],
     },
@@ -2253,7 +2318,7 @@ LEGACY_BADGES = {
                 "type": "RESOURCE_YIELD",
                 "operation": "multiply",
                 "value": 1.35,
-                "conditions": {"item": "Wood"},
+                "conditions": {"resource": "Wood"},
             },
         ],
     },
@@ -2373,8 +2438,9 @@ BUMPKIN_SKILLS = {
         "effects": [
             {
                 "type": "TREE_RECOVERY_TIME",
-                "operation": "multiply",
-                "value": 0.80,
+                "operation": "percentage",
+                "value": -0.20,
+                "conditions": {"resource": "Wood"},
             },
         ],
     },
@@ -2415,7 +2481,7 @@ BUMPKIN_SKILLS = {
                 "type": "RESOURCE_YIELD",
                 "operation": "multiply",
                 "value": 1.10,
-                "conditions": {"item": "Stone"},
+                "conditions": {"resource": "Stone"},
             },
         ],
     },
@@ -2442,7 +2508,7 @@ BUMPKIN_SKILLS = {
                 "operation": "set_chance",
                 "value": 0.05, # Assuming 5% chance
                 "bonus_multiplier": 2.5,
-                "conditions": {"item": "Gold"},
+                "conditions": {"resource": "Gold"},
             },
         ],
     },

@@ -1,0 +1,77 @@
+<div class="p-3">
+    {% if bud_analysis and bud_analysis.view %}
+    <div class="row">
+        <!-- Coluna 1: Resumo dos Bônus Ativos -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-shield-check-fill me-2"></i>Bônus Ativos na Fazenda</h6>
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted">O maior bônus de cada tipo, de todos os seus Buds, é aplicado à fazenda.</p>
+                    {# Acessa os dados através da chave 'view' #}
+                    {% if bud_analysis.view.summary_list %}
+                        <ul class="list-group list-group-flush">
+                            {% for summary_item in bud_analysis.view.summary_list %}
+                                <li class="list-group-item ps-0">{{ summary_item }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <div class="alert alert-info small" role="alert">
+                            Nenhum bônus de Bud ativo encontrado.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Coluna 2: Detalhes dos Buds Individuais -->
+        <div class="col-lg-8 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-bug-fill me-2"></i>Análise por Bud</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Tipo</th>
+                                    <th>Haste</th>
+                                    <th>Aura (Multiplicador)</th>
+                                    <th>Bônus Finais</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {# Acessa os dados através da chave 'view' #}
+                                {% for bud in bud_analysis.view.individual_buds.values() %}
+                                <tr>
+                                    <td>#{{ bud.id }}</td>
+                                    <td>{{ bud.type }}</td>
+                                    <td>{{ bud.stem }}</td>
+                                    <td>{{ bud.aura }} (x{{ "%.2f"|format(bud.aura_multiplier) }})</td>
+                                    <td>
+                                        <ul class="list-unstyled mb-0 small">
+                                        {% for buff_name, buff_value in bud.final_buffs.items() %}
+                                            <li>{{ buff_name }}: {{ "%+.2f"|format(buff_value|float) }}</li>
+                                        {% else %}
+                                            <li>Nenhum bônus.</li>
+                                        {% endfor %}
+                                        </ul>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+        <div class="alert alert-secondary" role="alert">
+            Nenhuma análise de Buds disponível. A fazenda pode não ter Buds.
+        </div>
+    {% endif %}
+</div>

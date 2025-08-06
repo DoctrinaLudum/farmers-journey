@@ -1,23 +1,71 @@
 # app/routes.py
 import logging
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from decimal import Decimal, InvalidOperation
 
-from flask import (Blueprint, json, jsonify, redirect, render_template, request, url_for)
+from flask import (Blueprint, current_app, json, jsonify, redirect,
+                   render_template, request, url_for)
 
 import config
 
-from . import analysis, sunflower_api
-from .cache import cache  # Importa o objeto 'cache' diretamente
-from .domain import expansions, npcs as npc_domain
+from . import analysis, game_state, sunflower_api
 from .analysis import build_bumpkin_image_url
-from .domain import flowers as flower_domain, fruits as fruit_domain, foods as foods_domain
-
-
-
+from .cache import cache  # Importa o objeto 'cache' diretamente
+from .domain import expansions
+from .domain import flowers as flower_domain
+from .domain import foods as foods_domain
+from .domain import fruits as fruit_domain
+from .domain import npcs as npc_domain
+from .game_state import GAME_STATE
+from .services import farm_layout_service, bud_service, wood_service, mining_service
 
 log = logging.getLogger(__name__)
 bp = Blueprint('main', __name__)
+
+from datetime import datetime
+
+
+@bp.app_template_filter()
+def datetimeformat(value, format='%Y-%m-%d %H:%M:%S'):
+    if value is None:
+        return ''
+    return datetime.fromtimestamp(value / 1000).strftime(format)
+
+@bp.app_template_filter()
+def time_remaining(timestamp_ms):
+    """Calcula e formata o tempo restante a partir de um timestamp em milissegundos."""
+    if not timestamp_ms:
+        return "N/A"
+    
+    now_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
+    remaining_seconds = (timestamp_ms - now_ms) / 1000
+    
+    if remaining_seconds <= 0:
+        return "Pronta"
+        
+    days, remainder = divmod(remaining_seconds, 86400)
+    hours, remainder = divmod(remainder, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    
+    parts = []
+    if days > 0: parts.append(f"{int(days)}d")
+    if hours > 0: parts.append(f"{int(hours)}h")
+    if minutes > 0: parts.append(f"{int(minutes)}m")
+    
+    return " ".join(parts) if parts else f"{int(seconds)}s"
+
+@bp.app_template_filter()
+def format_seconds_to_hms(total_seconds):
+    """Formata uma duração em segundos para o formato hh:mm:ss."""
+    if not isinstance(total_seconds, (int, float, Decimal)) or total_seconds < 0:
+        return "00:00:00"
+    
+    total_seconds = int(total_seconds)
+    
+    hours, remainder = divmod(total_seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    
+    return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
 
 @bp.route('/', methods=['GET'])
 def index():
@@ -269,7 +317,10 @@ def farm_dashboard(farm_id):
 
     # 11. Processamento de Escavação de Tesouros (Desert Digging)
     try:
-        context['treasure_dig_info'] = analysis.analyze_desert_digging_data(main_farm_data)
+        context['treasure_dig_info'] = analysis.analyze_desert_digging_data(
+            main_farm_data,
+            seasonal_artefact=game_state.GAME_STATE.get('current_artefact_name')
+        )
     except Exception as e:
         log.error(f"Falha ao processar dados de digitação de tesouros: {e}", exc_info=True)
         # Garante que a estrutura padrão exista em caso de erro para evitar que o template quebre
@@ -278,6 +329,75 @@ def farm_dashboard(farm_id):
             'stats': {},
             'patterns': {'current': [], 'completed': []}
         }
+
+    # 12. Processamento de Buffs de Buds (MOVIDO PARA CIMA para ser usado por outros serviços)
+    context['bud_analysis'] = None
+    active_bud_buffs = {}  # Inicializa como um dicionário vazio para segurança
+    try:
+        bud_data = bud_service.analyze_bud_buffs(main_farm_data)
+        if bud_data:
+            context['bud_analysis'] = bud_data
+            # Extrai os bônus ativos do novo formato interno para passar a outros serviços.
+            # Acessa de forma segura a estrutura aninhada para obter os bônus.
+            active_bud_buffs = bud_data.get("internal", {}).get("active_buffs", {})
+            # DEBUG: Log para verificar quais bônus de Bud estão sendo passados para outros serviços.
+            log.debug(f"Passing the following active_bud_buffs to services: {active_bud_buffs}")
+            log.info(f"Análise de Buds concluída com sucesso para a fazenda #{farm_id}.")
+    except Exception as e:
+        log.error(f"Falha ao analisar buffs de Buds: {e}", exc_info=True)
+
+    # Lista para agregar todas as análises de recursos para o painel de depuração
+    resource_analyses = []
+
+    # 13. Processamento de Recursos de Madeira (Wood)
+    context['wood_analysis'] = None
+    try:
+        # Passa a variável 'active_bud_buffs' que acabamos de criar.
+        # Agora o serviço de madeira sempre receberá um dicionário, mesmo que vazio.
+        wood_data = wood_service.analyze_wood_resources(main_farm_data, active_bud_buffs)
+
+        # Acessa a chave 'view' que contém os dados formatados para o template.
+        wood_view_data = wood_data.get("view") if wood_data else None
+
+        if wood_view_data and 'summary' in wood_view_data and 'tree_status' in wood_view_data:
+            # Passa apenas os dados da view para o contexto, para que o template não precise ser alterado.
+            context['wood_analysis'] = wood_view_data
+            resource_analyses.append({'name': 'Madeira', 'data': wood_view_data})
+            log.info(f"Análise de madeira (com buffs de Bud) processada com sucesso para a fazenda #{farm_id}.")
+        else:
+            log.warning(f"Dados de análise de madeira ausentes ou incompletos para a fazenda #{farm_id}.")
+    except Exception as e:
+        log.error(f"Falha ao analisar dados de madeira: {e}", exc_info=True)
+
+    # 14. Processamento de Recursos de Mineração (Mining)
+    context['mining_analysis'] = None
+    try:
+        mining_data = mining_service.analyze_mining_resources(main_farm_data, active_bud_buffs)
+        mining_view_data = mining_data.get("view") if mining_data else None
+
+        if mining_view_data:
+            context['mining_analysis'] = mining_view_data
+            resource_analyses.append({'name': 'Mineração', 'data': mining_view_data})
+            log.info(f"Análise de mineração processada com sucesso para a fazenda #{farm_id}.")
+        else:
+            log.warning(f"Dados de análise de mineração ausentes para a fazenda #{farm_id}.")
+    except Exception as e:
+        log.error(f"Falha ao analisar dados de mineração: {e}", exc_info=True)
+
+    # Adiciona a lista de análises de recursos ao contexto para o painel de depuração
+    context['resource_analyses'] = resource_analyses
+
+    # 14. Processamento do Mapa da Fazenda
+    context['layout_map'] = None
+    try:
+        layout_map_data = farm_layout_service.generate_layout_map(main_farm_data)
+        if layout_map_data:
+            context['layout_map'] = layout_map_data
+            log.info(f"Mapa da fazenda gerado com sucesso para a fazenda #{farm_id}.")
+        else:
+            log.warning(f"Não foi possível gerar o mapa da fazenda para a fazenda #{farm_id}.")
+    except Exception as e:
+        log.error(f"Falha ao gerar o mapa da fazenda: {e}", exc_info=True)
 
     return render_template('dashboard.html', title=f"Painel de {context['username']}", **context)
     
@@ -394,7 +514,14 @@ def api_treasure_dig_update(farm_id):
             return jsonify({"error": f"Não foi possível buscar dados atualizados: {api_error}"}), 500
 
         # 3. Analisa os dados de escavação
-        treasure_dig_info = analysis.analyze_desert_digging_data(main_farm_data)
+        # CORREÇÃO: Obter o 'seasonal_artefact' do estado global do jogo.
+        seasonal_artefact = GAME_STATE.get('current_artefact_name')
+        if not seasonal_artefact:
+            current_app.logger.error("Artefato sazonal não encontrado no GAME_STATE. O estado do jogo pode não ter sido carregado.")
+            return jsonify({'success': False, 'error': 'Erro interno: Estado do jogo não inicializado.'}), 500
+
+        # Passar o argumento necessário para a função de análise.
+        treasure_dig_info = analysis.analyze_desert_digging_data(main_farm_data, seasonal_artefact)
 
         # 4. Renderiza apenas o painel parcial com os novos dados
         updated_html = render_template(

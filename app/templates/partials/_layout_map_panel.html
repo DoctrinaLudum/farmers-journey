@@ -1,0 +1,50 @@
+{% if layout_map %}
+<div class="p-3 farm-layout-map">
+    <div class="row">
+        <!-- Coluna do Mapa -->
+        <div class="col-lg-9">
+            <h5 class="mb-3"><i class="bi bi-map-fill me-2"></i>Layout da Fazenda</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered text-center bg-light">
+                    <tbody>
+                        {# Itera do Y maior para o menor para desenhar de cima para baixo #}
+                        {% for y in range(layout_map.max_y, layout_map.min_y - 1, -1) %}
+                        <tr>
+                            {% for x in range(layout_map.min_x, layout_map.max_x + 1) %}
+                                {% set node = layout_map.grid.get((x, y), None) %}
+                                
+                                {# Apenas renderiza uma célula se for a célula principal (canto inferior esquerdo) de um nó. #}
+                                {# Isso permite que nós maiores (como árvores 2x2) usem rowspan e colspan. #}
+                                {% if node and node.is_primary %}
+                                    <td class="farm-layout-cell" rowspan="{{ node.height }}" colspan="{{ node.width }}"
+                                        style="--cell-width: {{ 40 * node.width }}px; --cell-height: {{ 40 * node.height }}px; --cell-font-size: {{ 1.2 * node.width }}rem;">
+                                        <span title="{{ node.type }}: {{ node.details }}" data-bs-toggle="tooltip">
+                                            {{ node.icon }}
+                                        </span>
+                                    </td>
+                                {# Se não houver nó, renderiza uma célula vazia. #}
+                                {% elif node is none %}
+                                    <td class="farm-layout-cell-empty"></td>
+                                {% endif %}
+                                {# Se houver um nó, mas não for o principal, não faz nada, pois ele é coberto pelo rowspan/colspan do nó principal. #}
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- Coluna da Legenda -->
+        <div class="col-lg-3">
+            <h6 class="mt-3 mt-lg-0"><i class="bi bi-key-fill me-2"></i>Legenda</h6>
+            <ul class="list-unstyled small farm-layout-legend">
+                {% for name, icon in layout_map.legend|dictsort %}{% if name != 'DEFAULT' %}
+                    <li><span class="me-2">{{ icon }}</span> {{ name }}</li>
+                {% endif %}{% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info m-3">Não foi possível gerar o mapa da fazenda. Verifique se os dados da API estão disponíveis.</div>
+{% endif %}

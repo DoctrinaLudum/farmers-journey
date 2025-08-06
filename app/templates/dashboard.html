@@ -16,7 +16,12 @@
     <ul class="nav nav-tabs" id="dashboardTabs" role="tablist">
         <li class="nav-item" role="presentation">
             <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview-pane" type="button" role="tab" aria-controls="overview-pane" aria-selected="true">
-                <i class="bi bi-grid-1x2-fill me-1"></i> Visão Geral
+                <i class="bi bi-grid-1x2-fill me-1"></i> Visao Geral
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="inventory-tab" data-bs-toggle="tab" data-bs-target="#inventory-pane" type="button" role="tab" aria-controls="inventory-pane" aria-selected="false">
+                <i class="bi bi-box-seam-fill me-1"></i> Inventario
             </button>
         </li>
         <li class="nav-item" role="presentation">
@@ -25,13 +30,8 @@
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="inventory-tab" data-bs-toggle="tab" data-bs-target="#inventory-pane" type="button" role="tab" aria-controls="inventory-pane" aria-selected="false">
-                <i class="bi bi-box-seam-fill me-1"></i> Inventário
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
             <button class="nav-link" id="fishing-tab" data-bs-toggle="tab" data-bs-target="#fishing-pane" type="button" role="tab" aria-controls="fishing-pane" aria-selected="false">
-                <i class="bi bi-fish me-1"></i> Pescaria
+                <i class="bi bi-fish me-1"></i> Peixes
             </button>
         </li>
         <li class="nav-item" role="presentation">
@@ -45,26 +45,46 @@
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="test-tab" data-bs-toggle="tab" data-bs-target="#test-pane" type="button" role="tab" aria-controls="test-pane" aria-selected="false">
-                <i class="bi bi-bug-fill me-1"></i> Área de testes futuros
+            <button class="nav-link" id="wood-tab" data-bs-toggle="tab" data-bs-target="#wood-pane" type="button" role="tab" aria-controls="wood-pane" aria-selected="false">
+                <i class="bi bi-tree-fill me-1"></i> Wood
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="mining-tab" data-bs-toggle="tab" data-bs-target="#mining-pane" type="button" role="tab" aria-controls="mining-pane" aria-selected="false">
+                <i class="bi bi-gem me-1"></i> Mineração
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="debug-tab" data-bs-toggle="tab" data-bs-target="#debug-pane" type="button" role="tab" aria-controls="debug-pane" aria-selected="false">
+                <i class="bi bi-bug-fill me-1"></i> Recursos (Debug)
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="layout-map-tab" data-bs-toggle="tab" data-bs-target="#layout-map-pane" type="button" role="tab" aria-controls="layout-map-pane" aria-selected="false">
+                <i class="bi bi-map-fill me-1"></i> Mapa da Fazenda
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="buds-tab" data-bs-toggle="tab" data-bs-target="#buds-pane" type="button" role="tab" aria-controls="buds-pane" aria-selected="false">
+                <i class="bi bi-bug-fill me-1"></i> Buds
             </button>
         </li>
     </ul>
 
     <div class="tab-content" id="dashboardTabsContent">
-        <div class="tab-pane fade show active p-3 border border-top-0 rounded-bottom" id="overview-pane" role="tabpanel" aria-labelledby="overview-tab">
+        <div class="tab-pane fade show active" id="overview-pane" role="tabpanel" aria-labelledby="overview-tab">
             {% include 'partials/_geral_panel.html' %}
         </div>
 
-        <div class="tab-pane fade p-3 border border-top-0 rounded-bottom" id="expansion-pane" role="tabpanel" aria-labelledby="expansion-tab">
+        <div class="tab-pane fade" id="expansion-pane" role="tabpanel" aria-labelledby="expansion-tab">
             {% include 'partials/_expansion_panel.html' %}
         </div>
 
-        <div class="tab-pane fade" id="inventory-pane" role="tabpanel" aria-labelledby="inventory-tab">
+        <div class="tab-pane fade" id="inventory-pane" role="tabpanel" aria-labelledby="inventory-pane">
             {% include 'partials/_inventory_panel.html' %}
         </div>
 
-        <div class="tab-pane fade" id="fishing-pane" role="tabpanel" aria-labelledby="fishing-tab">
+        <div class="tab-pane fade" id="fishing-pane" role="tabpanel" aria-labelledby="fishing-pane">
             {% include 'partials/_fishing_panel.html' %}
         </div>
 
@@ -72,12 +92,28 @@
             {% include 'partials/_flowers_panel.html' %}
         </div>
 
-        <div class="tab-pane fade" id="treasure_dig-pane" role="tabpanel" aria-labelledby="treasure_dig-tab">
+        <div class="tab-pane fade" id="treasure_dig-pane" role="tabpanel" aria-labelledby="treasure_dig-pane">
             {% include 'partials/_treasuredig_panel.html' %}
         </div>
+        
+        <div class="tab-pane fade" id="wood-pane" role="tabpanel" aria-labelledby="wood-tab">
+            {% include 'partials/_wood_panel.html' %}
+        </div>
 
-        <div class="tab-pane fade" id="test-pane" role="tabpanel" aria-labelledby="test-tab">
-            <p class="p-3">Área de testes futuros.</p>
+        <div class="tab-pane fade" id="mining-pane" role="tabpanel" aria-labelledby="mining-tab">
+            {% include 'partials/_mining_panel.html' %}
+        </div>
+
+        <div class="tab-pane fade" id="debug-pane" role="tabpanel" aria-labelledby="debug-tab">
+            {% include 'partials/_debug_resources_panel.html' %}
+        </div>
+
+        <div class="tab-pane fade" id="layout-map-pane" role="tabpanel" aria-labelledby="layout-map-tab">
+            {% include 'partials/_layout_map_panel.html' %}
+        </div>
+
+        <div class="tab-pane fade" id="buds-pane" role="tabpanel" aria-labelledby="buds-tab">
+            {% include 'partials/_buds_panel.html' %}
         </div>
     </div>
 </div>

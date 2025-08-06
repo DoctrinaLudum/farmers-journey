@@ -15,19 +15,19 @@
                 </div>
 
                 {% if expansion_construction_info %}
-                <div class="expansion-timer-card">
-                    <div class="timer-icon">
+                <div class="expansion-timer-card d-flex align-items-center">
+                    <div class="timer-icon me-2">
                         {% if expansion_construction_info.is_complete %}
                             <div class="completed-icon-stack">
-                                <img src="{{ url_for('static', filename='images/misc/land_complete.png') }}" alt="Expansão completa" class="stack-layer base-layer">
-                                <img src="{{ url_for('static', filename='images/misc/disc.png') }}" alt="Círculo" class="stack-layer middle-layer">
-                                <img src="{{ url_for('static', filename='images/misc/confirm.png') }}" alt="Confirmar" class="stack-layer top-layer-animated">
+                                <img src="{{ url_for('static', filename='images/misc/land_complete.webp') }}" alt="Expansão completa" class="stack-layer base-layer">
+                                <img src="{{ url_for('static', filename='images/misc/disc.webp') }}" alt="Círculo" class="stack-layer middle-layer">
+                                <img src="{{ url_for('static', filename='images/misc/confirm.webp') }}" alt="Confirmar" class="stack-layer top-layer-animated">
                             </div>
                         {% else %}
-                            <img src="{{ url_for('static', filename='images/misc/construct.gif') }}" alt="Construção" class="construction-gif-timer">
+                            <img src="{{ url_for('static', filename='images/misc/construct.webp') }}" alt="Construção" class="construction-gif-timer">
                         {% endif %}
                     </div>
-                    <div class="timer-details">
+                    <div class="timer-details flex-grow-1">
                         {% if expansion_construction_info.is_complete %}
                             <div class="timer-title">Expansão para o Nível {{ expansion_construction_info.target_level }}</div>
                             <div class="countdown-time text-success">Concluída!</div>

@@ -65,6 +65,14 @@ TOOLS_DATA = {
         "ingredients": {"Wood": 20, "Iron": 9, "Leather": 10},
         "enabled": True,
     },
+    "Pest Net": {
+        "name": "Pest Net",
+        "type": "Tool",
+        "crafting_location": "Workbench",
+        "price": 50,
+        "ingredients": {"Wool": 2},
+        "enabled": True,
+    },
 
     # --- GRUPO TREASURE TOOLS ---
     "Sand Shovel": {

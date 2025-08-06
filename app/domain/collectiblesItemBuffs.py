@@ -3,6 +3,18 @@ COLLECTIBLES_ITEM_BUFFS = {
         "id": 462,
         "description": "Choosy defender of your farm's VIP (Very Important Plants)",
         "boost_category": "Crop",
+        "size": { "width": 1, "height": 1 },
+        "aoe": {
+            "shape": "custom",
+            "plots": [
+                # Linha 1 (imediatamente abaixo do espantalho)
+                { "x": -1, "y": -1 }, { "x": 0, "y": -1 }, { "x": 1, "y": -1 },
+                # Linha 2
+                { "x": -1, "y": -2 }, { "x": 0, "y": -2 }, { "x": 1, "y": -2 },
+                # Linha 3
+                { "x": -1, "y": -3 }, { "x": 0, "y": -3 }, { "x": 1, "y": -3 }
+            ]
+        },
         "boosts": [
             {
                 "type": "GROWTH_TIME",
@@ -18,6 +30,18 @@ COLLECTIBLES_ITEM_BUFFS = {
         "id": 467,
         "description": "The veggie whisperer and champion of frightfully good harvests!",
         "boost_category": "Crop",
+        "size": { "width": 1, "height": 1 },
+        "aoe": {
+            "shape": "custom",
+            "plots": [
+                # Linha 1 (imediatamente abaixo do espantalho)
+                { "x": -1, "y": -1 }, { "x": 0, "y": -1 }, { "x": 1, "y": -1 },
+                # Linha 2
+                { "x": -1, "y": -2 }, { "x": 0, "y": -2 }, { "x": 1, "y": -2 },
+                # Linha 3
+                { "x": -1, "y": -3 }, { "x": 0, "y": -3 }, { "x": 1, "y": -3 }
+            ]
+        },
         "boosts": [
             {
                 "type": "YIELD",
@@ -33,6 +57,18 @@ COLLECTIBLES_ITEM_BUFFS = {
         "id": 468,
         "description": "With her disconcerting chuckle, she shooes peckers away from your crops!",
         "boost_category": "Crop",
+        "size": { "width": 1, "height": 1 },
+        "aoe": {
+            "shape": "custom",
+            "plots": [
+                # Linha 1 (imediatamente abaixo do espantalho)
+                { "x": -1, "y": -1 }, { "x": 0, "y": -1 }, { "x": 1, "y": -1 },
+                # Linha 2
+                { "x": -1, "y": -2 }, { "x": 0, "y": -2 }, { "x": 1, "y": -2 },
+                # Linha 3
+                { "x": -1, "y": -3 }, { "x": 0, "y": -3 }, { "x": 1, "y": -3 }
+            ]
+        },
         "boosts": [
             {
                 "type": "YIELD",
@@ -130,6 +166,20 @@ COLLECTIBLES_ITEM_BUFFS = {
         "id": 466,
         "description": "A royal member, Sir GoldenSnout infuses your farm with sovereign prosperity through its golden manure.",
         "boost_category": "Crop",
+        "size": { "width": 2, "height": 2 },
+        "aoe": {
+            "shape": "custom",
+            "plots": [
+                # Linha 1 (abaixo do item)
+                { "x": -1, "y": -1 }, { "x": 0, "y": -1 }, { "x": 1, "y": -1 }, { "x": 2, "y": -1 },
+                # Linha 2 (base do item)
+                { "x": -1, "y": 0 }, { "x": 0, "y": 0 }, { "x": 1, "y": 0 }, { "x": 2, "y": 0 },
+                # Linha 3 (topo do item)
+                { "x": -1, "y": 1 }, { "x": 0, "y": 1 }, { "x": 1, "y": 1 }, { "x": 2, "y": 1 },
+                # Linha 4 (acima do item)
+                { "x": -1, "y": 2 }, { "x": 0, "y": 2 }, { "x": 1, "y": 2 }, { "x": 2, "y": 2 },
+            ]
+        },
         "boosts": [
             {
                 "type": "YIELD",
@@ -162,11 +212,11 @@ COLLECTIBLES_ITEM_BUFFS = {
         "boost_category": "Crop",
         "boosts": [
             {
-                "type": "CRITICAL_YIELD",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 1,
                 "conditions": {
-                    "crop": "Potato"
+                    "resource": "Potato"
                 }
             },
             {
@@ -174,7 +224,7 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "operation": "percentage",
                 "value": 0.20,
                 "conditions": {
-                    "crop": "Potato"
+                    "resource": "Potato"
                 }
             }
         ]
@@ -402,6 +452,24 @@ COLLECTIBLES_ITEM_BUFFS = {
         "id": 474,
         "description": "Command the regal power of Queen Cornelia and experience a magnificent Area of Effect boost to your corn production. +1 Corn.",
         "boost_category": "Crop",
+        "size": { "width": 1, "height": 2 },
+        "aoe": {
+            "shape": "custom",
+            "plots": [
+                # Linha de 3 acima do item (na altura Y+2)
+                { "x": -1, "y": 2 }, { "x": 0, "y": 2 }, { "x": 1, "y": 2 },
+                
+                # Linha de 3 abaixo do item (na altura Y-1)
+                { "x": -1, "y": -1 }, { "x": 0, "y": -1 }, { "x": 1, "y": -1 },
+
+                # Coluna de 4 à esquerda do item (na lateral X-1)
+                { "x": -1, "y": -1 }, { "x": -1, "y": 0 }, { "x": -1, "y": 1 }, { "x": -1, "y": 2 },
+
+                # Coluna de 4 à direita do item (na lateral X+1)
+                { "x": 1, "y": -1 }, { "x": 1, "y": 0 }, { "x": 1, "y": 1 }, { "x": 1, "y": 2 }
+
+            ]
+        },
         "boosts": [
             {
                 "type": "YIELD",
@@ -941,13 +1009,13 @@ COLLECTIBLES_ITEM_BUFFS = {
     # Resources
     "Woody the Beaver": {
         "id": 415,
-        "description": "During the great wood shortage, Bumpkins created an alliance with the Beaver population.\n\nIncreases wood production.\n\nYou can craft this item at the Goblin Blacksmith in the game.",
+        "description": "During the great wood shortage, Bumpkins created an alliance with the Beaver population.\n\nIncreases wood production by 20%.\n\nYou can craft this item at the Goblin Blacksmith in the game.",
         "boost_category": "Resource",
         "boosts": [
             {
                 "type": "YIELD",
-                "operation": "add",
-                "value": 0.2,
+                "operation": "multiply",
+                "value": 1.2,
                 "conditions": {
                     "resource": "Wood"
                 }
@@ -961,8 +1029,8 @@ COLLECTIBLES_ITEM_BUFFS = {
         "boosts": [
             {
                 "type": "YIELD",
-                "operation": "add",
-                "value": 0.2,
+                "operation": "multiply",
+                "value": 1.2,
                 "conditions": {
                     "resource": "Wood"
                 }
@@ -984,8 +1052,8 @@ COLLECTIBLES_ITEM_BUFFS = {
         "boosts": [
             {
                 "type": "YIELD",
-                "operation": "add",
-                "value": 0.2,
+                "operation": "multiply",
+                "value": 1.2,
                 "conditions": {
                     "resource": "Wood"
                 }
@@ -1089,7 +1157,7 @@ COLLECTIBLES_ITEM_BUFFS = {
         "boost_category": "Resource",
         "boosts": [
             {
-                "type": "CRITICAL_YIELD",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 2,
                 "conditions": {
@@ -1125,6 +1193,10 @@ COLLECTIBLES_ITEM_BUFFS = {
         "id": 464,
         "description": "The Tin Turtle gives +0.1 to Stones you mine within its Area of Effect.",
         "boost_category": "Resource",
+        "aoe": {
+            "shape": "circle",
+            "radius": 1
+        },
         "boosts": [
             {
                 "type": "YIELD",
@@ -1140,13 +1212,17 @@ COLLECTIBLES_ITEM_BUFFS = {
         "id": 463,
         "description": "The Emerald Turtle gives +0.5 to any minerals you mine within its Area of Effect.",
         "boost_category": "Resource",
+        "aoe": {
+            "shape": "circle",
+            "radius": 1
+        },
         "boosts": [
             {
                 "type": "YIELD",
                 "operation": "add",
                 "value": 0.5,
                 "conditions": {
-                    "category": "Mineral"
+                    "resource": ["Stone", "Iron", "Gold"]
                 }
             }
         ]
@@ -1713,7 +1789,7 @@ COLLECTIBLES_ITEM_BUFFS = {
         "boost_category": "Fish",
         "boosts": [
             {
-                "type": "CRITICAL_YIELD",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 1,
                 "conditions": {
@@ -2003,7 +2079,7 @@ COLLECTIBLES_ITEM_BUFFS = {
         "boost_category": "Flower",
         "boosts": [
             {
-                "type": "CRITICAL_YIELD",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 1,
                 "conditions": {
@@ -2197,7 +2273,7 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "operation": "add",
                 "value": 0.1,
                 "conditions": {
-                    "category": "Mineral"
+                    "resource": ["Stone", "Iron", "Gold"]
                 }
             }
         ]

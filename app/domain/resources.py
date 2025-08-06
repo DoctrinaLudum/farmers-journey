@@ -7,15 +7,135 @@ categorias de domínio mais específicas (como ferramentas, frutas ou flores).
 
 RESOURCES_DATA = {
     # --- Resources ---
-    "Wood":           {"type": "Resource",       "source": "Tree", "enabled": True},
-    "Stone":          {"type": "Resource",       "source": "Stone Rock", "enabled": True},
-    "Iron":           {"type": "Resource",       "source": "Iron Rock", "enabled": True},
-    "Gold":           {"type": "Resource",       "source": "Gold Rock", "enabled": True},
-    "Crimstone":      {"type": "Resource",       "source": "Crimstone Rock", "enabled": True},
-    "Sunstone":       {"type": "Resource",       "source": "Sunstone Rock", "enabled": True},
-    "Oil":            {"type": "Resource",       "source": "Oil Reserve", "enabled": True},
-    "Diamond":        {"type": "Resource",       "source": "Boulder", "enabled": True},
-    "Obsidian":       {"type": "Resource",       "source": "Lava Pit", "enabled": True},
+    "Wood": {
+        "type": "Resource",
+        "source": "Tree",
+        "enabled": True,
+        "details": {
+            "cycle": {
+                # O ciclo de vida de uma árvore
+                "Tree": {
+                    "yield_amount": 1,
+                    "recovery_time_seconds": 7200,  # 2 horas
+                    "hp": 3,
+                },
+                "Stump": {
+                    "yield_amount": 1,
+                    "recovery_time_seconds": 14400,  # 4 horas
+                    "hp": 2,
+                },
+                "Sapling": {
+                    "yield_amount": 1,
+                    "recovery_time_seconds": 28800,  # 8 horas
+                    "hp": 1,
+                },
+            },
+        }
+    },
+    "Stone": {
+        "type": "Resource",
+        "source": "Stone Rock",
+        "enabled": True,
+        "details": {
+            "cycle": {
+                "Stone Rock": {
+                    "yield_amount": 1,
+                    "recovery_time_seconds": 14400  # 4 horas
+                }
+            }
+        }
+    },
+    "Iron": {
+        "type": "Resource",
+        "source": "Iron Rock",
+        "enabled": True,
+        "details": {
+            "cycle": {
+                "Iron Rock": {
+                    "yield_amount": 1,
+                    "recovery_time_seconds": 28800  # 8 horas
+                }
+            }
+        }
+    },
+    "Gold": {
+        "type": "Resource",
+        "source": "Gold Rock",
+        "enabled": True,
+        "details": {
+            "cycle": {
+                "Gold Rock": {
+                    "yield_amount": 1,
+                    "recovery_time_seconds": 86400  # 24 horas
+                }
+            }
+        }
+    },
+    "Crimstone": {
+        "type": "Resource", 
+        "source": "Crimstone Rock", 
+        "enabled": True,
+        "details": { 
+            "cycle": { 
+                "Crimstone Rock": { 
+                    "yield_amount": 1, 
+                    "recovery_time_seconds": 86400 #24hrs
+                }
+            }
+        } 
+    },
+    "Sunstone": {
+        "type": "Resource", 
+        "source": "Sunstone Rock", 
+        "enabled": True,
+        "details": { 
+            "cycle": { 
+                "Sunstone Rock": { 
+                    "yield_amount": 1, 
+                    "recovery_time_seconds": 259200 #72hrs 
+                }
+            }
+        }
+    },
+    "Oil": {
+        "type": "Resource", 
+        "source": "Oil Reserve", 
+        "enabled": True,
+        "details": { 
+            "cycle": { 
+                "Oil Reserve": { 
+                    "yield_amount": 10, 
+                    "recovery_time_seconds": 72000 # 20hrs
+                }
+            }
+        } 
+    },
+    "Diamond": {
+        "type": "Resource", 
+        "source": "Boulder", 
+        "enabled": False,
+        "details": { 
+            "cycle": { 
+                "Boulder": { 
+                    "yield_amount": 1, 
+                    "recovery_time_seconds": 0 
+                }
+            }
+        }
+    },
+    "Obsidian": {
+        "type": "Resource", 
+        "source": "Lava Pit", 
+        "enabled": True,
+        "details": { 
+            "cycle": { 
+                "Lava Pit": { 
+                    "yield_amount": 1, 
+                    "recovery_time_seconds": 0 
+                }
+            }
+        }
+    },
 
     # --- Animal Products ---
     "Egg":            {"type": "Animal Product", "enabled": True},

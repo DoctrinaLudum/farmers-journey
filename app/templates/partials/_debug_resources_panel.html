@@ -1,0 +1,132 @@
+<div class="p-3">
+    <div class="alert alert-info d-flex align-items-center" role="alert">
+        <i class="bi bi-info-circle-fill me-3 fs-4"></i>
+        <div>
+            Este painel exibe os dados brutos retornados pelos serviços de análise de recursos. Use-o para depurar e verificar se os cálculos de bônus e status estão corretos antes de construir os painéis finais.
+        </div>
+    </div>
+
+    {% if resource_analyses %}
+        <div class="accordion" id="debugResourcesAccordion">
+            {% for analysis in resource_analyses %}
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="heading-{{ loop.index }}">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ loop.index }}" aria-expanded="false" aria-controls="collapse-{{ loop.index }}">
+                        Análise de {{ analysis.name }}
+                    </button>
+                </h2>
+                <div id="collapse-{{ loop.index }}" class="accordion-collapse collapse" aria-labelledby="heading-{{ loop.index }}" data-bs-parent="#debugResourcesAccordion">
+                    <div class="accordion-body">
+                        {# --- NOVO: Tabela de Resumo por Tipo de Recurso --- #}
+                        
+                        {# 1. Agrega os dados por tipo de nó (ex: Tree, Stump, Stone Rock) #}
+                        {% set summary_by_type = {} %} {# Inicializa o dicionário de resumo. #}
+                        {% set nodes = analysis.data.tree_status or analysis.data.node_status %}
+                        
+                        {% if nodes %}
+                            {% for node in nodes.values() %}
+                                {% set node_type = node.state_name or node.resource_name %}
+                                
+                                {% if node_type not in summary_by_type %}
+                                    {# Se é a primeira vez que vemos este tipo de nó, inicializamos o dicionário para ele. #}
+                                    {% do summary_by_type.update({
+                                        node_type: {
+                                            'count': 1, 
+                                            'total_yield': node.calculations.yield.final_deterministic, 
+                                            'individual_yield': node.calculations.yield.final_deterministic, 
+                                            'recovery_time': node.calculations.recovery.final,
+                                            'applied_buffs': node.calculations.yield.applied_buffs
+                                        }
+                                    }) %}
+                                {% else %}
+                                    {# Se o tipo de nó já existe, atualizamos os contadores. #}
+                                    {% set existing_data = summary_by_type[node_type] %}
+                                    {% set updated_data = {
+                                        'count': existing_data.count + 1,
+                                        'total_yield': existing_data.total_yield + node.calculations.yield.final_deterministic,
+                                        'individual_yield': existing_data.individual_yield,
+                                        'recovery_time': existing_data.recovery_time,
+                                        'applied_buffs': existing_data.applied_buffs
+                                    } %}
+                                    {# Substituímos os dados antigos pelos novos no dicionário principal. #}
+                                    {% do summary_by_type.update({node_type: updated_data}) %}
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+
+                        {# 2. Exibe a tabela de resumo se houver dados agregados #}
+                        {% if summary_by_type %}
+                            <h6 class="mb-3">Resumo por Tipo de Nó</h6>
+                            <div class="table-responsive mb-4">
+                                <table class="table table-sm table-bordered table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Tipo de Nó</th>
+                                            <th class="text-end">Quantidade</th>
+                                            <th class="text-end">Rendimento Indiv.</th>
+                                            <th class="text-end">Rendimento Total</th>
+                                            <th class="text-center">Bônus</th>
+                                            <th class="text-end">Tempo Recuperação</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for type, data in summary_by_type.items()|sort %}
+                                        <tr>
+                                            <td>{{ type }}</td>
+                                            <td class="text-end">{{ data.count }}</td>
+                                            <td class="text-end">{{ "%.2f"|format(data.individual_yield) }}</td>
+                                            <td class="text-end">{{ "%.2f"|format(data.total_yield) }}</td>
+                                            <td class="text-center">
+                                                {% set popover_content %}
+                                                    <ul class='list-unstyled mb-0 small'>
+                                                    {% for buff in data.applied_buffs %}
+                                                        <li>
+                                                            <i class='bi bi-arrow-right-short'></i>
+                                                            <strong>{{ buff.source_item }}:</strong>
+                                                            {% if buff.operation == 'add' %}
+                                                                +{{ "%.2f"|format(buff.value|float) }}
+                                                            {% elif buff.operation == 'subtract' %}
+                                                                -{{ "%.2f"|format(buff.value|float) }}
+                                                            {% elif buff.operation == 'percentage' %}
+                                                                {{ "{:+.0%}".format(buff.value) }}
+                                                            {% elif buff.operation == 'multiply' %}
+                                                                x{{ buff.value }}
+                                                            {% else %}
+                                                                {{ buff.value }}
+                                                            {% endif %}
+                                                        </li>
+                                                    {% else %}
+                                                        <li>Nenhum bônus.</li>
+                                                    {% endfor %}
+                                                    </ul>
+                                                {% endset %}
+                                                <button type="button" class="btn btn-outline-info btn-sm py-0 px-2"
+                                                        data-bs-toggle="popover" data-bs-trigger="focus" tabindex="0"
+                                                        title="Bônus de Rendimento" data-bs-html="true"
+                                                        data-bs-content="{{ popover_content | e }}">
+                                                    <i class="bi bi-info-circle"></i>
+                                                </button>
+                                            </td>
+                                            <td class="text-end font-monospace">{{ data.recovery_time | format_seconds_to_hms }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% endif %}
+
+                        {# --- FIM DA TABELA DE RESUMO --- #}
+
+                        <p>Abaixo estão os dados completos (em formato JSON) retornados pelo serviço de <strong>{{ analysis.name }}</strong>.</p>
+                        <pre class="bg-light p-3 rounded"><code>{{ analysis.data | tojson(indent=2) }}</code></pre>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-secondary" role="alert">
+            Nenhuma análise de recurso disponível para depuração.
+        </div>
+    {% endif %}
+</div>

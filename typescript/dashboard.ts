@@ -1,4 +1,6 @@
 // typescript/dashboard.ts
+// Declara o objeto global do Bootstrap para que o TypeScript o reconheça.
+declare const bootstrap: any;
 /**
  * Ponto de entrada principal do script.
  * Executa quando todo o conteúdo HTML da página foi carregado.
@@ -24,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupPanelInteractivity('fishing');
     setupPanelInteractivity('flowers');
 
-    // NOVO: Configura todos os filtros genéricos da página (incluindo o de NPCs)
+    // Configura todos os filtros genéricos da página (incluindo o de NPCs)
     setupGenericFilters();
 
     // NOVO: Configura o botão de atualização do painel de tesouros.
@@ -32,8 +34,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // NOVO: Configura o realce do grid de tesouros ao passar o mouse sobre as dicas.
     setupHintHighlighter();
+
+    // NOVO: Configura a interatividade do painel de dicas flutuante.
+    setupFloatingHintsPanel();
     
+    // NOVO: Inicializa todos os componentes interativos do Bootstrap (Popovers, Tooltips).
+    // Isso é necessário para que funcionem em toda a aplicação.
+    setupBootstrapComponents();
 });
+
+/**
+ * Inicializa todos os componentes interativos do Bootstrap, como Popovers e Tooltips.
+ * Esta função deve ser chamada uma vez, após o carregamento do DOM.
+ */
+function setupBootstrapComponents() {
+    // Inicializa todos os Popovers na página.
+    const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
+    popoverTriggerList.forEach(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl, {
+        // Usar 'body' como container evita problemas de posicionamento dentro de tabelas ou outros componentes complexos.
+        container: 'body'
+    }));
+
+    // Inicializa todos os Tooltips na página.
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    tooltipTriggerList.forEach(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+}
 
 /**
  * Propósito: Configurar o formulário "Meta Final".
@@ -115,6 +140,25 @@ function setupMilestoneInteraction() {
 }
 
 /**
+ * NOVO: Atualiza o estado visual do botão "Ver Dicas".
+ * @param isActive Define se o botão deve estar no estado ativo (balão visível) ou inativo.
+ */
+function updateHintsButtonState(isActive: boolean) {
+    const button = document.getElementById('toggle-hints-balloon-btn');
+    if (!button) return;
+
+    const textSpan = button.querySelector<HTMLSpanElement>('.button-text');
+
+    if (isActive) {
+        button.classList.add('active');
+        if (textSpan) textSpan.textContent = 'Dicas Ativas';
+    } else {
+        button.classList.remove('active');
+        if (textSpan) textSpan.textContent = 'Ver Dicas';
+    }
+}
+
+/**
  * Configura o botão de atualização para o painel de escavação de tesouros.
  * Usa delegação de evento para funcionar mesmo após o painel ser recarregado via AJAX.
  */
@@ -193,8 +237,23 @@ function setupTreasureDigUpdater() {
             const data = await response.json();
 
             if (data.success) {
+                // --- MELHORIA DE USABILIDADE ---
+                // Verifica se o balão de dicas estava visível antes de substituir o HTML.
+                const oldBalloon = panelWrapper.querySelector('#hints-balloon');
+                const wasBalloonVisible = oldBalloon ? !oldBalloon.classList.contains('d-none') : false;
+
                 panelWrapper.innerHTML = data.html;
-                // Após a atualização, encontra o novo botão e inicia seu cooldown
+
+                // Se o balão estava visível, remove a classe 'd-none' do novo balão.
+                if (wasBalloonVisible) {
+                    panelWrapper.querySelector('#hints-balloon')?.classList.remove('d-none');
+                    // E também atualiza o estado do botão para "ativo"
+                    updateHintsButtonState(true);
+                } else {
+                    // Garante que o botão esteja no estado correto se o balão estava fechado
+                    updateHintsButtonState(false);
+                }
+
                 const newButton = document.querySelector<HTMLButtonElement>('#update-treasure-dig-btn');
                 if (newButton) {
                     startCooldown(newButton);
@@ -251,6 +310,110 @@ function setupHintHighlighter() {
 
     // Limpa os destaques quando o mouse sai da área do painel que contém as dicas
     panelWrapper.addEventListener('mouseout', clearHighlights);
+}
+
+/**
+ * Configura a interatividade do painel de dicas flutuante.
+ * Esta função lida com:
+ * 1. Mostrar/esconder o balão ao clicar no botão "Ver Dicas".
+ * 2. Arrastar o balão pela tela.
+ * 3. Recolher/expandir o conteúdo do balão ao clicar no seu cabeçalho.
+ */
+function setupFloatingHintsPanel() {
+	const panelWrapper = document.getElementById('treasure-dig-panel-wrapper');
+	if (!panelWrapper) return;
+
+	// --- Lógica para MOSTRAR/ESCONDER o balão ---
+	panelWrapper.addEventListener('click', (event: MouseEvent) => {
+		const target = event.target as HTMLElement;
+		const toggleBtn = target.closest<HTMLButtonElement>('#toggle-hints-balloon-btn');
+		if (toggleBtn) {
+			const balloon = document.getElementById('hints-balloon');
+            // Adiciona uma verificação para garantir que o balão existe antes de manipulá-lo.
+            // Isso previne um erro 'TypeError' se o botão for clicado mas o balão não estiver no DOM.
+            if (!balloon) {
+                return;
+            }
+			balloon.classList.toggle('d-none');
+            updateHintsButtonState(!balloon.classList.contains('d-none'));
+		}
+	});
+ 
+	// --- Lógica para EFEITO DE OCIOSIDADE ---
+	let idleTimer: number;
+	const IDLE_TIMEOUT = 5000; // 5 segundos para considerar ocioso
+
+	const resetIdleTimer = () => {
+		// Busca o balão dinamicamente, pois ele pode ser recriado.
+		const balloon = document.getElementById('hints-balloon');
+		if (balloon) {
+			balloon.classList.remove('is-idle');
+			clearTimeout(idleTimer);
+			idleTimer = window.setTimeout(() => {
+				const currentBalloon = document.getElementById('hints-balloon');
+				currentBalloon?.classList.add('is-idle');
+			}, IDLE_TIMEOUT);
+		}
+	};
+
+	// Inicia e reinicia o timer em qualquer atividade do usuário na página
+	['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart'].forEach(event => {
+		document.addEventListener(event, resetIdleTimer);
+	});
+	// Também reinicia quando o painel é atualizado para garantir o estado correto
+	panelWrapper.addEventListener('panelUpdated', resetIdleTimer);
+
+	// --- Lógica para ARRASTAR o balão ---
+	panelWrapper.addEventListener('mousedown', (e: MouseEvent) => {
+		const target = e.target as HTMLElement;
+		const header = target.closest<HTMLElement>('#hints-balloon-header');
+		const balloon = target.closest<HTMLElement>('#hints-balloon');
+
+		if (!header || !balloon) return;
+
+		// Prevent default browser behavior like text selection
+		e.preventDefault();
+
+		// Adiciona uma classe para desativar a transição CSS durante o arrasto
+		balloon.classList.add('is-dragging-balloon');
+
+		// Get the initial position of the balloon and the mouse using getBoundingClientRect(),
+		// which is always relative to the viewport and more reliable than offsetLeft/Top.
+		const rect = balloon.getBoundingClientRect();
+		const offsetX = e.clientX - rect.left;
+		const offsetY = e.clientY - rect.top;
+
+		// This is crucial for the first drag when the element is positioned with bottom/right.
+		// It switches the element to be positioned by top/left.
+		if (balloon.style.right !== 'auto' || balloon.style.bottom !== 'auto') {
+			balloon.style.left = `${rect.left}px`;
+			balloon.style.top = `${rect.top}px`;
+			balloon.style.right = 'auto';
+			balloon.style.bottom = 'auto';
+		}
+
+		document.body.classList.add('is-dragging');
+
+		const onMouseMove = (moveEvent: MouseEvent) => {
+			// Calculate the new top/left position based on the mouse movement and the initial offset.
+			const newLeft = moveEvent.clientX - offsetX;
+			const newTop = moveEvent.clientY - offsetY;
+
+			balloon.style.left = `${newLeft}px`;
+			balloon.style.top = `${newTop}px`;
+		};
+
+		const onMouseUp = () => {
+			document.removeEventListener('mousemove', onMouseMove);
+			document.removeEventListener('mouseup', onMouseUp);
+			document.body.classList.remove('is-dragging');
+			// Remove a classe para reativar a transição CSS
+			balloon.classList.remove('is-dragging-balloon');
+		};
+
+		document.addEventListener('mousemove', onMouseMove);
+		document.addEventListener('mouseup', onMouseUp);
+	});
 }
 
 /**
@@ -590,12 +753,18 @@ function setupGenericFilters() {
 
         // Se este seletor de alvo ainda não foi visto, inicialize-o no mapa.
         if (!filterTargets.has(targetSelector)) {
-            const elements = document.querySelectorAll(targetSelector);
-            if (elements.length > 0) {
-                filterTargets.set(targetSelector, {
-                    elements: elements,
-                    activeFilters: {}
-                });
+            // Adiciona um bloco try-catch para evitar que um seletor inválido
+            // no HTML quebre a execução de todo o script.
+            try {
+                const elements = document.querySelectorAll(targetSelector);
+                if (elements.length > 0) {
+                    filterTargets.set(targetSelector, {
+                        elements: elements,
+                        activeFilters: {}
+                    });
+                }
+            } catch (e) {
+                console.error(`Seletor inválido encontrado em data-filter-target: "${targetSelector}"`, e);
             }
         }
     });

@@ -1,6 +1,8 @@
 # tests/test_domain_data.py
 import os
+
 import pytest
+
 from app.domain import bumpkin, skills, wearablesItemBuffs
 
 # --- Conjunto de valores válidos para os testes ---

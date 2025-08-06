@@ -51,9 +51,6 @@ TREASURES = {
         "type": "BeachBountySeasonalArtefact"
     },
 
-    # --- Itens de Utilidade (Não vendáveis diretamente) ---
-    "Wood": {"sell_price": None, "type": "Utility"},
-    "Stone": {"sell_price": None, "type": "Utility"},
 }
 
 # ------------------------------------------------------------------------------

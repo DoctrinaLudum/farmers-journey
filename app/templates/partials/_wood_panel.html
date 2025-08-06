@@ -1,0 +1,215 @@
+<div class="p-3">
+    {% if wood_analysis and wood_analysis.tree_status %}
+    <!-- Cartões de Resumo -->
+    <div class="row mb-4 text-center">
+        <div class="col-md-4 mb-3 mb-md-0">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Total de Árvores</h6>
+                    <p class="card-text fs-4 fw-bold">{{ wood_analysis.summary.total }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3 mb-md-0">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Prontas para Corte</h6>
+                    <p class="card-text fs-4 fw-bold text-success">{{ wood_analysis.summary.ready }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Rendimento Total Previsto</h6>
+                    {# Usamos .get('total_yield', 0.0) para evitar erros caso a chave não exista. #}
+                    {# Isso torna o template mais robusto. #}
+                    <p class="card-text fs-4 fw-bold">{{ "%.2f"|format(wood_analysis.summary.get('total_yield', 0.0)) }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela de Previsão por Árvore -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h6 class="mb-0"><i class="bi bi-bar-chart-line-fill me-2"></i>Previsão de Rendimento por Árvore</h6>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Estado Atual</th>
+                            <th class="text-nowrap">Pronta em</th>
+                            <th class="text-nowrap">Rendimento Previsto</th>
+                            <th class="text-center" style="width: 180px;">Detalhes (Rendimento / Tempo)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tree in wood_analysis.tree_status.values() %}
+                        <tr>
+                            <td>
+                                #{{ tree.id }}
+                                {% if tree.has_aoe_buff %}
+                                    <span class="badge bg-info-subtle text-info-emphasis rounded-pill ms-1 small">AOE</span>
+                                {% endif %}
+                            </td>
+                            <td><span class="badge bg-secondary">{{ tree.state_name }}</span></td>
+                            <td class="text-nowrap">{{ tree.ready_at_timestamp_ms | time_remaining }}</td>
+                            <td class="text-nowrap"><strong>{{ "%.2f"|format(tree.calculations.yield.final_deterministic) }}</strong> Madeira</td>
+                            <td class="text-center d-flex justify-content-center gap-1">
+                                <!-- Popover para Bônus de Rendimento -->
+                                {% set popover_content %}
+                                    <ul class='list-unstyled mb-0 small'>
+                                    {% for buff in tree.calculations.yield.applied_buffs %}
+                                        <li>
+                                            <i class='bi bi-arrow-right-short'></i>
+                                            <strong>{{ buff.source_item }}:</strong>
+                                            {% if buff.operation == 'add' %}
+                                                +{{ "%.2f"|format(buff.value|float) }}
+                                            {% elif buff.operation == 'subtract' %}
+                                                -{{ "%.2f"|format(buff.value|float) }}
+                                            {% elif buff.operation == 'percentage' %}
+                                                {{ "{:+.0%}".format(buff.value) }}
+                                            {% elif buff.operation == 'multiply' %}
+                                                x{{ buff.value }}
+                                            {% elif buff.type == 'BONUS_YIELD_CHANCE' %}
+                                                {{ "{:.0%}".format(buff.value) }} de chance x{{ buff.bonus_multiplier }}
+                                            {% else %}
+                                                {{ buff.value }}
+                                            {% endif %}
+                                        </li>
+                                    {% else %}
+                                        <li>Nenhum bônus aplicado.</li>
+                                    {% endfor %}
+                                    </ul>
+                                {% endset %}
+                                <button type="button" class="btn btn-outline-info btn-sm py-0 px-2"
+                                        data-bs-toggle="popover" data-bs-trigger="focus" tabindex="0"
+                                        title="Bônus de Rendimento" data-bs-html="true"
+                                        data-bs-content="{{ popover_content | e }}">
+                                    <i class="bi bi-info-circle"></i>
+                                </button>
+
+                                <!-- NOVO: Popover para Bônus de Tempo de Recuperação -->
+                                {% set recovery_popover_content %}
+                                    <ul class='list-unstyled mb-0 small'>
+                                    {% for buff in tree.calculations.recovery.applied_buffs %}
+                                        <li>
+                                            <i class='bi bi-arrow-right-short'></i>
+                                            <strong>{{ buff.source_item }}:</strong>
+                                            {# Lógica de formatação unificada, espelhando o popover de rendimento para consistência. #}
+                                            {% if buff.operation == 'add' %}
+                                                <span class="text-danger">+{{ buff.value }}s</span> {# Adicionar tempo é ruim #}
+                                            {% elif buff.operation == 'subtract' %}
+                                                <span class="text-success">-{{ buff.value }}s</span> {# Subtrair tempo é bom #}
+                                            {% elif buff.operation == 'percentage' %}
+                                                {# Bônus de tempo são negativos (ex: -0.2 para -20%), então o sinal já está incluído. #}
+                                                <span class="text-success">{{ "{:+.0%}".format(buff.value) }}</span>
+                                            {% elif buff.operation == 'multiply' %}
+                                                x{{ buff.value }}
+                                            {% else %}
+                                                {{ buff.value }}
+                                            {% endif %}
+                                        </li>
+                                    {% else %}
+                                        <li>Nenhum bônus aplicado.</li>
+                                    {% endfor %}
+                                    </ul>
+                                {% endset %}
+                                <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2"
+                                        data-bs-toggle="popover" data-bs-trigger="focus" tabindex="0"
+                                        title="Bônus de Recuperação" data-bs-html="true"
+                                        data-bs-content="{{ recovery_popover_content | e }}">
+                                    <i class="bi bi-clock-history"></i>
+                                </button>
+
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <h5 class="card-title mb-3">Análise Geral de Bônus de Madeira</h5>
+
+    {% if wood_analysis and wood_analysis.active_boost_items is defined and wood_analysis.all_catalogued_items is defined %}
+        <div class="row">
+            <!-- Coluna 1: Itens de Madeira Ativos do Jogador -->
+            <div class="col-lg-4">
+                <h6><i class="bi bi-person-check-fill text-success me-2"></i>Bônus Ativos</h6>
+                <p class="small text-muted">Itens e habilidades que o jogador possui e que afetam a coleta de madeira.</p>
+                {% if wood_analysis.active_boost_items %}
+                    <ul class="list-group list-group-flush">
+                        {% for item in wood_analysis.active_boost_items %}
+                            <li class="list-group-item ps-0">{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <div class="alert alert-info small" role="alert">
+                        Nenhum bônus de madeira ativo encontrado.
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Coluna 2: Catálogo de Itens de Madeira -->
+            <div class="col-lg-4">
+                <h6><i class="bi bi-book-fill text-primary me-2"></i>Bônus Reconhecidos</h6>
+                <p class="small text-muted">Todos os itens e habilidades que o sistema reconhece como bônus de madeira.</p>
+                {% if wood_analysis.all_catalogued_items %}
+                    <ul class="list-group list-group-flush">
+                        {% for item in wood_analysis.all_catalogued_items %}
+                            <li class="list-group-item ps-0">{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <div class="alert alert-warning small" role="alert">
+                        O catálogo de bônus de madeira está vazio.
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Coluna 3: Estatísticas de Golpes Críticos -->
+            <div class="col-lg-4">
+                <h6><i class="bi bi-graph-up-arrow text-warning me-2"></i>Histórico de Golpes Críticos</h6>
+                <p class="small text-muted">Contagem de bônus ativados nos últimos cortes de árvore registrados.</p>
+                {% if wood_analysis.critical_hit_stats %}
+                    <ul class="list-group list-group-flush">
+                        {% for hit_name, count in wood_analysis.critical_hit_stats.items() %}
+                            <li class="list-group-item ps-0 d-flex justify-content-between align-items-center">
+                                {{ hit_name }}
+                                <span class="badge bg-warning rounded-pill">{{ count }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <div class="alert alert-info small" role="alert">
+                        Nenhum golpe crítico registrado no histórico das árvores.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Seção de JSON para depuração (opcional, mas útil) -->
+        <div class="mt-4">
+            <p>
+                <a class="btn btn-outline-secondary btn-sm" data-bs-toggle="collapse" href="#woodJsonCollapse" role="button" aria-expanded="false" aria-controls="woodJsonCollapse">
+                    <i class="bi bi-filetype-json me-1"></i> Ver Dados Brutos (JSON)
+                </a>
+            </p>
+            <div class="collapse" id="woodJsonCollapse">
+                <pre class="bg-light p-3 rounded"><code>{{ wood_analysis | tojson(indent=2) }}</code></pre>
+            </div>
+        </div>
+
+    {% else %}
+        <div class="alert alert-secondary" role="alert">
+            Nenhuma análise de madeira disponível ou os dados estão incompletos.
+        </div>
+    {% endif %}
+</div>

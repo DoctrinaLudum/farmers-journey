@@ -1,6 +1,6 @@
 # app/analysis.py
-import logging
 import json
+import logging
 from collections import defaultdict
 from datetime import timedelta
 from decimal import Decimal, InvalidOperation
@@ -9,12 +9,18 @@ import requests
 
 import config
 
+from .domain import buildings
 from .domain import bumpkin as bumpkin_domain
-from .domain import (buildings, expansions, fishing as fishing_data_domain,
-                     flowers as flower_domain, foods as foods_domain, seeds as seeds_domain,
-                     fruits as fruit_domain, item_map, npcs as npc_domain)
-
+from .domain import expansions
+from .domain import fishing as fishing_data_domain
+from .domain import flowers as flower_domain
+from .domain import foods as foods_domain
+from .domain import fruits as fruit_domain
+from .domain import item_map
+from .domain import npcs as npc_domain
+from .domain import seeds as seeds_domain
 from .domain import treasure_dig as treasure_domain
+
 log = logging.getLogger(__name__)
 
 def parse_time_to_seconds(time_str: str) -> int:
@@ -781,12 +787,13 @@ def get_item_image_path(item_name: str) -> str:
 # ---> FIM FUNÇÃO PARA CRIAÇÃO DE CAMINHOS DINAMICOS DE IMAGENS ---
 
 # ---> FUNÇÂO TREASURE DIG ---
-def analyze_desert_digging_data(main_farm_data: dict) -> dict:
+def analyze_desert_digging_data(main_farm_data: dict, seasonal_artefact: str) -> dict:
     """
     Analisa todos os dados de escavação de tesouros da Ilha do Deserto.
 
     Args:
         main_farm_data: O dicionário principal de dados da fazenda vindo da API.
+        seasonal_artefact: O nome do artefato sazonal atual, vindo do estado global.
 
     Returns:
          Um dicionário contendo o espelho do grid, estatísticas e padrões.
@@ -849,10 +856,6 @@ def analyze_desert_digging_data(main_farm_data: dict) -> dict:
             grid_data = {'mini_grid': None}
 
             if pattern_formation:
-                # Resolve o item sazonal com base na estação atual da fazenda
-                current_season_name = main_farm_data.get("season", {}).get("season", "spring")
-                seasonal_artefact = treasure_domain.SEASONAL_ARTEFACT.get(current_season_name, "Scarab")
-
                 TARGET_GRID_SIZE = 4
                 mini_grid = [[None for _ in range(TARGET_GRID_SIZE)] for _ in range(TARGET_GRID_SIZE)]
 
@@ -932,8 +935,6 @@ def analyze_desert_digging_data(main_farm_data: dict) -> dict:
                 formation = treasure_domain.DIGGING_FORMATIONS.get(pattern_name_key)
                 if not formation: continue
 
-                current_season_name = main_farm_data.get("season", {}).get("season", "spring")
-                seasonal_artefact = treasure_domain.SEASONAL_ARTEFACT.get(current_season_name, "Scarab")
                 pattern_items = [{'name': (seasonal_artefact if item['name'] == "SEASONAL" else item['name']), 'x': item['x'], 'y': item['y']} for item in formation]
                 if not pattern_items: continue
 
@@ -1031,7 +1032,7 @@ def analyze_desert_digging_data(main_farm_data: dict) -> dict:
 
         # 5. Montagem do resultado final com dicas e dados da máscara
         return {
-            'grid_mirror': grid_mirror,
+            'grid_mirror': grid_mirror, 
             'stats': { 'total_digs': total_digs, 'items_found': dict(sorted(items_found.items())), 'tool_usage': dict(sorted(tool_usage.items())), 'streak': digging_data.get('streak', {}) },
             'patterns': { 'current': current_patterns, 'completed': completed_patterns },
             'hints': pattern_location_hints,

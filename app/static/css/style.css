@@ -157,8 +157,8 @@
 }
 
 .expansion-timer-card .timer-icon img.construction-gif-timer {
-    width: 36px;
-    height: 36px;
+    width: 150px;
+    height: 80px;
 }
 
 .expansion-timer-card .timer-details {
@@ -770,6 +770,190 @@
     border-radius: 5px;
 }
 
+/* --- Estilos para o Balão de Dicas Flutuante --- */
+
+/* Adicionado para evitar seleção de texto durante o arrasto */
+body.is-dragging {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+/* --- Estilos para o Balão de Dicas Flutuante --- */
+
+.floating-hints-balloon {
+    position: fixed; /* Garante que o balão flutue em relação à janela do navegador */
+    bottom: 20px;
+    right: 20px;
+    width: 90%;
+    max-width: 380px;
+    z-index: 1030; /* Um z-index alto para ficar sobre outros elementos, como a navbar */
+    /* ALTERADO: Fundo mais claro para um visual menos "denso" e mais integrado */
+    background-color: rgba(var(--bs-body-bg-rgb), 0.85);
+    backdrop-filter: blur(8px); /* Aumenta o blur para melhor legibilidade */
+    border: 1px solid var(--bs-border-color);
+    /* NOVO: Borda inferior mais espessa para dar profundidade */
+    border-bottom: 3px solid var(--bs-border-color);
+    border-radius: 1rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    /* Transição para os efeitos de ociosidade e movimento */
+    transition: opacity 0.5s ease-in-out, box-shadow 0.5s ease-in-out, transform 0.3s ease-in-out;
+    /* Adiciona margem na parte inferior para dar espaço ao "rabicho" do balão */
+    margin-bottom: 12px;
+    /* NOVO: Garante que a cor do texto seja legível no novo fundo */
+    color: var(--bs-body-color);
+}
+
+/* "Rabicho" que dá a aparência de balão de fala */
+/* Este é o "preenchimento" do rabicho */
+.floating-hints-balloon::after {
+    content: '';
+    position: absolute;
+    bottom: -12px; /* Posiciona abaixo do balão */
+    right: 30px;
+    border: 12px solid transparent;
+    /* ALTERADO: Cor corresponde ao novo fundo */
+    border-top-color: rgba(var(--bs-body-bg-rgb), 0.85);
+    border-bottom: 0;
+    z-index: 1; /* Garante que fique sobre a borda */
+}
+
+/* NOVO: Esta é a "borda" do rabicho, posicionada ligeiramente atrás */
+.floating-hints-balloon::before {
+    content: '';
+    position: absolute;
+    bottom: -15px; /* 3px mais baixo que o preenchimento (espessura da borda inferior) */
+    right: 27px; /* 3px mais para a esquerda */
+    border: 15px solid transparent;
+    border-top-color: var(--bs-border-color); /* Cor da borda */
+    border-bottom: 0;
+    z-index: 0; /* Fica atrás do preenchimento */
+}
+
+/* Classe para o estado ocioso (translúcido) */
+.floating-hints-balloon.is-idle {
+    opacity: 0.6;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    cursor: pointer; /* Indica que pode ser "acordado" com um clique */
+    /* NOVO: Move o balão um pouco para baixo quando ocioso para um efeito visual */
+    transform: translateY(10px);
+}
+
+/* Desativa a transição durante o arrasto para evitar o efeito de "delay" ou "estilingue" */
+.floating-hints-balloon.is-dragging-balloon {
+    transition: none;
+    opacity: 1; /* Garante que o balão fique totalmente opaco ao ser arrastado */
+    transform: translateY(0); /* Garante que não haja transformação durante o arrasto */
+}
+
+.floating-hints-balloon .hints-header {
+    padding: 0.5rem 1rem;
+    cursor: move; /* ALTERADO: Indica que o cabeçalho é arrastável */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--bs-border-color-translucent);
+}
+
+.floating-hints-balloon .hints-header h6 {
+    font-size: 0.9rem;
+    font-weight: bold;
+    /* NOVO: Garante que o texto do cabeçalho continue com a cor de aviso */
+    color: var(--bs-warning);
+}
+
+.floating-hints-balloon .hints-body {
+    max-height: 220px; /* Limita a altura para evitar que ocupe a tela toda */
+    overflow-y: auto; /* Adiciona scroll se o conteúdo for maior */
+}
+
+.floating-hints-balloon .accordion-button {
+    padding: 0.75rem 1rem; /* Mais espaçamento vertical */
+    font-size: 0.85rem;
+    background-color: transparent;
+    color: var(--bs-body-color);
+}
+
+.floating-hints-balloon .accordion-button:not(.collapsed) {
+    box-shadow: none; /* Remove a sombra padrão do Bootstrap */
+    background-color: rgba(var(--bs-primary-rgb), 0.1); /* Um fundo sutil quando aberto */
+}
+
+.floating-hints-balloon .accordion-button:focus {
+    box-shadow: none; /* Remove o anel de foco */
+}
+
+/* Altera a cor do ícone de chevron do acordeão */
+.floating-hints-balloon .accordion-button::after {
+    filter: invert(75%) sepia(10%) saturate(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+}
+
+.floating-hints-balloon .accordion-button:not(.collapsed)::after {
+    filter: none; /* Volta à cor padrão quando aberto */
+}
+
+.floating-hints-balloon .accordion-body { padding: 0; }
+.floating-hints-balloon .accordion-body .list-group-item {
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+/* Melhora a interatividade das dicas, indicando que são "clicáveis" no hover */
+.floating-hints-balloon .list-group-item[data-highlight-coords] {
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.floating-hints-balloon .list-group-item[data-highlight-coords]:hover {
+    background-color: rgba(var(--bs-primary-rgb), 0.15) !important; /* !important para sobrepor o bg-transparent */
+}
+
+/* --- Estilos para o botão de Dicas Ativas --- */
+#toggle-hints-balloon-btn .icon-on {
+    display: none;
+}
+
+#toggle-hints-balloon-btn.active .icon-off {
+    display: none;
+}
+
+#toggle-hints-balloon-btn.active .icon-on {
+    display: inline-block;
+}
+
+/* =================================
+   PAINEL DE MAPA DA FAZENDA (LAYOUT)
+   ================================= */
+
+.farm-layout-map .table-responsive {
+    font-size: 1.2rem;
+    line-height: 1;
+}
+
+.farm-layout-map .table {
+    table-layout: fixed; /* Garante que as colunas tenham a mesma largura */
+}
+
+.farm-layout-cell {
+    /* Define os valores dinâmicos via variáveis CSS, que são setadas no HTML */
+    width: var(--cell-width, 40px);
+    height: var(--cell-height, 40px);
+    font-size: var(--cell-font-size, 1.2rem);
+    
+    /* Estilos estáticos que foram movidos do inline */
+    vertical-align: middle;
+    padding: 0;
+}
+
+.farm-layout-cell-empty {
+    width: 40px;
+    height: 40px;
+}
+
+.farm-layout-legend {
+    column-count: 1;
+    -webkit-column-count: 1;
+}
 /* =================================
    MEDIA QUERIES PARA RESPONSIVIDADE
    ================================= */
