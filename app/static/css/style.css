@@ -925,35 +925,370 @@ body.is-dragging {
    PAINEL DE MAPA DA FAZENDA (LAYOUT)
    ================================= */
 
-.farm-layout-map .table-responsive {
-    font-size: 1.2rem;
-    line-height: 1;
-}
-
 .farm-layout-map .table {
-    table-layout: fixed; /* Garante que as colunas tenham a mesma largura */
+    border-collapse: collapse;
+    table-layout: fixed;
 }
 
-.farm-layout-cell {
-    /* Define os valores dinâmicos via variáveis CSS, que são setadas no HTML */
-    width: var(--cell-width, 40px);
-    height: var(--cell-height, 40px);
-    font-size: var(--cell-font-size, 1.2rem);
-    
-    /* Estilos estáticos que foram movidos do inline */
-    vertical-align: middle;
-    padding: 0;
-}
-
-.farm-layout-cell-empty {
+/* Célula base do mapa */
+.farm-layout-cell, .farm-layout-cell-empty {
     width: 40px;
     height: 40px;
+    padding: 0 !important;
+    position: relative; /* Essencial para o posicionamento dos badges e conteúdo */
+    white-space: nowrap;
+    transition: opacity 0.3s ease-in-out, filter 0.3s ease-in-out;
+    border: 1px solid #e9ecef; /* Borda sutil */
 }
 
-.farm-layout-legend {
-    column-count: 1;
-    -webkit-column-count: 1;
+/* Célula que contém um recurso ou item */
+.farm-layout-cell.has-content {
+    background-color: #f8f9fa;
 }
+
+/* Cores de AOE dinâmicas usando variáveis CSS */
+/* !important é usado para garantir que a cor da AOE sobreponha a cor de fundo padrão da célula */
+.farm-layout-cell.has-aoe-color {
+    background-color: var(--cell-bg-color) !important;
+}
+
+.farm-layout-cell.has-aoe-gradient {
+    background: var(--cell-bg-gradient) !important;
+}
+
+/* Estilo para células escurecidas pelo filtro */
+.farm-layout-cell.is-dimmed,
+.map-item-overlay.is-dimmed {
+    opacity: 0.3;
+    filter: grayscale(80%);
+}
+
+/* Wrapper para centralizar o conteúdo principal da célula */
+.cell-content-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center; /* Re-centraliza o conteúdo verticalmente */
+    height: 100%;
+    /* O padding foi removido daqui para permitir que o conteúdo filho use 100% do espaço. */
+}
+
+/* Container do ícone principal do recurso */
+.resource-icon {
+    position: relative; /* Âncora para o rótulo de rendimento */
+    display: block; /* Garante que o container ocupe todo o espaço */
+    width: 100%;
+    height: 100%;
+}
+
+/* Ícones dentro do mapa */
+.map-item-icon, .aoe-source-icon {
+    max-width: 100%;
+    max-height: 95%; /* Aumenta o tamanho para ocupar quase toda a célula, deixando uma pequena margem. */
+    width: auto;
+    height: auto;
+    object-fit: contain;
+}
+
+/* Badge para contagens (minas/colheitas restantes) no canto da célula */
+.cell-badge {
+    position: absolute;
+    top: 1px;
+    right: 1px;
+    z-index: 2;
+    background-color: #ffc107;
+    color: #212529;
+    font-size: 0.65rem;
+    font-weight: bold;
+    padding: 1px 4px;
+    border-radius: 0.5rem;
+    line-height: 1.2;
+}
+
+/* Badge para recompensas bônus (ex: sementes) no canto da célula */
+.bonus-reward-badge {
+    position: absolute;
+    top: 1px;
+    left: 1px;
+    z-index: 2;
+    background-color: #0d6efd; /* Azul primário para destaque */
+    color: white;
+    font-size: 0.65rem;
+    padding: 1px 4px;
+    border-radius: 0.5rem;
+    line-height: 1.2;
+    /* Garante que o ícone dentro do badge não seja muito grande */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.bonus-reward-badge .bi {
+    font-size: 0.6em; /* Ajusta o tamanho do ícone dentro do badge */
+}
+
+/* NOVO: Ícone para enxame de abelhas (bee swarm) */
+.bee-swarm-badge {
+    position: absolute;
+    top: 1px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    width: 10px; /* Tamanho do ícone */
+    height: 10px; /* Tamanho do ícone */
+    padding: 0.5px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+/* NOVO: Legenda de ícones dinâmica no topo do mapa */
+.map-icon-legend {
+    font-size: 0.75rem;
+    color: var(--bs-secondary-color);
+}
+
+.map-legend-item {
+    display: flex;
+    align-items: center;
+}
+
+.map-legend-item img, .map-legend-item i {
+    width: 14px;
+    height: 14px;
+    object-fit: contain;
+}
+
+
+
+/* NOVO: Estilos para a visualização de processamento em edifícios */
+.processing-building-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.processing-building-container .base-building {
+    opacity: 0.6; /* Torna o edifício base semi-transparente */
+    filter: grayscale(30%);
+}
+
+.processing-building-container .processing-content-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);    
+    /* Define um tamanho base para o ícone de sobreposição, mas permite que ele encolha */
+    width: 38px;
+    height: 38px;
+    max-width: 70%; /* Não permite que o ícone seja maior que 70% do contêiner */
+    max-height: 70%;
+    z-index: 1; /* Garante que fique por cima */
+}
+
+/* NOVO: Ajustes para edifícios grandes (ex: 2x2) para preencher o espaço e evitar deformação */
+.processing-building-container.large-building .map-item-icon {
+    /* Garante que os ícones (base e sobreposição) dentro de um edifício grande
+       possam ocupar todo o espaço, sobrepondo o max-height: 95% padrão. */
+    max-width: 100%;
+    max-height: 100%;
+}
+
+/* Badge para fertilizante de rendimento (posição dinâmica) */
+.yield-fertiliser-badge {
+    position: absolute;
+    z-index: 2;
+    width: 8px; /* Tamanho do ícone */
+    height: 9px; /* Tamanho do ícone */
+    padding: 0.5px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.yield-fertiliser-badge.pos-top-left {
+    top: 1px;
+    left: 1px;
+}
+
+.yield-fertiliser-badge.pos-top-right {
+    top: 1px;
+    right: 1px;
+}
+
+/* Rótulo para rendimento (amount) sobreposto na base do ícone */
+.amount-label {
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.575);
+    color: white;
+    font-size: 0.60rem;
+    font-weight: bold;
+    padding: 1px 5px;
+    border-radius: 0.3rem;
+    line-height: 1;
+    white-space: nowrap;
+    z-index: 3;
+}
+
+/* NOVO: Estilos para a coluna da legenda ficar fixa durante a rolagem */
+.farm-layout-map .legend-column {
+    position: -webkit-sticky; /* Para compatibilidade com Safari */
+    position: sticky;
+    top: 20px; /* Distância do topo da tela */
+    align-self: flex-start; /* Essencial para o 'sticky' funcionar dentro de um contêiner flex (row) */
+}
+
+/* NOVO: Wrapper para o conteúdo da legenda, permite rolagem interna se for muito alto */
+.farm-layout-map .legend-content-wrapper {
+    max-height: calc(100vh - 40px); /* Altura máxima baseada na tela, menos o espaçamento do topo */
+    overflow-y: auto; /* Adiciona uma barra de rolagem vertical se necessário */
+    padding-right: 10px; /* Espaço para a barra de rolagem não sobrepor o conteúdo */
+}
+
+/* Ícone que marca uma célula VAZIA que está sob efeito de AOE */
+.aoe-effect-icon {
+    font-size: 1.0rem;
+    opacity: 0.6;
+    /* Centraliza o ícone de magia se a célula estiver vazia */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Legenda do mapa */
+.farm-layout-legend {
+    font-size: 0.8rem;
+}
+.farm-layout-legend li {
+    display: flex;
+    align-items: center;
+    margin-bottom: 4px;
+}
+.farm-layout-legend .legend-icon {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
+/* NOVO: Estilo para dividir a legenda de recursos em duas colunas quando necessário */
+.farm-layout-legend.multi-column-legend {
+    column-count: 2;
+    column-gap: 1rem;
+}
+
+/* NOVO: Estilo para o gatilho de filtro de recurso na legenda */
+.resource-filter-trigger {
+    cursor: pointer;
+    padding: 2px 8px;
+    border-radius: 10px;
+    transition: all 0.2s ease-in-out;
+    border: 1px solid var(--cor-borda);
+}
+
+/* Novo estilo para o gatilho de filtro de AOE na legenda */
+.aoe-filter-trigger {
+    cursor: pointer;
+    padding: 2px 8px;
+    border-radius: 10px;
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.6);
+    transition: all 0.2s ease-in-out;
+    border: 1px solid rgba(0,0,0,0.1);
+    display: inline-block; /* Garante que o padding e o fundo sejam aplicados corretamente */
+    /* Usa a variável CSS definida no HTML para o fundo dinâmico */
+    background: var(--aoe-bg);
+}
+
+.resource-filter-trigger:hover,
+.aoe-filter-trigger:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.resource-filter-trigger.active,
+.aoe-filter-trigger.active {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 3px var(--cor-primaria) !important; /* !important para sobrepor outros estilos */
+    background-color: var(--cor-primaria) !important;
+    color: white !important;
+}
+
+/* NOVO: Estilos para o Card Flutuante de Informações de Recursos */
+#floating-resource-card {
+    position: fixed;
+    z-index: 1056; /* Acima da maioria dos outros elementos */
+    width: 280px; /* Reduzido de 320px */
+    border: 1px solid var(--cor-borda);
+    background-color: rgba(var(--bs-body-bg-rgb), 0.9);
+    backdrop-filter: blur(8px);
+    border-radius: 0.5rem; /* Reduzido de 0.75rem */
+    display: none; /* Escondido por padrão */
+    font-size: 0.8rem; /* Reduz o tamanho da fonte base para o card */
+}
+
+#floating-resource-card .card-header {
+    cursor: move; /* Indica que o cabeçalho é arrastável */
+    padding: 0.4rem 0.8rem; /* Reduzido de 0.5rem 1rem */
+}
+
+#floating-resource-card .card-header h6 {
+    font-size: 0.9rem; /* Reduz o tamanho do título */
+    margin-bottom: 0;
+}
+
+#floating-resource-card .card-body {
+    padding: 0.8rem; /* Reduzido de 1rem */
+    max-height: 350px; /* Reduzido de 400px */
+    overflow-y: auto;
+}
+
+/* NOVO: Estilos para os itens da lista dentro do card para torná-los mais compactos */
+#floating-resource-card .list-group-item {
+    padding-top: 0.2rem !important;
+    padding-bottom: 0.2rem !important;
+    border: none; /* Remove as bordas padrão do list-group-flush para um visual mais limpo */
+}
+
+#floating-resource-card .buff-source {
+    font-size: 0.75rem; /* Torna a fonte do bônus ainda menor */
+}
+
+/* NOVO: Estilos para o Card Flutuante de Resumo */
+#floating-summary-card {
+    position: fixed;
+    z-index: 1057; /* Um pouco acima do card de detalhes para garantir a sobreposição */
+    width: 240px;
+    border: 1px solid var(--cor-borda);
+    background-color: rgba(var(--bs-body-bg-rgb), 0.9);
+    backdrop-filter: blur(8px);
+    border-radius: 0.5rem;
+    display: none;
+    font-size: 0.8rem;
+}
+
+#floating-summary-card .card-header {
+    cursor: move;
+    padding: 0.4rem 0.8rem;
+}
+
+#floating-summary-card .card-body {
+    padding: 0.8rem;
+    max-height: 350px;
+    overflow-y: auto;
+}
+/* Para evitar seleção de texto ao arrastar */
+body.is-dragging-card {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.resource-info-trigger {
+    cursor: pointer;
+}
+
+
 /* =================================
    MEDIA QUERIES PARA RESPONSIVIDADE
    ================================= */
@@ -967,4 +1302,88 @@ body.is-dragging {
     #inventory-grid {
         column-count: 1;
     }
+}
+
+.farm-layout-grid-container {
+    position: relative; /* Contexto para o posicionamento dos itens */
+}
+
+.items-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; /* Permite clicar através da camada de overlay */
+    display: grid; /* NOVO: Define o contêiner como uma grade CSS */
+}
+
+.map-item-overlay {
+    /* position: absolute; REMOVIDO: Agora é um item de grade */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    pointer-events: auto;
+    transition: transform 0.2s ease-in-out, opacity 0.3s ease-in-out, filter 0.3s ease-in-out;
+    /* NOVO: Garante que o item preencha a área da grade designada */
+    width: 100%;
+    height: 100%;
+}
+
+.map-item-overlay:hover {
+    transform: scale(1.05);
+    z-index: 10;
+}
+
+/* Estilo para a "tag" de origem do bônus */
+.buff-source-tag {
+    display: inline-block;
+    padding: 0.1em 0.4em 0.15em;
+    font-size: 0.75em;
+    font-weight: 600;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 0.375rem;
+    margin-right: 0.4em;
+    background-color: var(--bs-secondary-bg-subtle);
+    color: var(--bs-emphasis-color);
+    border: 1px solid var(--bs-border-color-translucent);
+}
+
+/* ================================================================== */
+/* Cores para os Badges de Prefixo de Bônus                           */
+/* ================================================================== */
+
+/* Padrão (cinza) - já definido em .buff-source-tag */
+
+/* Skill (Azul) */
+.buff-source-tag.is-type-skill,
+.buff-source-tag.is-type-skill_legacy {
+    background-color: var(--bs-primary-bg-subtle);
+    color: var(--bs-primary-text-emphasis);
+    border-color: var(--bs-primary-border-subtle);
+}
+
+/* SFT/Collectible (Amarelo) */
+.buff-source-tag.is-type-collectible {
+    background-color: var(--bs-warning-bg-subtle);
+    color: var(--bs-warning-text-emphasis);
+    border-color: var(--bs-warning-border-subtle);
+}
+
+/* Wearable (Ciano) */
+.buff-source-tag.is-type-wearable {
+    background-color: var(--bs-info-bg-subtle);
+    color: var(--bs-info-text-emphasis);
+    border-color: var(--bs-info-border-subtle);
+}
+
+/* Bud / Fertilizante (Verde) */
+.buff-source-tag.is-type-bud,
+.buff-source-tag.is-type-fertiliser {
+    background-color: var(--bs-success-bg-subtle);
+    color: var(--bs-success-text-emphasis);
+    border-color: var(--bs-success-border-subtle);
 }

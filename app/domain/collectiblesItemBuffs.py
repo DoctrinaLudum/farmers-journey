@@ -21,7 +21,7 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "operation": "percentage",
                 "value": -0.20,
                 "conditions": {
-                    "category": "Basic"
+                    "resource": ["Sunflower", "Potato", "Pumpkin", "Carrot", "Cabbage", "Beetroot", "Cauliflower", "Parsnip", "Radish", "Wheat", "Kale", "Rhubarb", "Zucchini", "Yam", "Broccoli", "Pepper", "Onion", "Turnip", "Artichoke", "Barley", "Corn", "Soybean"]
                 }
             }
         ]
@@ -47,9 +47,7 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "type": "YIELD",
                 "operation": "add",
                 "value": 0.2,
-                "conditions": {
-                    "category": "Medium"
-                }
+                "conditions": {"crop_tier": "medium"}
             }
         ]
     },
@@ -74,9 +72,7 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "type": "YIELD",
                 "operation": "add",
                 "value": 0.2,
-                "conditions": {
-                    "category": "Advanced"
-                }
+                "conditions": {"crop_tier": "advanced"}
             }
         ]
     },
@@ -90,7 +86,7 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "operation": "percentage",
                 "value": -0.15,
                 "conditions": {
-                    "category": "Crop"
+                    "resource": ["Sunflower", "Potato", "Pumpkin", "Carrot", "Cabbage", "Beetroot", "Cauliflower", "Parsnip", "Radish", "Wheat", "Kale", "Rhubarb", "Zucchini", "Yam", "Broccoli", "Pepper", "Onion", "Turnip", "Artichoke", "Barley", "Corn", "Soybean"]
                 }
             }
         ]
@@ -105,7 +101,7 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "operation": "percentage",
                 "value": -0.15,
                 "conditions": {
-                    "category": "Crop"
+                    "resource": ["Sunflower", "Potato", "Pumpkin", "Carrot", "Cabbage", "Beetroot", "Cauliflower", "Parsnip", "Radish", "Wheat", "Kale", "Rhubarb", "Zucchini", "Yam", "Broccoli", "Pepper", "Onion", "Turnip", "Artichoke", "Barley", "Corn", "Soybean"]
                 }
             },
             {
@@ -113,7 +109,7 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "operation": "add",
                 "value": 0.20,
                 "conditions": {
-                    "category": "Crop"
+                    "resource": ["Sunflower", "Potato", "Pumpkin", "Carrot", "Cabbage", "Beetroot", "Cauliflower", "Parsnip", "Radish", "Wheat", "Kale", "Rhubarb", "Zucchini", "Yam", "Broccoli", "Pepper", "Onion", "Turnip", "Artichoke", "Barley", "Corn", "Soybean"]
                 }
             }
         ]
@@ -128,7 +124,7 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "operation": "percentage",
                 "value": -0.15,
                 "conditions": {
-                    "category": "Crop"
+                    "resource": ["Sunflower", "Potato", "Pumpkin", "Carrot", "Cabbage", "Beetroot", "Cauliflower", "Parsnip", "Radish", "Wheat", "Kale", "Rhubarb", "Zucchini", "Yam", "Broccoli", "Pepper", "Onion", "Turnip", "Artichoke", "Barley", "Corn", "Soybean"]
                 }
             },
             {
@@ -136,14 +132,14 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "operation": "add",
                 "value": 0.20,
                 "conditions": {
-                    "category": "Crop"
+                    "resource": ["Sunflower", "Potato", "Pumpkin", "Carrot", "Cabbage", "Beetroot", "Cauliflower", "Parsnip", "Radish", "Wheat", "Kale", "Rhubarb", "Zucchini", "Yam", "Broccoli", "Pepper", "Onion", "Turnip", "Artichoke", "Barley", "Corn", "Soybean"]
                 }
             },
             {
                 "type": "SEED_COST",
                 "operation": "equals",
                 "value": 0,
-                "conditions": {}
+                "conditions": {"category": "Seed"}
             }
         ]
     },
@@ -157,10 +153,14 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "operation": "add",
                 "value": 0.10,
                 "conditions": {
-                    "category": ["Medium", "Advanced"]
+                    "resource": ["Sunflower", "Potato", "Pumpkin", "Carrot", "Cabbage", "Beetroot", "Cauliflower", "Parsnip", "Radish", "Wheat", "Kale", "Rhubarb", "Zucchini", "Yam", "Broccoli", "Pepper", "Onion", "Turnip", "Artichoke", "Barley", "Corn", "Soybean"]
                 }
             }
-        ]
+        ],
+        "aoe": {
+            "shape": "custom",
+            "plots": [{"x": 0, "y": -1}]
+        }
     },
     "Sir Goldensnout": {
         "id": 466,
@@ -170,14 +170,10 @@ COLLECTIBLES_ITEM_BUFFS = {
         "aoe": {
             "shape": "custom",
             "plots": [
-                # Linha 1 (abaixo do item)
-                { "x": -1, "y": -1 }, { "x": 0, "y": -1 }, { "x": 1, "y": -1 }, { "x": 2, "y": -1 },
-                # Linha 2 (base do item)
-                { "x": -1, "y": 0 }, { "x": 0, "y": 0 }, { "x": 1, "y": 0 }, { "x": 2, "y": 0 },
-                # Linha 3 (topo do item)
-                { "x": -1, "y": 1 }, { "x": 0, "y": 1 }, { "x": 1, "y": 1 }, { "x": 2, "y": 1 },
-                # Linha 4 (acima do item)
-                { "x": -1, "y": 2 }, { "x": 0, "y": 2 }, { "x": 1, "y": 2 }, { "x": 2, "y": 2 },
+                # CORREÇÃO: Área de 4x4 deslocada, conforme collisionDetection.ts
+                # Coordenadas relativas à posição (X, Y) do item.
+                # Gera as 16 coordenadas (de x=-1 a x=2 e de y=-2 a y=1)
+                *[{ "x": dx, "y": dy } for dy in range(-2, 2) for dx in range(-1, 3)]
             ]
         },
         "boosts": [
@@ -186,7 +182,7 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "operation": "add",
                 "value": 0.5,
                 "conditions": {
-                    "category": "Crop"
+                    "resource": ["Sunflower", "Potato", "Pumpkin", "Carrot", "Cabbage", "Beetroot", "Cauliflower", "Parsnip", "Radish", "Wheat", "Kale", "Rhubarb", "Zucchini", "Yam", "Broccoli", "Pepper", "Onion", "Turnip", "Artichoke", "Barley", "Corn", "Soybean"]
                 }
             }
         ]
@@ -201,7 +197,7 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "operation": "percentage",
                 "value": -0.10,
                 "conditions": {
-                    "category": "Crop"
+                    "resource": ["Sunflower", "Potato", "Pumpkin", "Carrot", "Cabbage", "Beetroot", "Cauliflower", "Parsnip", "Radish", "Wheat", "Kale", "Rhubarb", "Zucchini", "Yam", "Broccoli", "Pepper", "Onion", "Turnip", "Artichoke", "Barley", "Corn", "Soybean"]
                 }
             }
         ]
@@ -216,7 +212,7 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "operation": "add",
                 "value": 1,
                 "conditions": {
-                    "resource": "Potato"
+                    "resource": ["Potato"]
                 }
             },
             {
@@ -224,7 +220,7 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "operation": "percentage",
                 "value": 0.20,
                 "conditions": {
-                    "resource": "Potato"
+                    "resource": ["Potato"]
                 }
             }
         ]
@@ -239,7 +235,7 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "operation": "add",
                 "value": 0.20,
                 "conditions": {
-                    "crop": "Pumpkin"
+                    "resource": ["Pumpkin"]
                 }
             }
         ]
@@ -254,7 +250,7 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "operation": "add",
                 "value": 0.5,
                 "conditions": {
-                    "crop": "Pumpkin"
+                    "resource": ["Pumpkin"]
                 }
             }
         ]
@@ -269,7 +265,7 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "operation": "add",
                 "value": 0.20,
                 "conditions": {
-                    "crop": "Carrot"
+                    "resource": ["Carrot"]
                 }
             }
         ]
@@ -284,7 +280,7 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "operation": "add",
                 "value": 0.1,
                 "conditions": {
-                    "crop": "Carrot"
+                    "resource": ["Carrot"]
                 }
             }
         ]
@@ -299,7 +295,7 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "operation": "add",
                 "value": 0.25,
                 "conditions": {
-                    "crop": "Cabbage"
+                    "resource": ["Cabbage"],
                 }
             },
             {
@@ -307,7 +303,7 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "operation": "add",
                 "value": 0.5,
                 "conditions": {
-                    "crop": "Cabbage",
+                    "resource": ["Cabbage"],
                     "placed": "Cabbage Girl"
                 }
             }
@@ -456,18 +452,10 @@ COLLECTIBLES_ITEM_BUFFS = {
         "aoe": {
             "shape": "custom",
             "plots": [
-                # Linha de 3 acima do item (na altura Y+2)
-                { "x": -1, "y": 2 }, { "x": 0, "y": 2 }, { "x": 1, "y": 2 },
-                
-                # Linha de 3 abaixo do item (na altura Y-1)
-                { "x": -1, "y": -1 }, { "x": 0, "y": -1 }, { "x": 1, "y": -1 },
-
-                # Coluna de 4 à esquerda do item (na lateral X-1)
-                { "x": -1, "y": -1 }, { "x": -1, "y": 0 }, { "x": -1, "y": 1 }, { "x": -1, "y": 2 },
-
-                # Coluna de 4 à direita do item (na lateral X+1)
-                { "x": 1, "y": -1 }, { "x": 1, "y": 0 }, { "x": 1, "y": 1 }, { "x": 1, "y": 2 }
-
+                # CORREÇÃO: Área retangular de 3x4, conforme collisionDetection.ts
+                # Coordenadas relativas à posição (X, Y) do item.
+                # Gera as 12 coordenadas (de x=-1 a x=1 e de y=-2 a y=1)
+                *[{ "x": dx, "y": dy } for dy in range(-2, 2) for dx in range(-1, 2)]
             ]
         },
         "boosts": [
@@ -1636,8 +1624,10 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "operation": "percentage",
                 "value": -0.50,
                 "conditions": {
-                    "duration_hours": 2
-                }
+                    "duration_hours": 2,
+                    "resource": ["Stone Rock", "Iron Rock", "Gold Rock", "Tree", "Crop", "Fruit Patchs", "COOKING_BUILD"]
+                },
+                "is_temporal": True
             }
         ]
     },
@@ -1714,8 +1704,9 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "operation": "percentage",
                 "value": -0.50,
                 "conditions": {
-                    "duration_hours": 4
-                }
+                    "duration_hours": 4,
+                },
+                "is_temporal": True
             }
         ]
     },
@@ -1730,8 +1721,9 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "value": -0.25,
                 "conditions": {
                     "category": "Crop",
-                    "duration_hours": 6
-                }
+                    "duration_hours": 6,
+                },
+                "is_temporal": True
             }
         ]
     },
@@ -1746,8 +1738,9 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "value": -0.25,
                 "conditions": {
                     "resource": "Tree",
-                    "duration_hours": 4
-                }
+                    "duration_hours": 4,
+                },
+                "is_temporal": True
             }
         ]
     },
@@ -1762,8 +1755,9 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "value": -0.50,
                 "conditions": {
                     "category": "Mineral",
-                    "duration_hours": 3
-                }
+                    "duration_hours": 3,
+                },
+                "is_temporal": True
             }
         ]
     },
@@ -1778,8 +1772,9 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "value": -0.25,
                 "conditions": {
                     "category": "Fruit",
-                    "duration_hours": 6
-                }
+                    "duration_hours": 6,
+                },
+                "is_temporal": True
             }
         ]
     },
@@ -1794,8 +1789,9 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "value": 1,
                 "conditions": {
                     "category": "Fish",
-                    "duration_hours": 4
-                }
+                    "duration_hours": 4,
+                },
+                "is_temporal": True
             },
             {
                 "type": "CRITICAL_CHANCE",
@@ -1803,8 +1799,9 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "value": 0.50,
                 "conditions": {
                     "category": "Fish",
-                    "duration_hours": 4
-                }
+                    "duration_hours": 4,
+                },
+                "is_temporal": True
             }
         ]
     },
@@ -1819,8 +1816,9 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "value": -0.25,
                 "conditions": {
                     "category": "Flower",
-                    "duration_hours": 4
-                }
+                    "duration_hours": 4,
+                },
+                "is_temporal": True
             }
         ]
     },
@@ -2239,12 +2237,13 @@ COLLECTIBLES_ITEM_BUFFS = {
         "boost_category": "Other",
         "boosts": [
             {
-                "type": "GLOBAL_RECOVERY_TIME",
+                "type": "SUPER_TOTEM_TIME_BOOST", # <-- NOVO TIPO ESPECÍFICO
                 "operation": "percentage",
                 "value": -0.50,
                 "conditions": {
-                    "duration_days": 7
-                }
+                    "duration_days": 7,
+                },
+                "is_temporal": True
             }
         ]
     },

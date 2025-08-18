@@ -1,0 +1,20 @@
+{# app/templates/macros/reward_item_display.html #}
+{% if amount > 0 %}
+    <li class="d-flex align-items-center mb-1">
+        {# Lógica para exibir o nome e o ícone corretos para cada tipo de recompensa #}
+        {% if item_name == 'tickets' %}
+            <img src="{{ url_for('static', filename=get_item_image_path(delivery_analysis.seasonal_ticket_name)) }}" class="icon icon-2x me-2" alt="{{ delivery_analysis.seasonal_ticket_name or 'Tickets' }}">
+            <span>{{ amount }}x {{ delivery_analysis.seasonal_ticket_name or 'Tickets' }}</span>
+        {% elif item_name == 'coins' %}
+            <img src="{{ url_for('static', filename=get_item_image_path('Coins')) }}" class="icon icon-2x me-2" alt="Moedas">
+            <span>{{ amount }} Moedas</span>
+        {% elif item_name == 'sfl' %}
+            <img src="{{ url_for('static', filename=get_item_image_path('SFL')) }}" class="icon icon-2x me-2" alt="SFL">
+            <span>{{ amount }} SFL</span>
+        {% else %}
+            <img src="{{ url_for('static', filename=get_item_image_path(item_name)) }}" class="icon icon-2x me-2" alt="{{ item_name }}">
+            <span>{{ amount }}x {{ item_name }}</span>
+        {% endif %}
+    </li>
+{% endif %}
+

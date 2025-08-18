@@ -22,7 +22,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-5% plot crop growth time",
         "effects": [
             {
-                "type": "CROP_GROWTH_TIME",
+                "type": "GROWTH_TIME",
                 "operation": "multiply",
                 "value": 0.95,
             },
@@ -35,10 +35,10 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+0.1 Basic Crop yield",
         "effects": [
             {
-                "type": "CROP_YIELD",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 0.1,
-                "conditions": {"crop_tier": "basic"},
+                "conditions": {"target_category": "BasicCrop"},
             },
         ],
     },
@@ -49,10 +49,10 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+0.1 Medium Crop yield",
         "effects": [
             {
-                "type": "CROP_YIELD",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 0.1,
-                "conditions": {"crop_tier": "medium"},
+                "conditions": {"target_category": "MediumCrop"},
             },
         ],
     },
@@ -63,10 +63,10 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+0.1 Advanced Crop yield",
         "effects": [
             {
-                "type": "CROP_YIELD",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 0.1,
-                "conditions": {"crop_tier": "advanced"},
+                "conditions": {"target_category": "AdvancedCrop"},
             },
         ],
     },
@@ -77,10 +77,10 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "Betty Coin delivery revenue increased by 30%",
         "effects": [
             {
-                "type": "DELIVERY_REWARD",
+                "type": "DELIVERY_COIN_REWARD",
                 "operation": "multiply",
                 "value": 1.30,
-                "conditions": {"npc": "betty"},
+                "conditions": {"target_npc": "betty"},
             },
         ],
     },
@@ -91,10 +91,10 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-10% Advanced crop growth time",
         "effects": [
             {
-                "type": "CROP_GROWTH_TIME",
+                "type": "GROWTH_TIME",
                 "operation": "multiply",
                 "value": 0.90,
-                "conditions": {"crop_tier": "advanced"},
+                "conditions": {"target_category": "AdvancedCrop"},
             },
         ],
     },
@@ -105,10 +105,10 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+10% coins when selling plot crops at the Market",
         "effects": [
             {
-                "type": "SELL_PRICE",
+                "type": "COIN_GAIN",
                 "operation": "multiply",
                 "value": 1.10,
-                "conditions": {"category": "Crop", "building": "Market"},
+                "conditions": {"target_category": "Crop", "target_building": "Market"},
             },
         ],
     },
@@ -123,8 +123,8 @@ BUMPKIN_REVAMP_SKILLS = {
                 "operation": "set_chance",
                 "value": 1 / 700,
                 "yield_item": "Gold",
-                "yield_amount": 0.35,
-                "conditions": {"item": "Sunflower"},
+                "yield_amount": 0.35, # Mantido para lógica específica
+                "conditions": {"resource": "Sunflower"},
             },
         ],
     },
@@ -153,10 +153,10 @@ BUMPKIN_REVAMP_SKILLS = {
                 }
             },
             {
-                "type": "CROP_GROWTH_TIME",
+                "type": "GROWTH_TIME",
                 "operation": "multiply",
                 "value": 0.90,
-                "conditions": {"crop_tier": "basic"},
+                "conditions": {"target_category": "BasicCrop"},
             },
         ],
     },
@@ -170,7 +170,7 @@ BUMPKIN_REVAMP_SKILLS = {
                 "name": "MODIFY_ITEM_AOE",
                 "type": "ITEM_MODIFICATION",
                 "operation": "override",
-                "target_item": "Laurie the Chuckle Crow",
+                "target_item": "Scary Mike",
                 "new_aoe": {
                     # A nova AOE é uma área de 7x7, mas ainda direcional (abaixo)
                     "shape": "custom",
@@ -185,10 +185,10 @@ BUMPKIN_REVAMP_SKILLS = {
                 }
             },
             {
-                "type": "CROP_YIELD",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 0.1,
-                "conditions": {"crop_tier": "medium"},
+                "conditions": {"target_category": "MediumCrop"},
             },
         ],
     },
@@ -217,10 +217,10 @@ BUMPKIN_REVAMP_SKILLS = {
                 }
             },
             {
-                "type": "CROP_YIELD",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 0.1,
-                "conditions": {"crop_tier": "advanced"},
+                "conditions": {"target_category": "AdvancedCrop"},
             },
         ],
     },
@@ -233,7 +233,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "effects": [
             {
                 "type": "INSTANT_GROWTH",
-                "target": "AllCrops",
+                "resource": "AllCrops",
                 "cooldown_hours": 72,
             },
         ],
@@ -245,16 +245,16 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+1 Advanced crop yield; -0.5 Basic and Medium crop yield",
         "effects": [
             {
-                "type": "CROP_YIELD",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 1,
-                "conditions": {"crop_tier": "advanced"},
+                "conditions": {"target_category": "AdvancedCrop"},
             },
             {
-                "type": "CROP_YIELD",
+                "type": "YIELD",
                 "operation": "subtract",
                 "value": 0.5,
-                "conditions": {"crop_tier": ["basic", "medium"]},
+                "conditions": {"target_category": ["BasicCrop", "MediumCrop"]},
             },
         ],
     },
@@ -265,16 +265,16 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+1 Basic and Medium crop yield; -0.5 Advanced crop yield",
         "effects": [
             {
-                "type": "CROP_YIELD",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 1,
-                "conditions": {"crop_tier": ["basic", "medium"]},
+                "conditions": {"target_category": ["BasicCrop", "MediumCrop"]},
             },
             {
-                "type": "CROP_YIELD",
+                "type": "YIELD",
                 "operation": "subtract",
                 "value": 0.5,
-                "conditions": {"crop_tier": "advanced"},
+                "conditions": {"target_category": "AdvancedCrop"},
             },
         ],
     },
@@ -287,7 +287,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+0.1 fruit yield",
         "effects": [
             {
-                "type": "FRUIT_YIELD",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 0.1,
             },
@@ -300,10 +300,10 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-10% fruit seeds cost",
         "effects": [
             {
-                "type": "SEED_COST",
+                "type": "COST",
                 "operation": "multiply",
                 "value": 0.90,
-                "conditions": {"category": "FruitSeed"},
+                "conditions": {"target_category": "FruitSeed"},
             },
         ],
     },
@@ -314,10 +314,10 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+50% coins from Tango's deliveries",
         "effects": [
             {
-                "type": "DELIVERY_REWARD",
+                "type": "DELIVERY_COIN_REWARD",
                 "operation": "multiply",
                 "value": 1.50,
-                "conditions": {"npc": "tango"},
+                "conditions": {"target_npc": "tango"},
             },
         ],
     },
@@ -331,7 +331,7 @@ BUMPKIN_REVAMP_SKILLS = {
                 "type": "COLLECTIBLE_EFFECT_MULTIPLIER",
                 "operation": "multiply",
                 "value": 2,
-                "conditions": {"item": "Macaw"},
+                "conditions": {"resource": "Macaw"},
             },
         ],
     },
@@ -342,9 +342,9 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-10% fruit growth time",
         "effects": [
             {
-                "type": "FRUIT_GROWTH_TIME",
-                "operation": "multiply",
-                "value": 0.90,
+                "type": "GROWTH_TIME",
+                "operation": "percentage",
+                "value": -0.10,
             },
         ],
     },
@@ -360,10 +360,10 @@ BUMPKIN_REVAMP_SKILLS = {
                 "value": True,
             },
             {
-                "type": "RESOURCE_YIELD",
+                "type": "YIELD",
                 "operation": "add",
                 "value": -1,
-                "conditions": {"item": "Wood", "source": "FruitTree"},
+                "conditions": {"resource": "Wood", "source": "FruitTree"},
             },
         ],
     },
@@ -374,10 +374,10 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+1 wood from fruit branches and stems",
         "effects": [
             {
-                "type": "RESOURCE_YIELD",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 1,
-                "conditions": {"item": "Wood", "source": "FruitTree"},
+                "conditions": {"resource": "Wood", "source": "FruitTree"},
             },
         ],
     },
@@ -391,7 +391,7 @@ BUMPKIN_REVAMP_SKILLS = {
                 "type": "COLLECTIBLE_EFFECT_MULTIPLIER",
                 "operation": "multiply",
                 "value": 2,
-                "conditions": {"item": "Immortal Pear"},
+                "conditions": {"resource": "Immortal Pear"},
             },
         ],
     },
@@ -402,10 +402,10 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+10 Tomato and Lemon seeds stock",
         "effects": [
             {
-                "type": "SHOP_STOCK",
+                "type": "STOCK",
                 "operation": "add",
                 "value": 10,
-                "conditions": {"items": ["Tomato Seed", "Lemon Seed"]},
+                "conditions": {"resource": ["Tomato Seed", "Lemon Seed"]},
             },
         ],
     },
@@ -420,7 +420,7 @@ BUMPKIN_REVAMP_SKILLS = {
                 "operation": "set_chance",
                 "value": 0.20,
                 "bonus_amount": 1,
-                "conditions": {"category": "Fruit"},
+                "conditions": {"target_category": "Fruit"},
             },
         ],
     },
@@ -431,16 +431,16 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-50% Apple and Banana growth time; +100% growth time for all other fruits",
         "effects": [
             {
-                "type": "FRUIT_GROWTH_TIME",
+                "type": "GROWTH_TIME",
                 "operation": "multiply",
                 "value": 0.50,
-                "conditions": {"items": ["Apple", "Banana"]},
+                "conditions": {"resource": ["Apple", "Banana"]},
             },
             {
-                "type": "FRUIT_GROWTH_TIME",
+                "type": "GROWTH_TIME",
                 "operation": "multiply",
                 "value": 2.0,
-                "conditions": {"exclude_items": ["Apple", "Banana"]},
+                "conditions": {"exclude_target": ["Apple", "Banana"]},
             },
         ],
     },
@@ -451,16 +451,16 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-50% Blueberry and Orange growth time; +100% growth time for all other fruits",
         "effects": [
             {
-                "type": "FRUIT_GROWTH_TIME",
+                "type": "GROWTH_TIME",
                 "operation": "multiply",
                 "value": 0.50,
-                "conditions": {"items": ["Blueberry", "Orange"]},
+                "conditions": {"resource": ["Blueberry", "Orange"]},
             },
             {
-                "type": "FRUIT_GROWTH_TIME",
+                "type": "GROWTH_TIME",
                 "operation": "multiply",
                 "value": 2.0,
-                "conditions": {"exclude_items": ["Blueberry", "Orange"]},
+                "conditions": {"exclude_target": ["Blueberry", "Orange"]},
             },
         ],
     },
@@ -471,16 +471,16 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+1 Tomato and Lemon yield; -0.25 yield for all other fruits",
         "effects": [
             {
-                "type": "FRUIT_YIELD",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 1,
-                "conditions": {"items": ["Tomato", "Lemon"]},
+                "conditions": {"resource": ["Tomato", "Lemon"]},
             },
             {
-                "type": "FRUIT_YIELD",
+                "type": "YIELD",
                 "operation": "add",
                 "value": -0.25,
-                "conditions": {"exclude_items": ["Tomato", "Lemon"]},
+                "conditions": {"exclude_target": ["Tomato", "Lemon"]},
             },
         ],
     },
@@ -507,7 +507,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-10% tree growth time",
         "boosts": [
             {
-                "type": "RECOVERY_TIME",
+                "type": "GROWTH_TIME",
                 "operation": "percentage",
                 "value": -0.10,
                 "conditions": {"resource": "Tree"}
@@ -521,10 +521,10 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+50 axe stock",
         "effects": [
             {
-                "type": "SHOP_STOCK",
+                "type": "STOCK",
                 "operation": "add",
                 "value": 50,
-                "conditions": {"item": "Axe"},
+                "conditions": {"resource": "Axe"},
             },
         ],
     },
@@ -533,13 +533,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "tier": 1,
         "island": "basic",
         "description": "1 Tap Trees",
-        "effects": [
-            {
-                "type": "INSTANT_CHOP",
-                "operation": "set",
-                "value": True,
-            },
-        ],
+        "effects": [], # Lógica movida para o Tap Prospector para unificação
     },
     "Tough Tree": {
          "tree": "Trees",
@@ -550,12 +544,12 @@ BUMPKIN_REVAMP_SKILLS = {
              {
                  "type": "YIELD",
                  "operation": "multiply",
-                 "value": 3,
+                 "value": 3.0,
                  "conditions": {"resource": "Wood"},
              },
              {
                 "type": "CRITICAL_CHANCE",
-                "operation": "percentage",
+                "operation": "set_chance",
                 "value": 0.10,
                 "conditions": {"resource": "Wood"},
              }
@@ -568,10 +562,10 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-20% axe cost",
         "effects": [
             {
-                "type": "CRAFTING_COST",
+                "type": "COST",
                 "operation": "multiply",
                 "value": 0.80,
-                "conditions": {"item": "Axe"},
+                "conditions": {"resource": "Axe"},
             },
         ],
     },
@@ -583,7 +577,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "effects": [
             {
                 "type": "COIN_DROP_CHANCE",
-                "operation": "set_chance",
+                "operation": "set",
                 "value": 0.01,
                 "coin_amount": 200,
                 "conditions": {"action": "ChopTree"},
@@ -598,7 +592,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "effects": [
             {
                 "type": "INSTANT_GROWTH_CHANCE",
-                "operation": "set_chance",
+                "operation": "set",
                 "value": 0.15,
                 "conditions": {"category": "Tree"},
             },
@@ -613,7 +607,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "effects": [
             {
                 "type": "INSTANT_GROWTH",
-                "target": "AllTrees",
+                "resource": "AllTrees",
                 "cooldown_hours": 24,
             },
         ],
@@ -659,7 +653,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "10% chance of +1 basic fish",
         "effects": [
             {
-                "type": "BONUS_YIELD_CHANCE",
+                "type": "YIELD_CHANCE",
                 "operation": "set_chance",
                 "value": 0.10,
                 "bonus_amount": 1,
@@ -674,7 +668,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "10% chance of +1 advanced fish",
         "effects": [
             {
-                "type": "BONUS_YIELD_CHANCE",
+                "type": "YIELD_CHANCE",
                 "operation": "set_chance",
                 "value": 0.10,
                 "bonus_amount": 1,
@@ -689,10 +683,10 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-50% rod coin cost",
         "effects": [
             {
-                "type": "CRAFTING_COST",
+                "type": "COST",
                 "operation": "multiply",
                 "value": 0.50,
-                "conditions": {"item": "Rod", "currency": "SFL"},
+                "conditions": {"resource": "Rod", "currency": "SFL"},
             },
         ],
     },
@@ -716,7 +710,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+100% coins from Corale's deliveries",
         "effects": [
             {
-                "type": "DELIVERY_REWARD",
+                "type": "DELIVERY_COIN_REWARD",
                 "operation": "multiply",
                 "value": 2.0,
                 "conditions": {"npc": "corale"},
@@ -743,7 +737,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "20% chance of +1 expert fish",
         "effects": [
             {
-                "type": "BONUS_YIELD_CHANCE",
+                "type": "YIELD_CHANCE",
                 "operation": "set_chance",
                 "value": 0.20,
                 "bonus_amount": 1,
@@ -758,12 +752,12 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "During fish frenzy, +1 fish and 50% chance of +1 fish",
         "effects": [
             {
-                "type": "FRENZY_YIELD",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 1,
             },
             {
-                "type": "FRENZY_BONUS_CHANCE",
+                "type": "YIELD_CHANCE",
                 "operation": "set_chance",
                 "value": 0.50,
                 "bonus_amount": 1,
@@ -784,8 +778,8 @@ BUMPKIN_REVAMP_SKILLS = {
             {
                 "type": "COMPOST_YIELD",
                 "operation": "add",
-                "value": -1,
-                "conditions": {"item": "Worm"},
+                "value": -1.0,
+                "conditions": {"resource": "Worm"},
             },
         ],
     },
@@ -796,7 +790,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+20% Fish XP",
         "effects": [
             {
-                "type": "FISHING_XP",
+                "type": "XP",
                 "operation": "multiply",
                 "value": 1.20,
             },
@@ -811,10 +805,10 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+0.2 Egg, Wool and Milk yield",
         "effects": [
             {
-                "type": "ANIMAL_PRODUCE_YIELD",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 0.2,
-                "conditions": {"items": ["Egg", "Wool", "Milk"]},
+                "conditions": {"resource": ["Egg", "Wool", "Milk"]},
             },
         ],
     },
@@ -825,7 +819,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-5% feed to feed all animals",
         "effects": [
             {
-                "type": "ANIMAL_FEED_COST",
+                "type": "FEED_COST",
                 "operation": "multiply",
                 "value": 0.95,
             },
@@ -838,7 +832,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-10% Animal sleep time",
         "effects": [
             {
-                "type": "ANIMAL_RECOVERY_TIME",
+                "type": "RECOVERY_TIME",
                 "operation": "multiply",
                 "value": 0.90,
             },
@@ -854,7 +848,7 @@ BUMPKIN_REVAMP_SKILLS = {
                 "type": "COLLECTIBLE_EFFECT_MULTIPLIER",
                 "operation": "multiply",
                 "value": 2,
-                "conditions": {"item": "Bale"},
+                "conditions": {"resource": "Bale"},
             },
         ],
     },
@@ -865,7 +859,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "Bale affects milk and wool production",
         "effects": [
             {
-                "type": "BALE_AFFECTS_ITEMS",
+                "type": "ITEM_MODIFICATION",
                 "operation": "add_items",
                 "value": ["Milk", "Wool"],
             },
@@ -878,10 +872,10 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+0.1 Feather, Leather and Merino Wool yield",
         "effects": [
             {
-                "type": "ANIMAL_PRODUCE_YIELD",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 0.1,
-                "conditions": {"items": ["Feather", "Leather", "Merino Wool"]},
+                "conditions": {"resource": ["Feather", "Leather", "Merino Wool"]},
             },
         ],
     },
@@ -892,7 +886,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+50% Coins from Animal Bounties",
         "effects": [
             {
-                "type": "DELIVERY_REWARD",
+                "type": "DELIVERY_COIN_REWARD",
                 "operation": "multiply",
                 "value": 1.50,
                 "conditions": {"delivery_type": "AnimalBounty"},
@@ -906,7 +900,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+50% Animal XP from Animal Affection tools",
         "effects": [
             {
-                "type": "ANIMAL_XP",
+                "type": "XP",
                 "operation": "multiply",
                 "value": 1.50,
                 "conditions": {"source": "AffectionTool"},
@@ -920,7 +914,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "Mixed Grain requires 3 kale to mix instead",
         "effects": [
             {
-                "type": "CRAFTING_RECIPE_CHANGE",
+                "type": "RECIPE_CHANGE",
                 "item": "Mixed Grain",
                 "new_recipe": {"Kale": 3},
             },
@@ -933,7 +927,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "Barn Delight requires 1 less Lemon and Honey to mix",
         "effects": [
             {
-                "type": "CRAFTING_COST_REDUCTION",
+                "type": "COST_REDUCTION",
                 "item": "Barn Delight",
                 "ingredient_reductions": {"Lemon": 1, "Honey": 1},
             },
@@ -946,7 +940,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-50% chance of sickness",
         "effects": [
             {
-                "type": "ANIMAL_SICKNESS_CHANCE",
+                "type": "SICKNESS_CHANCE",
                 "operation": "multiply",
                 "value": 0.50,
             },
@@ -959,13 +953,13 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-25% feed to feed Chickens; +50% feed to feed other animals",
         "effects": [
             {
-                "type": "ANIMAL_FEED_COST",
+                "type": "FEED_COST",
                 "operation": "multiply",
                 "value": 0.75,
                 "conditions": {"animal": "Chicken"},
             },
             {
-                "type": "ANIMAL_FEED_COST",
+                "type": "FEED_COST",
                 "operation": "multiply",
                 "value": 1.50,
                 "conditions": {"exclude_animal": "Chicken"},
@@ -979,13 +973,13 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-25% feed to feed Sheep; +50% feed to feed other animals",
         "effects": [
             {
-                "type": "ANIMAL_FEED_COST",
+                "type": "FEED_COST",
                 "operation": "multiply",
                 "value": 0.75,
                 "conditions": {"animal": "Sheep"},
             },
             {
-                "type": "ANIMAL_FEED_COST",
+                "type": "FEED_COST",
                 "operation": "multiply",
                 "value": 1.50,
                 "conditions": {"exclude_animal": "Sheep"},
@@ -999,13 +993,13 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-25% feed to feed Cows; +50% feed to feed other animals",
         "effects": [
             {
-                "type": "ANIMAL_FEED_COST",
+                "type": "FEED_COST",
                 "operation": "multiply",
                 "value": 0.75,
                 "conditions": {"animal": "Cow"},
             },
             {
-                "type": "ANIMAL_FEED_COST",
+                "type": "FEED_COST",
                 "operation": "multiply",
                 "value": 1.50,
                 "conditions": {"exclude_animal": "Cow"},
@@ -1019,13 +1013,13 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "2x animal xp from animal feed; +50% feed to feed all animals",
         "effects": [
             {
-                "type": "ANIMAL_XP",
+                "type": "XP",
                 "operation": "multiply",
                 "value": 2.0,
                 "conditions": {"source": "AnimalFeed"},
             },
             {
-                "type": "ANIMAL_FEED_COST",
+                "type": "FEED_COST",
                 "operation": "multiply",
                 "value": 1.50,
             },
@@ -1040,7 +1034,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "effects": [
             {
                 "type": "INSTANT_WAKE_UP",
-                "target": "AllAnimals",
+                "resource": "AllAnimals",
                 "cooldown_hours": 120,
             },
         ],
@@ -1053,7 +1047,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+50% Coins from Victoria's deliveries",
         "effects": [
             {
-                "type": "DELIVERY_REWARD",
+                "type": "DELIVERY_COIN_REWARD",
                 "operation": "multiply",
                 "value": 1.50,
                 "conditions": {"npc": "victoria"},
@@ -1067,7 +1061,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+0.1 Greenhouse produce yield",
         "effects": [
             {
-                "type": "GREENHOUSE_YIELD",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 0.1,
             },
@@ -1080,7 +1074,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-15% Greenhouse seeds cost",
         "effects": [
             {
-                "type": "SEED_COST",
+                "type": "COST",
                 "operation": "multiply",
                 "value": 0.85,
                 "conditions": {"category": "GreenhouseSeed"},
@@ -1094,7 +1088,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-5% growth time for greenhouse produce",
         "effects": [
             {
-                "type": "GREENHOUSE_CROP_GROWTH_TIME",
+                "type": "GROWTH_TIME",
                 "operation": "multiply",
                 "value": 0.95,
             },
@@ -1107,10 +1101,10 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-10% Olive growth time",
         "effects": [
             {
-                "type": "GREENHOUSE_CROP_GROWTH_TIME",
+                "type": "GROWTH_TIME",
                 "operation": "multiply",
                 "value": 0.90,
-                "conditions": {"item": "Olive"},
+                "conditions": {"resource": "Olive"},
             },
         ],
     },
@@ -1121,10 +1115,10 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-10% Rice growth time",
         "effects": [
             {
-                "type": "GREENHOUSE_CROP_GROWTH_TIME",
+                "type": "GROWTH_TIME",
                 "operation": "multiply",
                 "value": 0.90,
-                "conditions": {"item": "Rice"},
+                "conditions": {"resource": "Rice"},
             },
         ],
     },
@@ -1135,10 +1129,10 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-10% Grape growth time",
         "effects": [
             {
-                "type": "GREENHOUSE_CROP_GROWTH_TIME",
+                "type": "GROWTH_TIME",
                 "operation": "multiply",
                 "value": 0.90,
-                "conditions": {"item": "Grape"},
+                "conditions": {"resource": "Grape"},
             },
         ],
     },
@@ -1149,12 +1143,12 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+0.5 Greenhouse produce yield; +1 Greenhouse seed to plant",
         "effects": [
             {
-                "type": "GREENHOUSE_YIELD",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 0.5,
             },
             {
-                "type": "SEED_COST",
+                "type": "COST",
                 "operation": "add",
                 "value": 1,
                 "conditions": {"category": "GreenhouseSeed"},
@@ -1168,12 +1162,12 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+1 Greenhouse produce yield; +100% Oil consumption in greenhouse",
         "effects": [
             {
-                "type": "GREENHOUSE_YIELD",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 1,
             },
             {
-                "type": "GREENHOUSE_OIL_COST",
+                "type": "OIL_COST",
                 "operation": "multiply",
                 "value": 2.0,
             },
@@ -1188,7 +1182,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "effects": [
             {
                 "type": "INSTANT_GROWTH",
-                "target": "AllGreenhouse",
+                "resource": "AllGreenhouse",
                 "cooldown_hours": 96,
             },
         ],
@@ -1200,7 +1194,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "25% chance of +1 greenhouse produce",
         "effects": [
             {
-                "type": "BONUS_YIELD_CHANCE",
+                "type": "YIELD_CHANCE",
                 "operation": "set_chance",
                 "value": 0.25,
                 "bonus_amount": 1,
@@ -1215,7 +1209,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-1 Oil to grow greenhouse produce",
         "effects": [
             {
-                "type": "GREENHOUSE_OIL_COST",
+                "type": "OIL_COST",
                 "operation": "add",
                 "value": -1,
             },
@@ -1230,7 +1224,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+0.1 Stone Yield",
         "effects": [
             {
-                "type": "RESOURCE_YIELD",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 0.1,
                 "conditions": {"resource": "Stone"},
@@ -1244,7 +1238,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+0.1 Iron Yield",
         "effects": [
             {
-                "type": "RESOURCE_YIELD",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 0.1,
                 "conditions": {"resource": "Iron"},
@@ -1258,7 +1252,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-20% Stone recovery time",
         "effects": [
             {
-                "type": "RECOVERY_TIME",
+                "type": "GROWTH_TIME",
                 "operation": "percentage",
                 "value": -0.20,
                 "conditions": {"resource": "Stone Rock"},
@@ -1272,7 +1266,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "1 tap small mineral nodes",
         "effects": [
             {
-                "type": "INSTANT_MINE",
+                "type": "INSTANT_CHOP",
                 "operation": "set",
                 "value": True,
                 "conditions": {"rock_size": "small"},
@@ -1286,7 +1280,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+20% Blacksmith deliveries revenue",
         "effects": [
             {
-                "type": "DELIVERY_REWARD",
+                "type": "DELIVERY_COIN_REWARD",
                 "operation": "multiply",
                 "value": 1.20,
                 "conditions": {"npc": "blacksmith"},
@@ -1300,7 +1294,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-30% Iron recovery time",
         "effects": [
             {
-                "type": "RECOVERY_TIME",
+                "type": "GROWTH_TIME",
                 "operation": "percentage",
                 "value": -0.30,
                 "conditions": {"resource": "Iron Rock"},
@@ -1314,7 +1308,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-20% coin cost for all pickaxes",
         "effects": [
             {
-                "type": "CRAFTING_COST",
+                "type": "COST",
                 "operation": "multiply",
                 "value": 0.80,
                 "conditions": {"category": "Pickaxe", "currency": "SFL"},
@@ -1328,13 +1322,13 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+1 Stone yield; -0.5 Iron yield",
         "effects": [
             {
-                "type": "RESOURCE_YIELD",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 1,
                 "conditions": {"resource": "Stone"},
             },
             {
-                "type": "RESOURCE_YIELD",
+                "type": "YIELD",
                 "operation": "subtract",
                 "value": 0.5,
                 "conditions": {"resource": "Iron"},
@@ -1348,13 +1342,13 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+1 Iron yield; -0.5 Stone yield",
         "effects": [
             {
-                "type": "RESOURCE_YIELD",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 1,
                 "conditions": {"resource": "Iron"},
             },
             {
-                "type": "RESOURCE_YIELD",
+                "type": "YIELD",
                 "operation": "subtract",
                 "value": 0.5,
                 "conditions": {"resource": "Stone"},
@@ -1368,7 +1362,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-10% Gold recovery time",
         "effects": [
             {
-                "type": "RECOVERY_TIME",
+                "type": "GROWTH_TIME",
                 "operation": "percentage",
                 "value": -0.10,
                 "conditions": {"resource": "Gold Rock"},
@@ -1382,7 +1376,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-20% Gold recovery time",
         "effects": [
             {
-                "type": "RECOVERY_TIME",
+                "type": "GROWTH_TIME",
                 "operation": "percentage",
                 "value": -0.20,
                 "conditions": {"resource": "Gold Rock"},
@@ -1396,7 +1390,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+0.5 Gold Yield",
         "effects": [
             {
-                "type": "RESOURCE_YIELD",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 0.5,
                 "conditions": {"resource": "Gold"},
@@ -1409,10 +1403,10 @@ BUMPKIN_REVAMP_SKILLS = {
         "island": "basic",
         "description": "Increased stock: +70 Pickaxe, +20 Stone Pickaxe, +7 Iron Pickaxe, +2 Gold Pickaxe",
         "effects": [
-            {"type": "SHOP_STOCK", "operation": "add", "value": 70, "conditions": {"item": "Pickaxe"}},
-            {"type": "SHOP_STOCK", "operation": "add", "value": 20, "conditions": {"item": "Stone Pickaxe"}},
-            {"type": "SHOP_STOCK", "operation": "add", "value": 7, "conditions": {"item": "Iron Pickaxe"}},
-            {"type": "SHOP_STOCK", "operation": "add", "value": 2, "conditions": {"item": "Gold Pickaxe"}},
+            {"type": "STOCK", "operation": "add", "value": 70, "conditions": {"resource": "Pickaxe"}},
+            {"type": "STOCK", "operation": "add", "value": 20, "conditions": {"resource": "Stone Pickaxe"}},
+            {"type": "STOCK", "operation": "add", "value": 7, "conditions": {"resource": "Iron Pickaxe"}},
+            {"type": "STOCK", "operation": "add", "value": 2, "conditions": {"resource": "Gold Pickaxe"}},
         ],
     },
     "Fire Kissed": {
@@ -1439,7 +1433,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-15% Crimstone recovery time",
         "effects": [
             {
-                "type": "RECOVERY_TIME",
+                "type": "GROWTH_TIME",
                 "operation": "percentage",
                 "value": -0.15,
                 "conditions": {"resource": "Crimstone Rock"},
@@ -1469,7 +1463,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+10% Food deliveries revenue",
         "effects": [
             {
-                "type": "DELIVERY_REWARD",
+                "type": "DELIVERY_COIN_REWARD",
                 "operation": "multiply",
                 "value": 1.10,
                 "conditions": {"category": "Food"},
@@ -1483,7 +1477,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+5% Experience from eating meals",
         "effects": [
             {
-                "type": "CONSUME_XP",
+                "type": "XP",
                 "operation": "multiply",
                 "value": 1.05,
             },
@@ -1524,7 +1518,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+10% experience for drinks from the Smoothie Shack",
         "effects": [
             {
-                "type": "CONSUME_XP",
+                "type": "XP",
                 "operation": "multiply",
                 "value": 1.10,
                 "conditions": {"building": "Smoothie Shack"},
@@ -1538,13 +1532,13 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+1 food from cooking; 2x ingredients required for cooking",
         "effects": [
             {
-                "type": "CRAFTING_YIELD",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 1,
                 "conditions": {"category": "Food"},
             },
             {
-                "type": "CRAFTING_COST",
+                "type": "COST",
                 "operation": "multiply",
                 "value": 2.0,
                 "conditions": {"category": "Food"},
@@ -1574,7 +1568,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "effects": [
             {
                 "type": "INSTANT_COOK",
-                "target": "AllMeals",
+                "resource": "AllMeals",
                 "cooldown_hours": 96,
             },
         ],
@@ -1586,7 +1580,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+15% experience for meals from the Deli",
         "effects": [
             {
-                "type": "CONSUME_XP",
+                "type": "XP",
                 "operation": "multiply",
                 "value": 1.15,
                 "conditions": {"building": "Deli"},
@@ -1600,7 +1594,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+20% Chance of +1 food from Firepit",
         "effects": [
             {
-                "type": "BONUS_YIELD_CHANCE",
+                "type": "YIELD_CHANCE",
                 "operation": "set_chance",
                 "value": 0.20,
                 "bonus_amount": 1,
@@ -1631,10 +1625,10 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+0.1 Honey per hive",
         "effects": [
             {
-                "type": "RESOURCE_YIELD",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 0.1,
-                "conditions": {"item": "Honey"},
+                "conditions": {"resource": "Honey"},
             },
         ],
     },
@@ -1645,7 +1639,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+0.1 Honey production speed",
         "effects": [
             {
-                "type": "BEEHIVE_PRODUCTION_SPEED",
+                "type": "PRODUCTION_SPEED",
                 "operation": "multiply",
                 "value": 1.10,
             },
@@ -1658,9 +1652,9 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-10% Flower growth time",
         "effects": [
             {
-                "type": "FLOWER_GROWTH_TIME",
-                "operation": "multiply",
-                "value": 0.90,
+                "type": "GROWTH_TIME",
+                "operation": "percentage",
+                "value": -0.10,
             },
         ],
     },
@@ -1671,7 +1665,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-20% Flower Seeds cost",
         "effects": [
             {
-                "type": "SEED_COST",
+                "type": "COST",
                 "operation": "multiply",
                 "value": 0.80,
                 "conditions": {"category": "FlowerSeed"},
@@ -1685,7 +1679,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+10% Experience on food made with Honey",
         "effects": [
             {
-                "type": "CONSUME_XP",
+                "type": "XP",
                 "operation": "multiply",
                 "value": 1.10,
                 "conditions": {"ingredient": "Honey"},
@@ -1699,7 +1693,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+2 relationship points for gifting flowers",
         "effects": [
             {
-                "type": "GIFTING_RELATIONSHIP_POINTS",
+                "type": "RELATIONSHIP_POINTS",
                 "operation": "add",
                 "value": 2,
                 "conditions": {"category": "Flower"},
@@ -1713,7 +1707,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "Additional +0.1 crop yield after pollination (total +0.3)",
         "effects": [
             {
-                "type": "POLLINATION_YIELD_BOOST",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 0.1,
             },
@@ -1726,7 +1720,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "10% chance of +1 Flower",
         "effects": [
             {
-                "type": "BONUS_YIELD_CHANCE",
+                "type": "YIELD_CHANCE",
                 "operation": "set_chance",
                 "value": 0.10,
                 "bonus_amount": 1,
@@ -1741,7 +1735,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+20% Bee Swarm chance",
         "effects": [
             {
-                "type": "BEE_SWARM_CHANCE",
+                "type": "SWARM_CHANCE",
                 "operation": "multiply",
                 "value": 1.20,
             },
@@ -1754,9 +1748,9 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-20% Flower growth time",
         "effects": [
             {
-                "type": "FLOWER_GROWTH_TIME",
-                "operation": "multiply",
-                "value": 0.80,
+                "type": "GROWTH_TIME",
+                "operation": "percentage",
+                "value": -0.20,
             },
         ],
     },
@@ -1767,12 +1761,12 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+0.5 Honey production speed; +50% Flower growth time",
         "effects": [
             {
-                "type": "BEEHIVE_PRODUCTION_SPEED",
+                "type": "PRODUCTION_SPEED",
                 "operation": "multiply",
                 "value": 1.50,
             },
             {
-                "type": "FLOWER_GROWTH_TIME",
+                "type": "GROWTH_TIME",
                 "operation": "multiply",
                 "value": 1.50,
             },
@@ -1787,7 +1781,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "effects": [
             {
                 "type": "INSTANT_GROWTH",
-                "target": "AllFlowers",
+                "resource": "AllFlowers",
                 "cooldown_hours": 96,
             },
         ],
@@ -1801,12 +1795,12 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-5% Crop Machine growth time; +10% Oil consumption in Crop Machine",
         "effects": [
             {
-                "type": "CROP_MACHINE_TIME",
+                "type": "GROWTH_TIME",
                 "operation": "multiply",
                 "value": 0.95,
             },
             {
-                "type": "CROP_MACHINE_OIL_COST",
+                "type": "OIL_COST",
                 "operation": "multiply",
                 "value": 1.10,
             },
@@ -1835,7 +1829,7 @@ BUMPKIN_REVAMP_SKILLS = {
                 "type": "YIELD",
                 "operation": "add",
                 "value": 1,
-                "conditions": {"resource": "Oil", "source": "Oil Reserve"},
+                "conditions": {"resource": "Oil"},
             },
         ],
     },
@@ -1971,7 +1965,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "effects": [
             {
                 "type": "INSTANT_REFILL",
-                "target": "OilWell",
+                "resource": "OilWell",
                 "cooldown_hours": 96,
             },
         ],
@@ -2277,7 +2271,7 @@ LEGACY_BADGES = {
         "description": "Increase gold drops by 50%.",
         "effects": [
             {
-                "type": "RESOURCE_YIELD",
+                "type": "YIELD",
                 "operation": "multiply",
                 "value": 1.50,
                 "conditions": {"resource": "Gold"},
@@ -2345,269 +2339,6 @@ LEGACY_BADGES = {
                 "operation": "set",
                 "value": True,
                 "conditions": {"feature": "LandExpansion"},
-            },
-        ],
-    },
-}
-
-# ------------------------------------------------------------------------------
-# 3. BUMPKIN_SKILLS: The first generation of Bumpkin skills.
-# ------------------------------------------------------------------------------
-BUMPKIN_SKILLS = {
-    "Green Thumb": {
-        "tree": "Crops",
-        "description": "Crops yield 5% more",
-        "disabled": False,
-        "effects": [
-            {
-                "type": "CROP_YIELD",
-                "operation": "multiply",
-                "value": 1.05,
-            },
-        ],
-    },
-    "Cultivator": {
-        "tree": "Crops",
-        "description": "Crops grow 5% quicker",
-        "disabled": False,
-        "effects": [
-            {
-                "type": "CROP_GROWTH_TIME",
-                "operation": "multiply",
-                "value": 0.95,
-            },
-        ],
-    },
-    "Master Farmer": {
-        "tree": "Crops",
-        "description": "Crops yield 10% more",
-        "disabled": False,
-        "effects": [
-            {
-                "type": "CROP_YIELD",
-                "operation": "multiply",
-                "value": 1.10,
-            },
-        ],
-    },
-    "Golden Flowers": {
-        "tree": "Crops",
-        "description": "Chance for Sunflowers to Drop Gold",
-        "disabled": False,
-        "effects": [
-            {
-                "type": "SPECIAL_RESOURCE_CHANCE",
-                "operation": "set_chance",
-                "value": 0.01, # Assuming 1% chance
-                "yield_item": "Gold",
-                "yield_amount": 1, # Assuming 1 Gold
-                "conditions": {"item": "Sunflower"},
-            },
-        ],
-    },
-    "Happy Crop": {
-        "tree": "Crops",
-        "description": "Chance to get 2x crops",
-        "disabled": False,
-        "effects": [
-            {
-                "type": "DOUBLE_YIELD_CHANCE",
-                "operation": "set_chance",
-                "value": 0.10, # Assuming 10% chance
-                "conditions": {"category": "Crop"},
-            },
-        ],
-    },
-    "Lumberjack": {
-        "tree": "Trees",
-        "description": "Trees drop 10% more",
-        "disabled": False,
-        "effects": [
-            {
-                "type": "RESOURCE_YIELD",
-                "operation": "multiply",
-                "value": 1.10,
-                "conditions": {"item": "Wood"},
-            },
-        ],
-    },
-    "Tree Hugger": {
-        "tree": "Trees",
-        "description": "Trees regrow 20% quicker",
-        "disabled": False,
-        "effects": [
-            {
-                "type": "TREE_RECOVERY_TIME",
-                "operation": "percentage",
-                "value": -0.20,
-                "conditions": {"resource": "Wood"},
-            },
-        ],
-    },
-    "Tough Tree": {
-        "tree": "Trees",
-        "description": "Chance to get 3x wood drops",
-        "disabled": False,
-        "effects": [
-            {
-                "type": "BONUS_YIELD_CHANCE",
-                "operation": "set_chance",
-                "value": 0.10, # Assuming 10% chance
-                "bonus_multiplier": 3,
-                "conditions": {"item": "Wood"},
-            },
-        ],
-    },
-    "Money Tree": {
-        "tree": "Trees",
-        "description": "Chance for coin drops",
-        "disabled": False,
-        "effects": [
-            {
-                "type": "COIN_DROP_CHANCE",
-                "operation": "set_chance",
-                "value": 0.05, # Assuming 5% chance
-                "coin_amount": 1, # Assuming 1 Coin
-                "conditions": {"action": "ChopTree"},
-            },
-        ],
-    },
-    "Digger": {
-        "tree": "Rocks",
-        "description": "Stone Drops 10% more",
-        "disabled": False,
-        "effects": [
-            {
-                "type": "RESOURCE_YIELD",
-                "operation": "multiply",
-                "value": 1.10,
-                "conditions": {"resource": "Stone"},
-            },
-        ],
-    },
-    "Coal Face": {
-        "tree": "Rocks",
-        "description": "Stones recover 20% quicker",
-        "disabled": False,
-        "effects": [
-            {
-                "type": "ROCK_RECOVERY_TIME",
-                "operation": "multiply",
-                "value": 0.80,
-                "conditions": {"item": "Stone Rock"},
-            },
-        ],
-    },
-    "Gold Rush": {
-        "tree": "Rocks",
-        "description": "Chance to get 2.5x gold drops",
-        "disabled": False,
-        "effects": [
-            {
-                "type": "BONUS_YIELD_CHANCE",
-                "operation": "set_chance",
-                "value": 0.05, # Assuming 5% chance
-                "bonus_multiplier": 2.5,
-                "conditions": {"resource": "Gold"},
-            },
-        ],
-    },
-    "Rush Hour": {
-        "tree": "Cooking",
-        "description": "Cook meals 10% faster",
-        "disabled": False,
-        "effects": [
-            {
-                "type": "COOKING_TIME",
-                "operation": "multiply",
-                "value": 0.90,
-            },
-        ],
-    },
-    "Kitchen Hand": {
-        "tree": "Cooking",
-        "description": "Meals yield an extra 5% experience",
-        "disabled": False,
-        "effects": [
-            {
-                "type": "CONSUME_XP",
-                "operation": "multiply",
-                "value": 1.05,
-            },
-        ],
-    },
-    "Michelin Stars": {
-        "tree": "Cooking",
-        "description": "High quality food, earn additional 5% SFL",
-        "disabled": False,
-        "effects": [
-            {
-                "type": "SELL_PRICE",
-                "operation": "multiply",
-                "value": 1.05,
-                "conditions": {"category": "Food"},
-            },
-        ],
-    },
-    "Curer": {
-        "tree": "Cooking",
-        "description": "Consuming deli goods adds extra 15% exp",
-        "disabled": False,
-        "effects": [
-            {
-                "type": "CONSUME_XP",
-                "operation": "multiply",
-                "value": 1.15,
-                "conditions": {"building": "Deli"},
-            },
-        ],
-    },
-    "Stable Hand": {
-        "tree": "Animals",
-        "description": "Animals produce 10% quicker",
-        "disabled": False,
-        "effects": [
-            {
-                "type": "ANIMAL_RECOVERY_TIME",
-                "operation": "multiply",
-                "value": 0.90,
-            },
-        ],
-    },
-    "Free Range": {
-        "tree": "Animals",
-        "description": "+0.1 Animal Produce",
-        "disabled": False,
-        "effects": [
-            {
-                "type": "ANIMAL_PRODUCE_YIELD",
-                "operation": "add",
-                "value": 0.1,
-            },
-        ],
-    },
-    "Horse Whisperer": {
-        "tree": "Animals",
-        "description": "Increase chance of mutants",
-        "disabled": False,
-        "effects": [
-            {
-                "type": "MUTANT_ANIMAL_CHANCE",
-                "operation": "multiply",
-                "value": 1.20, # Assuming 20% increase
-            },
-        ],
-    },
-    "Buckaroo": {
-        "tree": "Animals",
-        "description": "Chance of double drops",
-        "disabled": False,
-        "effects": [
-            {
-                "type": "DOUBLE_YIELD_CHANCE",
-                "operation": "set_chance",
-                "value": 0.10, # Assuming 10% chance
-                "conditions": {"category": "Animal"},
             },
         ],
     },

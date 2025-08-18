@@ -29,4 +29,6 @@ BUILDING_REQUIREMENTS = {
     "Manor": {"unlocksAtLevel": 17, "unlocksOnIsland": "desert", "enabled": False},
     "Greenhouse": {"unlocksAtLevel": 19, "unlocksOnIsland": "desert", "enabled": True},
     "Barn": {"unlocksAtLevel": 21, "unlocksOnIsland": "desert", "enabled": True},
+    "Crop Machine": {"unlocksAtLevel": 23, "unlocksOnIsland": "desert", "enabled": True},
+    
 }

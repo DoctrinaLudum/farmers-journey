@@ -30,6 +30,16 @@
             </button>
         </li>
         <li class="nav-item" role="presentation">
+            <button class="nav-link" id="deliveries-tab" data-bs-toggle="tab" data-bs-target="#deliveries-pane" type="button" role="tab" aria-controls="deliveries-pane" aria-selected="false">
+                <i class="bi bi-truck me-1"></i> Entregas
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="chores-tab" data-bs-toggle="tab" data-bs-target="#chores-pane" type="button" role="tab" aria-controls="chores-pane" aria-selected="false">
+                <i class="bi bi-check2-square me-1"></i> Tarefas
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
             <button class="nav-link" id="fishing-tab" data-bs-toggle="tab" data-bs-target="#fishing-pane" type="button" role="tab" aria-controls="fishing-pane" aria-selected="false">
                 <i class="bi bi-fish me-1"></i> Peixes
             </button>
@@ -44,19 +54,10 @@
                 <i class="bi bi-unlock-fill me-1"></i> Escavação de Tesouros
             </button>
         </li>
+               
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="wood-tab" data-bs-toggle="tab" data-bs-target="#wood-pane" type="button" role="tab" aria-controls="wood-pane" aria-selected="false">
-                <i class="bi bi-tree-fill me-1"></i> Wood
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="mining-tab" data-bs-toggle="tab" data-bs-target="#mining-pane" type="button" role="tab" aria-controls="mining-pane" aria-selected="false">
-                <i class="bi bi-gem me-1"></i> Mineração
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="debug-tab" data-bs-toggle="tab" data-bs-target="#debug-pane" type="button" role="tab" aria-controls="debug-pane" aria-selected="false">
-                <i class="bi bi-bug-fill me-1"></i> Recursos (Debug)
+            <button class="nav-link" id="resources-tab" data-bs-toggle="tab" data-bs-target="#resources-pane" type="button" role="tab" aria-controls="resources-pane" aria-selected="false">
+                <i class="bi bi-bug-fill me-1"></i> Análise de Recursos
             </button>
         </li>
         <li class="nav-item" role="presentation">
@@ -84,6 +85,14 @@
             {% include 'partials/_inventory_panel.html' %}
         </div>
 
+        <div class="tab-pane fade" id="deliveries-pane" role="tabpanel" aria-labelledby="deliveries-tab">
+            {% include 'partials/_deliveries_panel.html' %}
+        </div>
+
+        <div class="tab-pane fade" id="chores-pane" role="tabpanel" aria-labelledby="chores-tab">
+            {% include 'partials/_chores_panel.html' %}
+        </div>
+
         <div class="tab-pane fade" id="fishing-pane" role="tabpanel" aria-labelledby="fishing-pane">
             {% include 'partials/_fishing_panel.html' %}
         </div>
@@ -96,16 +105,8 @@
             {% include 'partials/_treasuredig_panel.html' %}
         </div>
         
-        <div class="tab-pane fade" id="wood-pane" role="tabpanel" aria-labelledby="wood-tab">
-            {% include 'partials/_wood_panel.html' %}
-        </div>
-
-        <div class="tab-pane fade" id="mining-pane" role="tabpanel" aria-labelledby="mining-tab">
-            {% include 'partials/_mining_panel.html' %}
-        </div>
-
-        <div class="tab-pane fade" id="debug-pane" role="tabpanel" aria-labelledby="debug-tab">
-            {% include 'partials/_debug_resources_panel.html' %}
+        <div class="tab-pane fade" id="resources-pane" role="tabpanel" aria-labelledby="resources-tab">
+            {% include 'partials/_unified_resources_panel.html' %}
         </div>
 
         <div class="tab-pane fade" id="layout-map-pane" role="tabpanel" aria-labelledby="layout-map-tab">
@@ -191,5 +192,11 @@
 
 
 {% block scripts %}
+<!-- NOVO: Expõe os dados de preços para o JavaScript -->
+<script>
+    // A função tojson do Flask/Jinja2 converte o dicionário Python em um objeto JSON seguro.
+    window.SFL_PRICES = {{ prices_data | tojson }};
+</script>
 <script src="{{ url_for('static', filename='js/dashboard.js') }}" type="module"></script>
+<script src="{{ url_for('static', filename='js/summary_card.js') }}" type="module"></script>
 {% endblock %}

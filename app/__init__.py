@@ -14,6 +14,9 @@ logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %
 def create_app():
     app = Flask(__name__)
     app.config.from_object(config)
+    app.config['TEMPLATES_AUTO_RELOAD'] = True
+    app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+
 
     # Habilita a extensão 'do' no Jinja2 para permitir a modificação de variáveis dentro de loops.
     app.jinja_env.add_extension('jinja2.ext.do')

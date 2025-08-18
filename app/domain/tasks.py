@@ -1,8 +1,71 @@
+# ==============================================================================
+#  TASKS & DELIVERIES DOMAIN
+#  Fonte da verdade para as regras de negócio de Entregas (Deliveries) e
+#  Tarefas do Quadro de Avisos (Chore Board).
+#  Dados extraídos e validados a partir de delivery.ts, deliver.ts e en.json.
+# ==============================================================================
+
 # ------------------------------------------------------------------------------
-# 1. BASE_DELIVERY_REWARDS: Describes all NPC base reward for delivey.
+# 1. CATEGORIAS DE NPCS
+# Define os NPCs com base no tipo de recompensa que eles oferecem.
 # ------------------------------------------------------------------------------
 
-BASE_DELIVERY_REWARDS = {
+TICKET_NPCS = [
+    "pumpkin' pete", "bert", "raven", "timmy", "tywin", "cornwell", "finn",
+    "finley", "miranda", "jester", "pharaoh"
+]
+
+SFL_NPCS = ["grimbly", "grimtooth", "grubnuk", "gordo", "guria", "gambit"]
+
+COIN_NPCS = [
+    "betty", "peggy", "tango", "corale", "blacksmith", "victoria", "old salty"
+]
+
+# ------------------------------------------------------------------------------
+# 2. NÍVEIS DE DIFICULDADE DAS ENTREGAS (DELIVERIES)
+# Define a complexidade e o valor dos itens pedidos por cada NPC.
+# Fonte: delivery.ts -> NPC_DELIVERY_LEVELS
+# ------------------------------------------------------------------------------
+
+NPC_DELIVERY_LEVELS = {
+    # NPCs que recompensam com Moedas (Coins)
+    "betty": 1,
+    "blacksmith": 1,
+    "peggy": 3,
+    "corale": 7,
+    "tango": 13,
+    "old salty": 15,
+    "victoria": 30,
+
+    # NPCs que recompensam com SFL (Goblins)
+    "grimbly": 10,
+    "grimtooth": 12,
+    "grubnuk": 16,
+    "gambit": 25,
+    "gordo": 30,
+    "guria": 40,
+
+    # NPCs que recompensam com Bilhetes Sazonais (Tickets)
+    "pumpkin' pete": 5,
+    "bert": 8,
+    "finley": 12,
+    "raven": 14,
+    "miranda": 15,
+    "finn": 16,
+    "pharaoh": 17,
+    "cornwell": 18,
+    "timmy": 20,
+    "tywin": 22,
+    "jester": 26,
+}
+
+# ------------------------------------------------------------------------------
+# 3. RECOMPENSAS BASE DE BILHETES (TICKETS)
+# Quantidade base de bilhetes sazonais por entrega de NPC.
+# Fonte: deliver.ts -> TICKET_REWARDS
+# ------------------------------------------------------------------------------
+
+TICKET_DELIVERY_REWARDS = {
     "pumpkin' pete": 1,
     "bert": 2,
     "finley": 2,
@@ -17,13 +80,14 @@ BASE_DELIVERY_REWARDS = {
 }
 
 # ------------------------------------------------------------------------------
-# 2. CHORES_BOARD_TASKS: Describes all taks to choresBoards wekkely
+# 4. TAREFAS DO QUADRO DE AVISOS (CHORE BOARD)
+# Mapeia a descrição da tarefa para o nome da atividade interna e o requisito.
+# Fonte: api_response_test.json (choreBoard) e en.json (chaves "chore.*")
 # ------------------------------------------------------------------------------
 
-CHORES_BOARD_TASKS = {
-    # ------------------
-    # Tarefas de Colheita (Harvest)
-    # ------------------
+CHORE_BOARD_TASKS = {
+    # =================== Harvest Tasks ===================
+    # --- Tarefas de Colheita (Harvest) ---
     "Harvest Sunflowers 150 times": {"requirement": 150, "activity_name": "Sunflower Harvested"},
     "Harvest Sunflowers 200 times": {"requirement": 200, "activity_name": "Sunflower Harvested"},
     "Harvest Sunflowers 250 times": {"requirement": 250, "activity_name": "Sunflower Harvested"},
@@ -126,18 +190,40 @@ CHORES_BOARD_TASKS = {
     "Harvest Rice 16 times": {"requirement": 16, "activity_name": "Rice Harvested"},
     "Harvest Rice 20 times": {"requirement": 20, "activity_name": "Rice Harvested"},
     "Harvest Rice 24 times": {"requirement": 24, "activity_name": "Rice Harvested"},
+    "Harvest 8 Olives": {"requirement": 8, "activity_name": "Olive Harvested"},
     "Harvest Olives 12 times": {"requirement": 12, "activity_name": "Olive Harvested"},
     "Harvest Olives 16 times": {"requirement": 16, "activity_name": "Olive Harvested"},
     "Harvest Olives 20 times": {"requirement": 20, "activity_name": "Olive Harvested"},
-    
-    # ------------------
-    # Tarefas de Alimentação (Eat)
-    # ------------------
+    "Harvest Parsnip 200 times": {"requirement": 200, "activity_name": "Parsnip Harvested"},
+    "Harvest Parsnip 240 times": {"requirement": 240, "activity_name": "Parsnip Harvested"},
+    "Harvest Parsnip 280 times": {"requirement": 280, "activity_name": "Parsnip Harvested"},
+
+    # =================== Eat Tasks ===================
+     # --- Tarefas de Alimentação (Eat) ---
     "Eat 3 Boiled Eggs": {"requirement": 3, "activity_name": "Boiled Eggs Fed"},
     "Eat 5 Boiled Eggs": {"requirement": 5, "activity_name": "Boiled Eggs Fed"},
     "Eat 7 Boiled Eggs": {"requirement": 7, "activity_name": "Boiled Eggs Fed"},
     "Eat 10 Boiled Eggs": {"requirement": 10, "activity_name": "Boiled Eggs Fed"},
     "Eat 15 Boiled Eggs": {"requirement": 15, "activity_name": "Boiled Eggs Fed"},
+    "Eat 5 Bumpkin Salad": {"requirement": 5, "activity_name": "Bumpkin Salad Fed"},
+    "Eat 5 Cauliflower Burgers": {"requirement": 5, "activity_name": "Cauliflower Burger Fed"},
+    "Eat 7 Chowder": {"requirement": 7, "activity_name": "Chowder Fed"},
+    "Eat 20 Chowder": {"requirement": 20, "activity_name": "Chowder Fed"},
+    "Eat 25 Chowder": {"requirement": 25, "activity_name": "Chowder Fed"},
+    "Eat 30 Chowder": {"requirement": 30, "activity_name": "Chowder Fed"},
+    "Eat 5 Club Sandwiches": {"requirement": 5, "activity_name": "Club Sandwich Fed"},
+    "Eat 10 Mashed Potatoes": {"requirement": 10, "activity_name": "Mashed Potato Fed"},
+    "Eat 15 Mashed Potatoes": {"requirement": 15, "activity_name": "Mashed Potato Fed"},
+    "Eat 20 Mashed Potatoes": {"requirement": 20, "activity_name": "Mashed Potato Fed"},
+    "Eat 30 Mashed Potatoes": {"requirement": 30, "activity_name": "Mashed Potato Fed"},
+    "Eat 5 Orange Cake": {"requirement": 5, "activity_name": "Orange Cake Fed"},
+    "Eat 7 Orange Cake": {"requirement": 7, "activity_name": "Orange Cake Fed"},
+    "Eat 10 Orange Cake": {"requirement": 10, "activity_name": "Orange Cake Fed"},
+    "Eat 15 Orange Cake": {"requirement": 15, "activity_name": "Orange Cake Fed"},
+    "Eat 5 Pancakes": {"requirement": 5, "activity_name": "Pancake Fed"},
+    "Eat 15 Pumpkin Soup": {"requirement": 15, "activity_name": "Pumpkin Soup Fed"},
+    "Eat 20 Pumpkin Soup": {"requirement": 20, "activity_name": "Pumpkin Soup Fed"},
+    "Eat 30 Pumpkin Soup": {"requirement": 30, "activity_name": "Pumpkin Soup Fed"},
     "Eat 10 Reindeer Carrot": {"requirement": 10, "activity_name": "Reindeer Carrot Fed"},
     "Eat 15 Reindeer Carrot": {"requirement": 15, "activity_name": "Reindeer Carrot Fed"},
     "Eat 20 Anchovies": {"requirement": 20, "activity_name": "Anchovy Fed"},
@@ -146,367 +232,367 @@ CHORES_BOARD_TASKS = {
     "Eat 10 Tunas": {"requirement": 10, "activity_name": "Tuna Fed"},
     "Eat 20 Tunas": {"requirement": 20, "activity_name": "Tuna Fed"},
     "Eat 30 Tunas": {"requirement": 30, "activity_name": "Tuna Fed"},
-    "Eat 5 Cauliflower Burgers": {"requirement": 5, "activity_name": "Cauliflower Burger Fed"},
-    "Eat 5 Club Sandwiches": {"requirement": 5, "activity_name": "Club Sandwich Fed"},
-    "Eat 5 Pancakes": {"requirement": 5, "activity_name": "Pancakes Fed"},
-    "Eat 20 Chowder": {"requirement": 20, "activity_name": "Chowder Fed"},
-    "Eat 25 Chowder": {"requirement": 25, "activity_name": "Chowder Fed"},
-    "Eat 30 Chowder": {"requirement": 30, "activity_name": "Chowder Fed"},
-    "Eat 5 Orange Cake": {"requirement": 5, "activity_name": "Orange Cake Fed"},
-    "Eat 7 Orange Cake": {"requirement": 7, "activity_name": "Orange Cake Fed"},
-    "Eat 10 Orange Cake": {"requirement": 10, "activity_name": "Orange Cake Fed"},
-    "Eat 15 Orange Cake": {"requirement": 15, "activity_name": "Orange Cake Fed"},
-    "Eat 10 Mashed Potatoes": {"requirement": 10, "activity_name": "Mashed Potato Fed"},
-    "Eat 15 Mashed Potatoes": {"requirement": 15, "activity_name": "Mashed Potato Fed"},
-    "Eat 20 Mashed Potatoes": {"requirement": 20, "activity_name": "Mashed Potato Fed"},
-    "Eat 30 Mashed Potatoes": {"requirement": 30, "activity_name": "Mashed Potato Fed"},
-    "Eat 20 Pumpkin Soup": {"requirement": 20, "activity_name": "Pumpkin Soup Fed"},
-    "Eat 30 Pumpkin Soup": {"requirement": 30, "activity_name": "Pumpkin Soup Fed"},
-    "Eat 5 Bumpkin Salad": {"requirement": 5, "activity_name": "Bumpkin Salad Fed"},
-    "Eat 15 Pumpkin Soup": {"requirement": 15, "activity_name": "Pumpkin Soup Fed"},
-    "Eat 7 Chowder": {"requirement": 7, "activity_name": "Chowder Fed"},
 
-    # ------------------
-    # Tarefas de Bebidas (Drink)
-    # ------------------
-    "Drink 15 Orange Juice": {"requirement": 15, "activity_name": "Orange Juice Fed"},
-    "Drink 15 Purple Smoothies": {"requirement": 15, "activity_name": "Purple Smoothie Fed"},
-    "Drink 10 Apple Juice": {"requirement": 10, "activity_name": "Apple Juice Fed"},
-    "Drink 5 Power Smoothies": {"requirement": 5, "activity_name": "Power Smoothie Fed"},
-    "Drink 25 Orange Juice": {"requirement": 25, "activity_name": "Orange Juice Fed"},
-    "Drink 35 Orange Juice": {"requirement": 35, "activity_name": "Orange Juice Fed"},
-    "Drink 40 Orange Juice": {"requirement": 40, "activity_name": "Orange Juice Fed"},
-    "Drink 50 Orange Juice": {"requirement": 50, "activity_name": "Orange Juice Fed"},
-    "Drink 15 Sour Shakes": {"requirement": 15, "activity_name": "Sour Shake Fed"},
-    "Drink 15 Banana Blast": {"requirement": 15, "activity_name": "Banana Blast Fed"},
-    "Drink 5 Grape Juice": {"requirement": 5, "activity_name": "Grape Juice Fed"},
-    "Drink 10 Orange Juice": {"requirement": 10, "activity_name": "Orange Juice Fed"},
-    "Drink 15 Carrot Juice": {"requirement": 15, "activity_name": "Carrot Juice Fed"},
-    
-    # ------------------
-    # Tarefas de Culinária (Cook)
-    # ------------------
-    "Cook Boiled Eggs 3 times": {"requirement": 3, "activity_name": "Boiled Eggs Cooked"},
-    "Cook Boiled Eggs 5 times": {"requirement": 5, "activity_name": "Boiled Eggs Cooked"},
-    "Cook Reindeer Carrot 8 times": {"requirement": 8, "activity_name": "Reindeer Carrot Cooked"},
-    "Cook Reindeer Carrot 12 times": {"requirement": 12, "activity_name": "Reindeer Carrot Cooked"},
-    "Cook Mashed Potatoes 15 times": {"requirement": 15, "activity_name": "Mashed Potato Cooked"},
-    "Cook Mashed Potatoes 18 times": {"requirement": 18, "activity_name": "Mashed Potato Cooked"},
-    "Cook Mashed Potatoes 20 times": {"requirement": 20, "activity_name": "Mashed Potato Cooked"},
-    "Cook Roast Veggies 5 times": {"requirement": 5, "activity_name": "Roast Veggies Cooked"},
-    "Cook Roast Veggies 6 times": {"requirement": 6, "activity_name": "Roast Veggies Cooked"},
-    "Cook Roast Veggies 7 times": {"requirement": 7, "activity_name": "Roast Veggies Cooked"},
-    "Cook Club Sandwich 5 times": {"requirement": 5, "activity_name": "Club Sandwich Cooked"},
-    "Cook Club Sandwich 6 times": {"requirement": 6, "activity_name": "Club Sandwich Cooked"},
-    "Cook Club Sandwich 7 times": {"requirement": 7, "activity_name": "Club Sandwich Cooked"},
-    "Cook Pancakes 3 times": {"requirement": 3, "activity_name": "Pancakes Cooked"},
-    "Cook Pancakes 4 times": {"requirement": 4, "activity_name": "Pancakes Cooked"},
-    "Cook Pancakes 5 times": {"requirement": 5, "activity_name": "Pancakes Cooked"},
-    "Cook Pancakes 6 times": {"requirement": 6, "activity_name": "Pancakes Cooked"},
-    "Cook Fried Calamari 1 time": {"requirement": 1, "activity_name": "Fried Calamari Cooked"},
-    "Cook Fried Calamari 2 times": {"requirement": 2, "activity_name": "Fried Calamari Cooked"},
-    "Cook Fried Calamari 3 times": {"requirement": 3, "activity_name": "Fried Calamari Cooked"},
-    "Cook Fried Calamari 4 times": {"requirement": 4, "activity_name": "Fried Calamari Cooked"},
-    "Cook Cauliflower Burger 5 times": {"requirement": 5, "activity_name": "Cauliflower Burger Cooked"},
-    "Cook Cauliflower Burger 7 times": {"requirement": 7, "activity_name": "Cauliflower Burger Cooked"},
-    "Cook Cauliflower Burger 10 times": {"requirement": 10, "activity_name": "Cauliflower Burger Cooked"},
-    "Cook Bumpkin Salad 5 times": {"requirement": 5, "activity_name": "Bumpkin Salad Cooked"},
-    "Cook Bumpkin Salad 7 times": {"requirement": 7, "activity_name": "Bumpkin Salad Cooked"},
-    "Cook Bumpkin Salad 10 times": {"requirement": 10, "activity_name": "Bumpkin Salad Cooked"},
-    "Cook Bumpkin ganoush 3 times": {"requirement": 3, "activity_name": "Bumpkin ganoush Cooked"},
-    "Cook Bumpkin ganoush 5 times": {"requirement": 5, "activity_name": "Bumpkin ganoush Cooked"},
-    "Cook Bumpkin ganoush 7 times": {"requirement": 7, "activity_name": "Bumpkin ganoush Cooked"},
-    "Cook Goblin's Treat 3 times": {"requirement": 3, "activity_name": "Goblin's Treat Cooked"},
-    "Cook Goblin's Treat 5 times": {"requirement": 5, "activity_name": "Goblin's Treat Cooked"},
-    "Cook Goblin's Treat 7 times": {"requirement": 7, "activity_name": "Goblin's Treat Cooked"},
-    "Cook Gumbo 20 times": {"requirement": 20, "activity_name": "Gumbo Cooked"},
-    "Cook Gumbo 25 times": {"requirement": 25, "activity_name": "Gumbo Cooked"},
-    "Cook Gumbo 30 times": {"requirement": 30, "activity_name": "Gumbo Cooked"},
-    "Cook Sunflower Cake 7 times": {"requirement": 7, "activity_name": "Sunflower Cake Cooked"},
-    "Cook Carrot Cake 5 times": {"requirement": 5, "activity_name": "Carrot Cake Cooked"},
-    "Cook Cabbage Cake 5 times": {"requirement": 5, "activity_name": "Cabbage Cake Cooked"},
-    "Cook Wheat Cake 5 times": {"requirement": 5, "activity_name": "Wheat Cake Cooked"},
-    "Cook Honey Cake 10 times": {"requirement": 10, "activity_name": "Honey Cake Cooked"},
-    "Cook Honey Cake 15 times": {"requirement": 15, "activity_name": "Honey Cake Cooked"},
-    "Cook Honey Cake 20 times": {"requirement": 20, "activity_name": "Honey Cake Cooked"},
-    "Cook Cornbread 10 times": {"requirement": 10, "activity_name": "Cornbread Cooked"},
-    "Cook Lemon Cheesecakes 3 times": {"requirement": 3, "activity_name": "Lemon Cheesecake Cooked"},
-    "Cook Lemon Cheesecakes 5 times": {"requirement": 5, "activity_name": "Lemon Cheesecake Cooked"},
-    "Cook Fermented Fish 10 times": {"requirement": 10, "activity_name": "Fermented Fish Cooked"},
-    "Cook Fermented Fish 12 times": {"requirement": 12, "activity_name": "Fermented Fish Cooked"},
-    "Cook Fermented Fish 15 times": {"requirement": 15, "activity_name": "Fermented Fish Cooked"},
-    "Cook Chowder 15 times": {"requirement": 15, "activity_name": "Chowder Cooked"},
-    "Cook Chowder 18 times": {"requirement": 18, "activity_name": "Chowder Cooked"},
-    "Cook Chowder 21 times": {"requirement": 21, "activity_name": "Chowder Cooked"},
+    # =================== Cook Tasks ===================
+# --- Tarefas de Cozinhar (Cook) ---
     "Cook Antipasto 25 times": {"requirement": 25, "activity_name": "Antipasto Cooked"},
     "Cook Antipasto 30 times": {"requirement": 30, "activity_name": "Antipasto Cooked"},
     "Cook Antipasto 35 times": {"requirement": 35, "activity_name": "Antipasto Cooked"},
-    "Cook Fruit Salad 50 times": {"requirement": 50, "activity_name": "Fruit Salad Cooked"},
-    "Cook Fruit Salad 75 times": {"requirement": 75, "activity_name": "Fruit Salad Cooked"},
-    "Cook Fruit Salad 100 times": {"requirement": 100, "activity_name": "Fruit Salad Cooked"},
-    "Cook Steamed Red Rice 20 times": {"requirement": 20, "activity_name": "Steamed Red Rice Cooked"},
-    "Cook Steamed Red Rice 25 times": {"requirement": 25, "activity_name": "Steamed Red Rice Cooked"},
-    "Cook Steamed Red Rice 30 times": {"requirement": 30, "activity_name": "Steamed Red Rice Cooked"},
-    "Cook Rice Bun 20 times": {"requirement": 20, "activity_name": "Rice Bun Cooked"},
-    "Cook Rice Bun 25 times": {"requirement": 25, "activity_name": "Rice Bun Cooked"},
-    "Cook Rice Bun 30 times": {"requirement": 30, "activity_name": "Rice Bun Cooked"},
-    "Cook Shroom Syrup 2 times": {"requirement": 2, "activity_name": "Shroom Syrup Cooked"},
-    "Cook Cheese 50 times": {"requirement": 50, "activity_name": "Cheese Cooked"},
-    "Cook Honey Cheddar 5 times": {"requirement": 5, "activity_name": "Honey Cheddar Cooked"},
-    "Cook Honey Cheddar 7 times": {"requirement": 7, "activity_name": "Honey Cheddar Cooked"},
-    "Cook Honey Cheddar 10 times": {"requirement": 10, "activity_name": "Honey Cheddar Cooked"},
+    "Cook Apple Pie 15 times": {"requirement": 15, "activity_name": "Apple Pie Cooked"},
+    "Cook Beetroot Cake 5 times": {"requirement": 5, "activity_name": "Beetroot Cake Cooked"},
+    "Cook Beetroot Cake 7 times": {"requirement": 7, "activity_name": "Beetroot Cake Cooked"},
     "Cook Blue Cheese 20 times": {"requirement": 20, "activity_name": "Blue Cheese Cooked"},
     "Cook Blue Cheese 25 times": {"requirement": 25, "activity_name": "Blue Cheese Cooked"},
     "Cook Blue Cheese 30 times": {"requirement": 30, "activity_name": "Blue Cheese Cooked"},
-    "Cook Goblin Brunch 1 time": {"requirement": 1, "activity_name": "Goblin Brunch Cooked"},
-    "Cook Goblin Brunch 2 times": {"requirement": 2, "activity_name": "Goblin Brunch Cooked"},
-    "Cook Goblin Brunch 3 times": {"requirement": 3, "activity_name": "Goblin Brunch Cooked"},
-    "Cook Sushi Roll 3 times": {"requirement": 3, "activity_name": "Sushi Roll Cooked"},
-    "Cook Sushi Roll 4 times": {"requirement": 4, "activity_name": "Sushi Roll Cooked"},
-    "Cook Sushi Roll 5 times": {"requirement": 5, "activity_name": "Sushi Roll Cooked"},
+    "Cook Boiled Eggs 3 times": {"requirement": 3, "activity_name": "Boiled Egg Cooked"},
+    "Cook Boiled Eggs 5 times": {"requirement": 5, "activity_name": "Boiled Egg Cooked"},
+    "Cook Bumpkin ganoush 3 times": {"requirement": 3, "activity_name": "Bumpkin Ganoush Cooked"},
+    "Cook Bumpkin ganoush 5 times": {"requirement": 5, "activity_name": "Bumpkin Ganoush Cooked"},
+    "Cook Bumpkin ganoush 7 times": {"requirement": 7, "activity_name": "Bumpkin Ganoush Cooked"},
+    "Cook Bumpkin Roast 5 times": {"requirement": 5, "activity_name": "Bumpkin Roast Cooked"},
+    "Cook Bumpkin Roast 7 times": {"requirement": 7, "activity_name": "Bumpkin Roast Cooked"},
+    "Cook Bumpkin Roast 10 times": {"requirement": 10, "activity_name": "Bumpkin Roast Cooked"},
+    "Cook Bumpkin Salad 5 times": {"requirement": 5, "activity_name": "Bumpkin Salad Cooked"},
+    "Cook Bumpkin Salad 7 times": {"requirement": 7, "activity_name": "Bumpkin Salad Cooked"},
+    "Cook Bumpkin Salad 10 times": {"requirement": 10, "activity_name": "Bumpkin Salad Cooked"},
+    "Cook Cabbage Cake 5 times": {"requirement": 5, "activity_name": "Cabbage Cake Cooked"},
+    "Cook Cabbage Cake 7 times": {"requirement": 7, "activity_name": "Cabbage Cake Cooked"},
     "Cook Caprese Salad 4 times": {"requirement": 4, "activity_name": "Caprese Salad Cooked"},
     "Cook Caprese Salad 5 times": {"requirement": 5, "activity_name": "Caprese Salad Cooked"},
     "Cook Caprese Salad 6 times": {"requirement": 6, "activity_name": "Caprese Salad Cooked"},
     "Cook Caprese Salad 7 times": {"requirement": 7, "activity_name": "Caprese Salad Cooked"},
     "Cook Caprese Salad 8 times": {"requirement": 8, "activity_name": "Caprese Salad Cooked"},
     "Cook Caprese Salad 10 times": {"requirement": 10, "activity_name": "Caprese Salad Cooked"},
+    "Cook Carrot Cake 5 times": {"requirement": 5, "activity_name": "Carrot Cake Cooked"},
+    "Cook Carrot Cake 7 times": {"requirement": 7, "activity_name": "Carrot Cake Cooked"},
+    "Cook Cauliflower Burger 5 times": {"requirement": 5, "activity_name": "Cauliflower Burger Cooked"},
+    "Cook Cauliflower Burger 7 times": {"requirement": 7, "activity_name": "Cauliflower Burger Cooked"},
+    "Cook Cauliflower Burger 10 times": {"requirement": 10, "activity_name": "Cauliflower Burger Cooked"},
+    "Cook Cauliflower Cake 7 times": {"requirement": 7, "activity_name": "Cauliflower Cake Cooked"},
+    "Cook Cheese 50 times": {"requirement": 50, "activity_name": "Cheese Cooked"},
+    "Cook Chowder 15 times": {"requirement": 15, "activity_name": "Chowder Cooked"},
+    "Cook Chowder 18 times": {"requirement": 18, "activity_name": "Chowder Cooked"},
+    "Cook Chowder 21 times": {"requirement": 21, "activity_name": "Chowder Cooked"},
+    "Cook Club Sandwich 5 times": {"requirement": 5, "activity_name": "Club Sandwich Cooked"},
+    "Cook Club Sandwich 6 times": {"requirement": 6, "activity_name": "Club Sandwich Cooked"},
+    "Cook Club Sandwich 7 times": {"requirement": 7, "activity_name": "Club Sandwich Cooked"},
+    "Cook Cornbread 10 times": {"requirement": 10, "activity_name": "Cornbread Cooked"},
+    "Cook Eggplant Cake 5 times": {"requirement": 5, "activity_name": "Eggplant Cake Cooked"},
+    "Cook Fermented Fish 5 times": {"requirement": 5, "activity_name": "Fermented Fish Cooked"},
+    "Cook Fermented Fish 10 times": {"requirement": 10, "activity_name": "Fermented Fish Cooked"},
+    "Cook Fermented Fish 12 times": {"requirement": 12, "activity_name": "Fermented Fish Cooked"},
+    "Cook Fermented Fish 15 times": {"requirement": 15, "activity_name": "Fermented Fish Cooked"},
+    "Cook Fried Calamari 1 time": {"requirement": 1, "activity_name": "Fried Calamari Cooked"},
+    "Cook Fried Calamari 2 times": {"requirement": 2, "activity_name": "Fried Calamari Cooked"},
+    "Cook Fried Calamari 3 times": {"requirement": 3, "activity_name": "Fried Calamari Cooked"},
+    "Cook Fried Calamari 4 times": {"requirement": 4, "activity_name": "Fried Calamari Cooked"},
+    "Cook Fruit Salad 50 times": {"requirement": 50, "activity_name": "Fruit Salad Cooked"},
+    "Cook Fruit Salad 75 times": {"requirement": 75, "activity_name": "Fruit Salad Cooked"},
+    "Cook Fruit Salad 100 times": {"requirement": 100, "activity_name": "Fruit Salad Cooked"},
+    "Cook Goblin Brunch 1 time": {"requirement": 1, "activity_name": "Goblin Brunch Cooked"},
+    "Cook Goblin Brunch 2 times": {"requirement": 2, "activity_name": "Goblin Brunch Cooked"},
+    "Cook Goblin Brunch 3 times": {"requirement": 3, "activity_name": "Goblin Brunch Cooked"},
+    "Cook Goblin's Treat 3 times": {"requirement": 3, "activity_name": "Goblin's Treat Cooked"},
+    "Cook Goblin's Treat 5 times": {"requirement": 5, "activity_name": "Goblin's Treat Cooked"},
+    "Cook Goblin's Treat 7 times": {"requirement": 7, "activity_name": "Goblin's Treat Cooked"},
+    "Cook Gumbo 20 times": {"requirement": 20, "activity_name": "Gumbo Cooked"},
+    "Cook Gumbo 25 times": {"requirement": 25, "activity_name": "Gumbo Cooked"},
+    "Cook Gumbo 30 times": {"requirement": 30, "activity_name": "Gumbo Cooked"},
+    "Cook Honey Cake 10 times": {"requirement": 10, "activity_name": "Honey Cake Cooked"},
+    "Cook Honey Cake 15 times": {"requirement": 15, "activity_name": "Honey Cake Cooked"},
+    "Cook Honey Cake 20 times": {"requirement": 20, "activity_name": "Honey Cake Cooked"},
+    "Cook Honey Cheddar 5 times": {"requirement": 5, "activity_name": "Honey Cheddar Cooked"},
+    "Cook Honey Cheddar 7 times": {"requirement": 7, "activity_name": "Honey Cheddar Cooked"},
+    "Cook Honey Cheddar 10 times": {"requirement": 10, "activity_name": "Honey Cheddar Cooked"},
+    "Cook Lemon Cheesecakes 3 times": {"requirement": 3, "activity_name": "Lemon Cheesecake Cooked"},
+    "Cook Lemon Cheesecakes 5 times": {"requirement": 5, "activity_name": "Lemon Cheesecake Cooked"},
+    "Cook Mashed Potatoes 15 times": {"requirement": 15, "activity_name": "Mashed Potato Cooked"},
+    "Cook Mashed Potatoes 18 times": {"requirement": 18, "activity_name": "Mashed Potato Cooked"},
+    "Cook Mashed Potatoes 20 times": {"requirement": 20, "activity_name": "Mashed Potato Cooked"},
     "Cook Ocean's Olive 3 times": {"requirement": 3, "activity_name": "Ocean's Olive Cooked"},
     "Cook Ocean's Olive 5 times": {"requirement": 5, "activity_name": "Ocean's Olive Cooked"},
     "Cook Ocean's Olive 7 times": {"requirement": 7, "activity_name": "Ocean's Olive Cooked"},
-    "Cook Eggplant Cake 5 times": {"requirement": 5, "activity_name": "Eggplant Cake Cooked"},
-    "Cook Radish Cake 5 times": {"requirement": 5, "activity_name": "Radish Cake Cooked"},
-    "Cook Beetroot Cake 5 times": {"requirement": 5, "activity_name": "Beetroot Cake Cooked"},
-    "Cook Pumpkin Soup 5 times": {"requirement": 5, "activity_name": "Pumpkin Soup Cooked"},
-    "Cook Pumpkin Soup 7 times": {"requirement": 7, "activity_name": "Pumpkin Soup Cooked"},
-    "Cook Pumpkin Soup 10 times": {"requirement": 10, "activity_name": "Pumpkin Soup Cooked"},
-    "Cook Bumpkin Roast 5 times": {"requirement": 5, "activity_name": "Bumpkin Roast Cooked"},
-    "Cook Bumpkin Roast 7 times": {"requirement": 7, "activity_name": "Bumpkin Roast Cooked"},
-    "Cook Bumpkin Roast 10 times": {"requirement": 10, "activity_name": "Bumpkin Roast Cooked"},
+    "Cook Pancakes 3 times": {"requirement": 3, "activity_name": "Pancake Cooked"},
+    "Cook Pancakes 4 times": {"requirement": 4, "activity_name": "Pancake Cooked"},
+    "Cook Pancakes 5 times": {"requirement": 5, "activity_name": "Pancake Cooked"},
+    "Cook Pancakes 6 times": {"requirement": 6, "activity_name": "Pancake Cooked"},
+    "Cook Parsnip Cake 7 times": {"requirement": 7, "activity_name": "Parsnip Cake Cooked"},
     "Cook Pizza Margherita 5 times": {"requirement": 5, "activity_name": "Pizza Margherita Cooked"},
     "Cook Pizza Margherita 7 times": {"requirement": 7, "activity_name": "Pizza Margherita Cooked"},
     "Cook Pizza Margherita 10 times": {"requirement": 10, "activity_name": "Pizza Margherita Cooked"},
-    "Cook Apple Pie 15 times": {"requirement": 15, "activity_name": "Apple Pie Cooked"},
     "Cook Potato Cake 7 times": {"requirement": 7, "activity_name": "Potato Cake Cooked"},
-    "Cook Carrot Cake 7 times": {"requirement": 7, "activity_name": "Carrot Cake Cooked"},
-    "Cook Wheat Cake 7 times": {"requirement": 7, "activity_name": "Wheat Cake Cooked"},
+    "Cook Pumpkin Soup 5 times": {"requirement": 5, "activity_name": "Pumpkin Soup Cooked"},
+    "Cook Pumpkin Soup 7 times": {"requirement": 7, "activity_name": "Pumpkin Soup Cooked"},
+    "Cook Pumpkin Soup 10 times": {"requirement": 10, "activity_name": "Pumpkin Soup Cooked"},
+    "Cook Radish Cake 5 times": {"requirement": 5, "activity_name": "Radish Cake Cooked"},
+    "Cook Reindeer Carrot 8 times": {"requirement": 8, "activity_name": "Reindeer Carrot Cooked"},
+    "Cook Reindeer Carrot 12 times": {"requirement": 12, "activity_name": "Reindeer Carrot Cooked"},
+    "Cook Rice Bun 20 times": {"requirement": 20, "activity_name": "Rice Bun Cooked"},
+    "Cook Rice Bun 25 times": {"requirement": 25, "activity_name": "Rice Bun Cooked"},
+    "Cook Rice Bun 30 times": {"requirement": 30, "activity_name": "Rice Bun Cooked"},
+    "Cook Roast Veggies 5 times": {"requirement": 5, "activity_name": "Roast Veggies Cooked"},
+    "Cook Roast Veggies 6 times": {"requirement": 6, "activity_name": "Roast Veggies Cooked"},
+    "Cook Roast Veggies 7 times": {"requirement": 7, "activity_name": "Roast Veggies Cooked"},
+    "Cook Shroom Syrup 2 times": {"requirement": 2, "activity_name": "Shroom Syrup Cooked"},
     "Cook Spaghetti al Limone 4 times": {"requirement": 4, "activity_name": "Spaghetti al Limone Cooked"},
     "Cook Spaghetti al Limone 6 times": {"requirement": 6, "activity_name": "Spaghetti al Limone Cooked"},
     "Cook Spaghetti al Limone 8 times": {"requirement": 8, "activity_name": "Spaghetti al Limone Cooked"},
-    "Cook Beetroot Cake 7 times": {"requirement": 7, "activity_name": "Beetroot Cake Cooked"},
-    "Cook Cabbage Cake 7 times": {"requirement": 7, "activity_name": "Cabbage Cake Cooked"},
-    "Cook Parsnip Cake 7 times": {"requirement": 7, "activity_name": "Parsnip Cake Cooked"},
-    "Cook Cauliflower Cake 7 times": {"requirement": 7, "activity_name": "Cauliflower Cake Cooked"},
-    "Cook 5 Fermented Fish": {"requirement": 5, "activity_name": "Fermented Fish Cooked"},
+    "Cook Steamed Red Rice 20 times": {"requirement": 20, "activity_name": "Steamed Red Rice Cooked"},
+    "Cook Steamed Red Rice 25 times": {"requirement": 25, "activity_name": "Steamed Red Rice Cooked"},
+    "Cook Steamed Red Rice 30 times": {"requirement": 30, "activity_name": "Steamed Red Rice Cooked"},
+    "Cook Sunflower Cake 7 times": {"requirement": 7, "activity_name": "Sunflower Cake Cooked"},
+    "Cook Sushi Roll 3 times": {"requirement": 3, "activity_name": "Sushi Roll Cooked"},
+    "Cook Sushi Roll 4 times": {"requirement": 4, "activity_name": "Sushi Roll Cooked"},
+    "Cook Sushi Roll 5 times": {"requirement": 5, "activity_name": "Sushi Roll Cooked"},
     "Cook 10 Sushi Roll": {"requirement": 10, "activity_name": "Sushi Roll Cooked"},
+    "Cook Wheat Cake 5 times": {"requirement": 5, "activity_name": "Wheat Cake Cooked"},
+    "Cook Wheat Cake 7 times": {"requirement": 7, "activity_name": "Wheat Cake Cooked"},
+    "Cook Bumpkin Bento 3 times": {"requirement": 3, "activity_name": "Bumpkin Bento Cooked"},
+    "Cook Bumpkin Bento 5 times": {"requirement": 5, "activity_name": "Bumpkin Bento Cooked"},
 
-    # ------------------
-    # Tarefas de Preparo (Smoothies)
-    # ------------------
-    "Prepare Power Smoothie 20 times": {"requirement": 20, "activity_name": "Power Smoothie Cooked"},
-    "Prepare Power Smoothie 35 times": {"requirement": 35, "activity_name": "Power Smoothie Cooked"},
-    "Prepare Power Smoothie 50 times": {"requirement": 50, "activity_name": "Power Smoothie Cooked"},
-    "Prepare Slow Juice 5 times": {"requirement": 5, "activity_name": "Slow Juice Cooked"},
-    "Prepare Slow Juice 6 times": {"requirement": 6, "activity_name": "Slow Juice Cooked"},
-    "Prepare Slow Juice 7 times": {"requirement": 7, "activity_name": "Slow Juice Cooked"},
-    "Prepare Banana Blast 20 times": {"requirement": 20, "activity_name": "Banana Blast Cooked"},
-    "Prepare Banana Blast 35 times": {"requirement": 35, "activity_name": "Banana Blast Cooked"},
-    "Prepare Banana Blast 50 times": {"requirement": 50, "activity_name": "Banana Blast Cooked"},
-    "Prepare Grape Juice 10 times": {"requirement": 10, "activity_name": "Grape Juice Cooked"},
-    "Prepare Grape Juice 12 times": {"requirement": 12, "activity_name": "Grape Juice Cooked"},
-    "Prepare Grape Juice 15 times": {"requirement": 15, "activity_name": "Grape Juice Cooked"},
-    "Prepare Apple Juice 5 times": {"requirement": 5, "activity_name": "Apple Juice Cooked"},
-    "Prepare Apple Juice 6 times": {"requirement": 6, "activity_name": "Apple Juice Cooked"},
-    "Prepare Apple Juice 7 times": {"requirement": 7, "activity_name": "Apple Juice Cooked"},
-    "Prepare Apple Juice 15 times": {"requirement": 15, "activity_name": "Apple Juice Cooked"},
-    "Prepare Apple Juice 20 times": {"requirement": 20, "activity_name": "Apple Juice Cooked"},
-    "Prepare Apple Juice 25 times": {"requirement": 25, "activity_name": "Apple Juice Cooked"},
-    "Prepare Carrot Juice 2 times": {"requirement": 2, "activity_name": "Carrot Juice Cooked"},
-    "Prepare Carrot Juice 3 times": {"requirement": 3, "activity_name": "Carrot Juice Cooked"},
-    "Prepare Carrot Juice 4 times": {"requirement": 4, "activity_name": "Carrot Juice Cooked"},
-    "Prepare Purple Smoothie 5 times": {"requirement": 5, "activity_name": "Purple Smoothie Cooked"},
-    "Prepare Purple Smoothie 6 times": {"requirement": 6, "activity_name": "Purple Smoothie Cooked"},
-    "Prepare Purple Smoothie 7 times": {"requirement": 7, "activity_name": "Purple Smoothie Cooked"},
-    "Prepare Power Smoothie 2 times": {"requirement": 2, "activity_name": "Power Smoothie Cooked"},
-    "Prepare Power Smoothie 3 times": {"requirement": 3, "activity_name": "Power Smoothie Cooked"},
-    "Prepare Power Smoothie 4 times": {"requirement": 4, "activity_name": "Power Smoothie Cooked"},
-    "Prepare 15 Bumpkin Detox": {"requirement": 15, "activity_name": "Bumpkin Detox Cooked"},
 
-    # ------------------
-    # Tarefas de Cultivo de Flores (Grow)
-    # ------------------
-    "Grow Red Pansy 2 times": {"requirement": 2, "activity_name": "Red Pansy Harvested"},
-    "Grow Red Pansy 3 times": {"requirement": 3, "activity_name": "Red Pansy Harvested"},
-    "Grow Yellow Pansy 2 times": {"requirement": 2, "activity_name": "Yellow Pansy Harvested"},
-    "Grow Yellow Pansy 3 times": {"requirement": 3, "activity_name": "Yellow Pansy Harvested"},
-    "Grow Purple Cosmos 2 times": {"requirement": 2, "activity_name": "Purple Cosmos Harvested"},
-    "Grow Purple Cosmos 3 times": {"requirement": 3, "activity_name": "Purple Cosmos Harvested"},
-    "Grow Blue Cosmos 2 times": {"requirement": 2, "activity_name": "Blue Cosmos Harvested"},
-    "Grow Blue Cosmos 3 times": {"requirement": 3, "activity_name": "Blue Cosmos Harvested"},
-    "Grow Red Balloon Flower 3 times": {"requirement": 3, "activity_name": "Red Balloon Flower Harvested"},
-    "Grow Red Balloon Flower 4 times": {"requirement": 4, "activity_name": "Red Balloon Flower Harvested"},
-    "Grow Red Balloon Flower 5 times": {"requirement": 5, "activity_name": "Red Balloon Flower Harvested"},
-    "Grow Red Balloon Flower 6 times": {"requirement": 6, "activity_name": "Red Balloon Flower Harvested"},
-    "Grow Blue Balloon Flower 3 times": {"requirement": 3, "activity_name": "Blue Balloon Flower Harvested"},
-    "Grow Blue Balloon Flower 4 times": {"requirement": 4, "activity_name": "Blue Balloon Flower Harvested"},
-    "Grow Blue Balloon Flower 5 times": {"requirement": 5, "activity_name": "Blue Balloon Flower Harvested"},
-    "Grow Purple Daffodil 3 times": {"requirement": 3, "activity_name": "Purple Daffodil Harvested"},
-    "Grow Purple Daffodil 4 times": {"requirement": 4, "activity_name": "Purple Daffodil Harvested"},
-    "Grow Purple Daffodil 5 times": {"requirement": 5, "activity_name": "Purple Daffodil Harvested"},
-    "Grow Purple Daffodil 6 times": {"requirement": 6, "activity_name": "Purple Daffodil Harvested"},
-    "Grow Red Daffodil 2 times": {"requirement": 2, "activity_name": "Red Daffodil Harvested"},
-    "Grow Red Daffodil 3 times": {"requirement": 3, "activity_name": "Red Daffodil Harvested"},
-    "Grow Yellow Carnation 3 times": {"requirement": 3, "activity_name": "Yellow Carnation Harvested"},
-    "Grow Blue Carnation 3 times": {"requirement": 3, "activity_name": "Blue Carnation Harvested"},
-    "Grow White Carnation 3 times": {"requirement": 3, "activity_name": "White Carnation Harvested"},
-    "Grow Red Lotus 3 times": {"requirement": 3, "activity_name": "Red Lotus Harvested"},
-    "Grow Yellow Lotus 3 times": {"requirement": 3, "activity_name": "Yellow Lotus Harvested"},
-    "Grow White Lotus 3 times": {"requirement": 3, "activity_name": "White Lotus Harvested"},
-    "Grow Blue Pansy 6 times": {"requirement": 6, "activity_name": "Blue Pansy Harvested"},
-    "Grow White Pansy 6 times": {"requirement": 6, "activity_name": "White Pansy Harvested"},
-    "Grow White Pansy 3 times": {"requirement": 3, "activity_name": "White Pansy Harvested"},
-    "Grow White Cosmos 3 times": {"requirement": 3, "activity_name": "White Cosmos Harvested"},
-
-    # ------------------
-    # Tarefas de Pesca (Fish)
-    # ------------------
-    "Fish 20 times": {"requirement": 20, "activity_name": "Rod Casted"},
-    "Fish 40 times": {"requirement": 40, "activity_name": "Rod Casted"},
-    "Fish 60 times": {"requirement": 60, "activity_name": "Rod Casted"},
-    "Fish 200 times": {"requirement": 200, "activity_name": "Rod Casted"},
-    "Fish 250 times": {"requirement": 250, "activity_name": "Rod Casted"},
-    "Fish 275 times": {"requirement": 275, "activity_name": "Rod Casted"},
-
-    # ------------------
-    # Tarefas de Fabrico (Craft)
-    # ------------------
+    # =================== Craft Tasks ===================
+    # --- Craft Tasks ---
     "Craft 10 Axes": {"requirement": 10, "activity_name": "Axe Crafted"},
     "Craft 12 Axes": {"requirement": 12, "activity_name": "Axe Crafted"},
     "Craft 15 Axes": {"requirement": 15, "activity_name": "Axe Crafted"},
-    "Craft 6 Pickaxes": {"requirement": 6, "activity_name": "Pickaxe Crafted"},
-    "Craft 8 Pickaxes": {"requirement": 8, "activity_name": "Pickaxe Crafted"},
-    "Craft 10 Pickaxes": {"requirement": 10, "activity_name": "Pickaxe Crafted"},
-    "Craft 100 Rods": {"requirement": 100, "activity_name": "Rod Crafted"},
-    "Craft 150 Rods": {"requirement": 150, "activity_name": "Rod Crafted"},
-    "Craft 200 Rods": {"requirement": 200, "activity_name": "Rod Crafted"},
     "Craft 25 Gold Pickaxes": {"requirement": 25, "activity_name": "Gold Pickaxe Crafted"},
     "Craft 30 Gold Pickaxes": {"requirement": 30, "activity_name": "Gold Pickaxe Crafted"},
     "Craft 35 Gold Pickaxes": {"requirement": 35, "activity_name": "Gold Pickaxe Crafted"},
     "Craft 40 Gold Pickaxes": {"requirement": 40, "activity_name": "Gold Pickaxe Crafted"},
-    "Craft 5 Sand Drill": {"requirement": 5, "activity_name": "Sand Drill Crafted"},
-    "Craft 10 Sand Drill": {"requirement": 10, "activity_name": "Sand Drill Crafted"},
-    "Craft 15 Sand Drill": {"requirement": 15, "activity_name": "Sand Drill Crafted"},
+    "Craft 6 Pickaxes": {"requirement": 6, "activity_name": "Pickaxe Crafted"},
+    "Craft 8 Pickaxes": {"requirement": 8, "activity_name": "Pickaxe Crafted"},
+    "Craft 10 Pickaxes": {"requirement": 10, "activity_name": "Pickaxe Crafted"},
+    "Craft 100 Pickaxes": {"requirement": 100, "activity_name": "Pickaxe Crafted"},
+    "Craft 150 Pickaxes": {"requirement": 150, "activity_name": "Pickaxe Crafted"},
+    "Craft 200 Pickaxes": {"requirement": 200, "activity_name": "Pickaxe Crafted"},
+    "Craft 250 Pickaxes": {"requirement": 250, "activity_name": "Pickaxe Crafted"},
+    "Craft 100 Rods": {"requirement": 100, "activity_name": "Rod Crafted"},
+    "Craft 150 Rods": {"requirement": 150, "activity_name": "Rod Crafted"},
+    "Craft 200 Rods": {"requirement": 200, "activity_name": "Rod Crafted"},
+    "Craft 5 Sand Drills": {"requirement": 5, "activity_name": "Sand Drill Crafted"},
+    "Craft 10 Sand Drills": {"requirement": 10, "activity_name": "Sand Drill Crafted"},
+    "Craft 15 Sand Drills": {"requirement": 15, "activity_name": "Sand Drill Crafted"},
 
-    # ------------------
-    # Tarefas de Lenhador (Chop)
-    # ------------------
-    "Chop Trees 10 times": {"requirement": 10, "activity_name": "Tree Chopped"},
-    "Chop Trees 15 times": {"requirement": 15, "activity_name": "Tree Chopped"},
-    "Chop Trees 20 times": {"requirement": 20, "activity_name": "Tree Chopped"},
-    "Chop Trees 100 times": {"requirement": 100, "activity_name": "Tree Chopped"},
-    "Chop Trees 120 times": {"requirement": 120, "activity_name": "Tree Chopped"},
-    "Chop Trees 150 times": {"requirement": 150, "activity_name": "Tree Chopped"},
-    "Chop Trees 450 times": {"requirement": 450, "activity_name": "Tree Chopped"},
-    "Chop Trees 500 times": {"requirement": 500, "activity_name": "Tree Chopped"},
-    "Chop Trees 600 times": {"requirement": 600, "activity_name": "Tree Chopped"},
+    # =================== Chop Tasks ===================
+     # --- Chop Tasks ---
+    "Chop 1 Tree": {"requirement": 1, "activity_name": "Tree Chopped"},
+    "Chop 2 Trees": {"requirement": 2, "activity_name": "Tree Chopped"},
+    "Chop 10 Trees": {"requirement": 10, "activity_name": "Tree Chopped"},
+    "Chop 15 Trees": {"requirement": 15, "activity_name": "Tree Chopped"},
+    "Chop 20 Trees": {"requirement": 20, "activity_name": "Tree Chopped"},
     "Chop 80 Trees": {"requirement": 80, "activity_name": "Tree Chopped"},
+    "Chop 100 Trees": {"requirement": 100, "activity_name": "Tree Chopped"},
+    "Chop 120 Trees": {"requirement": 120, "activity_name": "Tree Chopped"},
+    "Chop 150 Trees": {"requirement": 150, "activity_name": "Tree Chopped"},
+    "Chop 450 Trees": {"requirement": 450, "activity_name": "Tree Chopped"},
+    "Chop 500 Trees": {"requirement": 500, "activity_name": "Tree Chopped"},
+    "Chop 600 Trees": {"requirement": 600, "activity_name": "Tree Chopped"},
 
-    # ------------------
-    # Tarefas de Mineração (Mine)
-    # ------------------
-    "Mine Stones 5 times": {"requirement": 5, "activity_name": "Stone Mined"},
-    "Mine Stones 7 times": {"requirement": 7, "activity_name": "Stone Mined"},
-    "Mine Stones 8 times": {"requirement": 8, "activity_name": "Stone Mined"},
-    "Mine Stones 50 times": {"requirement": 50, "activity_name": "Stone Mined"},
-    "Mine Stones 60 times": {"requirement": 60, "activity_name": "Stone Mined"},
-    "Mine Stones 100 times": {"requirement": 100, "activity_name": "Stone Mined"},
-    "Mine Gold 30 times": {"requirement": 30, "activity_name": "Gold Mined"},
-    "Mine Gold 38 times": {"requirement": 38, "activity_name": "Gold Mined"},
-    "Mine Gold 45 times": {"requirement": 45, "activity_name": "Gold Mined"},
-    "Mine Crimstone 20 times": {"requirement": 20, "activity_name": "Crimstone Mined"},
-    "Mine Crimstone 22 times": {"requirement": 22, "activity_name": "Crimstone Mined"},
-    "Mine Crimstone 24 times": {"requirement": 24, "activity_name": "Crimstone Mined"},
-    "Mine Iron 150 times": {"requirement": 150, "activity_name": "Iron Mined"},
-    "Mine Iron 175 times": {"requirement": 175, "activity_name": "Iron Mined"},
-    "Mine Iron 200 times": {"requirement": 200, "activity_name": "Iron Mined"},
-    "Mine Iron 225 times": {"requirement": 225, "activity_name": "Iron Mined"},
-    "Mine Stones 200 times": {"requirement": 200, "activity_name": "Stone Mined"},
-    "Mine Stones 250 times": {"requirement": 250, "activity_name": "Stone Mined"},
-    "Mine Stones 300 times": {"requirement": 300, "activity_name": "Stone Mined"},
+    # =================== Drink Tasks ===================
+        # --- Tarefas de Beber (Drink) ---
+    "Drink 10 Apple Juice": {"requirement": 10, "activity_name": "Apple Juice Drank"},
+    "Drink 15 Banana Blast": {"requirement": 15, "activity_name": "Banana Blast Drank"},
+    "Drink 15 Carrot Juice": {"requirement": 15, "activity_name": "Carrot Juice Drank"},
+    "Drink 5 Grape Juice": {"requirement": 5, "activity_name": "Grape Juice Drank"},
+    "Drink 10 Orange Juice": {"requirement": 10, "activity_name": "Orange Juice Drank"},
+    "Drink 15 Orange Juice": {"requirement": 15, "activity_name": "Orange Juice Drank"},
+    "Drink 25 Orange Juice": {"requirement": 25, "activity_name": "Orange Juice Drank"},
+    "Drink 35 Orange Juice": {"requirement": 35, "activity_name": "Orange Juice Drank"},
+    "Drink 40 Orange Juice": {"requirement": 40, "activity_name": "Orange Juice Drank"},
+    "Drink 50 Orange Juice": {"requirement": 50, "activity_name": "Orange Juice Drank"},
+    "Drink 5 Power Smoothies": {"requirement": 5, "activity_name": "Power Smoothie Drank"},
+    "Drink 15 Purple Smoothies": {"requirement": 15, "activity_name": "Purple Smoothie Drank"},
+    "Drink 15 Sour Shakes": {"requirement": 15, "activity_name": "Sour Shake Drank"},
+
+    # =================== Prepare Tasks ===================
+        # --- Tarefas de Preparar (Prepare) ---
+    "Prepare Apple Juice 5 times": {"requirement": 5, "activity_name": "Apple Juice Prepared"},
+    "Prepare Apple Juice 6 times": {"requirement": 6, "activity_name": "Apple Juice Prepared"},
+    "Prepare Apple Juice 7 times": {"requirement": 7, "activity_name": "Apple Juice Prepared"},
+    "Prepare Apple Juice 15 times": {"requirement": 15, "activity_name": "Apple Juice Prepared"},
+    "Prepare Apple Juice 20 times": {"requirement": 20, "activity_name": "Apple Juice Prepared"},
+    "Prepare Apple Juice 25 times": {"requirement": 25, "activity_name": "Apple Juice Prepared"},
+    "Prepare Banana Blast 20 times": {"requirement": 20, "activity_name": "Banana Blast Prepared"},
+    "Prepare Banana Blast 35 times": {"requirement": 35, "activity_name": "Banana Blast Prepared"},
+    "Prepare Banana Blast 50 times": {"requirement": 50, "activity_name": "Banana Blast Prepared"},
+    "Prepare Bumpkin Detox 15 times": {"requirement": 15, "activity_name": "Bumpkin Detox Prepared"},
+    "Prepare Carrot Juice 2 times": {"requirement": 2, "activity_name": "Carrot Juice Prepared"},
+    "Prepare Carrot Juice 3 times": {"requirement": 3, "activity_name": "Carrot Juice Prepared"},
+    "Prepare Carrot Juice 4 times": {"requirement": 4, "activity_name": "Carrot Juice Prepared"},
+    "Prepare Grape Juice 10 times": {"requirement": 10, "activity_name": "Grape Juice Prepared"},
+    "Prepare Grape Juice 12 times": {"requirement": 12, "activity_name": "Grape Juice Prepared"},
+    "Prepare Grape Juice 15 times": {"requirement": 15, "activity_name": "Grape Juice Prepared"},
+    "Prepare Power Smoothie 2 times": {"requirement": 2, "activity_name": "Power Smoothie Prepared"},
+    "Prepare Power Smoothie 3 times": {"requirement": 3, "activity_name": "Power Smoothie Prepared"},
+    "Prepare Power Smoothie 4 times": {"requirement": 4, "activity_name": "Power Smoothie Prepared"},
+    "Prepare Power Smoothie 20 times": {"requirement": 20, "activity_name": "Power Smoothie Prepared"},
+    "Prepare Power Smoothie 35 times": {"requirement": 35, "activity_name": "Power Smoothie Prepared"},
+    "Prepare Power Smoothie 50 times": {"requirement": 50, "activity_name": "Power Smoothie Prepared"},
+    "Prepare Purple Smoothie 5 times": {"requirement": 5, "activity_name": "Purple Smoothie Prepared"},
+    "Prepare Purple Smoothie 6 times": {"requirement": 6, "activity_name": "Purple Smoothie Prepared"},
+    "Prepare Purple Smoothie 7 times": {"requirement": 7, "activity_name": "Purple Smoothie Prepared"},
+    "Prepare Slow Juice 5 times": {"requirement": 5, "activity_name": "Slow Juice Prepared"},
+    "Prepare Slow Juice 6 times": {"requirement": 6, "activity_name": "Slow Juice Prepared"},
+    "Prepare Slow Juice 7 times": {"requirement": 7, "activity_name": "Slow Juice Prepared"},
+    "Prepare Sunflower Crunch 2 times": {"requirement": 2, "activity_name": "Sunflower Crunch Prepared"},
+    "Prepare Sunflower Crunch 3 times": {"requirement": 3, "activity_name": "Sunflower Crunch Prepared"},
+    "Prepare Sunflower Crunch 4 times": {"requirement": 4, "activity_name": "Sunflower Crunch Prepared"},
+
+
+    # =================== Grow Tasks ===================
+    # --- Grow Tasks ---
+    "Grow Blue Balloon Flower 3 times": {"requirement": 3, "activity_name": "Blue Balloon Flower Grown"},
+    "Grow Blue Balloon Flower 4 times": {"requirement": 4, "activity_name": "Blue Balloon Flower Grown"},
+    "Grow Blue Balloon Flower 5 times": {"requirement": 5, "activity_name": "Blue Balloon Flower Grown"},
+    "Grow Blue Carnation 3 times": {"requirement": 3, "activity_name": "Blue Carnation Grown"},
+    "Grow Blue Cosmos 2 times": {"requirement": 2, "activity_name": "Blue Cosmos Grown"},
+    "Grow Blue Cosmos 3 times": {"requirement": 3, "activity_name": "Blue Cosmos Grown"},
+    "Grow Blue Pansy 6 times": {"requirement": 6, "activity_name": "Blue Pansy Grown"},
+    "Grow Purple Cosmos 2 times": {"requirement": 2, "activity_name": "Purple Cosmos Grown"},
+    "Grow Purple Cosmos 3 times": {"requirement": 3, "activity_name": "Purple Cosmos Grown"},
+    "Grow Purple Daffodil 3 times": {"requirement": 3, "activity_name": "Purple Daffodil Grown"},
+    "Grow Purple Daffodil 4 times": {"requirement": 4, "activity_name": "Purple Daffodil Grown"},
+    "Grow Purple Daffodil 5 times": {"requirement": 5, "activity_name": "Purple Daffodil Grown"},
+    "Grow Purple Daffodil 6 times": {"requirement": 6, "activity_name": "Purple Daffodil Grown"},
+    "Grow Red Balloon Flower 3 times": {"requirement": 3, "activity_name": "Red Balloon Flower Grown"},
+    "Grow Red Balloon Flower 4 times": {"requirement": 4, "activity_name": "Red Balloon Flower Grown"},
+    "Grow Red Balloon Flower 5 times": {"requirement": 5, "activity_name": "Red Balloon Flower Grown"},
+    "Grow Red Balloon Flower 6 times": {"requirement": 6, "activity_name": "Red Balloon Flower Grown"},
+    "Grow Red Daffodil 2 times": {"requirement": 2, "activity_name": "Red Daffodil Grown"},
+    "Grow Red Daffodil 3 times": {"requirement": 3, "activity_name": "Red Daffodil Grown"},
+    "Grow Red Lotus 3 times": {"requirement": 3, "activity_name": "Red Lotus Grown"},
+    "Grow Red Pansy 2 times": {"requirement": 2, "activity_name": "Red Pansy Grown"},
+    "Grow Red Pansy 3 times": {"requirement": 3, "activity_name": "Red Pansy Grown"},
+    "Grow White Carnation 3 times": {"requirement": 3, "activity_name": "White Carnation Grown"},
+    "Grow White Cosmos 3 times": {"requirement": 3, "activity_name": "White Cosmos Grown"},
+    "Grow White Lotus 3 times": {"requirement": 3, "activity_name": "White Lotus Grown"},
+    "Grow White Pansy 3 times": {"requirement": 3, "activity_name": "White Pansy Grown"},
+    "Grow White Pansy 6 times": {"requirement": 6, "activity_name": "White Pansy Grown"},
+    "Grow Yellow Carnation 3 times": {"requirement": 3, "activity_name": "Yellow Carnation Grown"},
+    "Grow Yellow Lotus 3 times": {"requirement": 3, "activity_name": "Yellow Lotus Grown"},
+    "Grow Yellow Pansy 2 times": {"requirement": 2, "activity_name": "Yellow Pansy Grown"},
+    "Grow Yellow Pansy 3 times": {"requirement": 3, "activity_name": "Yellow Pansy Grown"},
+
+    # =================== Fish Tasks ===================
+ # --- Fish Tasks ---
+    "Fish 20 times": {"requirement": 20, "activity_name": "Fish Fished"},
+    "Fish 40 times": {"requirement": 40, "activity_name": "Fish Fished"},
+    "Fish 60 times": {"requirement": 60, "activity_name": "Fish Fished"},
+    "Fish 200 times": {"requirement": 200, "activity_name": "Fish Fished"},
+    "Fish 250 times": {"requirement": 250, "activity_name": "Fish Fished"},
+    "Fish 275 times": {"requirement": 275, "activity_name": "Fish Fished"},
+
+    # =================== Mine Tasks ===================
+     # --- Mine Tasks ---
+    "Mine 5 Stones": {"requirement": 5, "activity_name": "Stone Mined"},
+    "Mine 7 Stones": {"requirement": 7, "activity_name": "Stone Mined"},
+    "Mine 8 Stones": {"requirement": 8, "activity_name": "Stone Mined"},
     "Mine 10 Crimstone": {"requirement": 10, "activity_name": "Crimstone Mined"},
+    "Mine 15 Oil": {"requirement": 15, "activity_name": "Oil Mined"},
+    "Mine 18 Oil": {"requirement": 18, "activity_name": "Oil Mined"},
+    "Mine 20 Crimstone": {"requirement": 20, "activity_name": "Crimstone Mined"},
+    "Mine 21 Oil": {"requirement": 21, "activity_name": "Oil Mined"},
+    "Mine 22 Crimstone": {"requirement": 22, "activity_name": "Crimstone Mined"},
+    "Mine 24 Crimstone": {"requirement": 24, "activity_name": "Crimstone Mined"},
+    "Mine 30 Gold": {"requirement": 30, "activity_name": "Gold Mined"},
+    "Mine 38 Gold": {"requirement": 38, "activity_name": "Gold Mined"},
+    "Mine 45 Gold": {"requirement": 45, "activity_name": "Gold Mined"},
+    "Mine 50 Stones": {"requirement": 50, "activity_name": "Stone Mined"},
+    "Mine 60 Stones": {"requirement": 60, "activity_name": "Stone Mined"},
+    "Mine 100 Stones": {"requirement": 100, "activity_name": "Stone Mined"},
+    "Mine 120 Stones": {"requirement": 120, "activity_name": "Stone Mined"},
+    "Mine 150 Stones": {"requirement": 150, "activity_name": "Stone Mined"},
+    "Mine 150 Iron": {"requirement": 150, "activity_name": "Iron Mined"},
+    "Mine 175 Iron": {"requirement": 175, "activity_name": "Iron Mined"},
+    "Mine 200 Stones": {"requirement": 200, "activity_name": "Stone Mined"},
+    "Mine 200 Iron": {"requirement": 200, "activity_name": "Iron Mined"},
+    "Mine 225 Iron": {"requirement": 225, "activity_name": "Iron Mined"},
+    "Mine 250 Stones": {"requirement": 250, "activity_name": "Stone Mined"},
+    "Mine 300 Stones": {"requirement": 300, "activity_name": "Stone Mined"},
 
-    # ------------------
-    # Tarefas de Perfuração (Drill)
-    # ------------------
-    "Drill Oil Reserves 15 times": {"requirement": 15, "activity_name": "Oil Drilled"},
-    "Drill Oil Reserves 18 times": {"requirement": 18, "activity_name": "Oil Drilled"},
-    "Drill Oil Reserves 21 times": {"requirement": 21, "activity_name": "Oil Drilled"},
+    # =================== Pick Tasks ===================
+ # --- Pick Tasks ---
+    "Pick 36 Grapes": {"requirement": 36, "activity_name": "Grape Picked"},
+    "Pick 44 Grapes": {"requirement": 44, "activity_name": "Grape Picked"},
+    "Pick 52 Grapes": {"requirement": 52, "activity_name": "Grape Picked"},
+    "Pick 60 Apples": {"requirement": 60, "activity_name": "Apple Picked"},
+    "Pick 60 Blueberries": {"requirement": 60, "activity_name": "Blueberry Picked"},
+    "Pick 75 Apples": {"requirement": 75, "activity_name": "Apple Picked"},
+    "Pick Bananas 80 times": {"requirement": 80, "activity_name": "Banana Picked"},
+    "Pick 90 Apples": {"requirement": 90, "activity_name": "Apple Picked"},
+    "Pick Bananas 90 times": {"requirement": 90, "activity_name": "Banana Picked"},
+    "Pick Bananas 100 times": {"requirement": 100, "activity_name": "Banana Picked"},
+    "Pick 100 Oranges": {"requirement": 100, "activity_name": "Orange Picked"},
+    "Pick Bananas 120 times": {"requirement": 120, "activity_name": "Banana Picked"},
+    "Pick 120 Blueberries": {"requirement": 120, "activity_name": "Blueberry Picked"},
+    "Pick 125 Oranges": {"requirement": 125, "activity_name": "Orange Picked"},
+    "Pick Bananas 150 times": {"requirement": 150, "activity_name": "Banana Picked"},
+    "Pick 150 Blueberries": {"requirement": 150, "activity_name": "Blueberry Picked"},
+    "Pick 150 Lemons": {"requirement": 150, "activity_name": "Lemon Picked"},
+    "Pick 150 Tomatoes": {"requirement": 150, "activity_name": "Tomato Picked"},
+    "Pick 160 Oranges": {"requirement": 160, "activity_name": "Orange Picked"},
+    "Pick 200 Blueberries": {"requirement": 200, "activity_name": "Blueberry Picked"},
+    "Pick 200 Lemons": {"requirement": 200, "activity_name": "Lemon Picked"},
+    "Pick 200 Tomatoes": {"requirement": 200, "activity_name": "Tomato Picked"},
+    "Pick 250 Lemons": {"requirement": 250, "activity_name": "Lemon Picked"},
+    "Pick 250 Tomatoes": {"requirement": 250, "activity_name": "Tomato Picked"},
 
-    # ------------------
-    # Tarefas de Colheita de Frutas (Pick)
-    # ------------------
-    "Pick Blueberries 120 times": {"requirement": 120, "activity_name": "Blueberry Harvested"},
-    "Pick Blueberries 150 times": {"requirement": 150, "activity_name": "Blueberry Harvested"},
-    "Pick Blueberries 200 times": {"requirement": 200, "activity_name": "Blueberry Harvested"},
-    "Pick Oranges 100 times": {"requirement": 100, "activity_name": "Orange Harvested"},
-    "Pick Oranges 125 times": {"requirement": 125, "activity_name": "Orange Harvested"},
-    "Pick Oranges 160 times": {"requirement": 160, "activity_name": "Orange Harvested"},
-    "Pick Apples 60 times": {"requirement": 60, "activity_name": "Apple Harvested"},
-    "Pick Apples 75 times": {"requirement": 75, "activity_name": "Apple Harvested"},
-    "Pick Apples 90 times": {"requirement": 90, "activity_name": "Apple Harvested"},
-    "Pick Tomatoes 150 times": {"requirement": 150, "activity_name": "Tomato Harvested"},
-    "Pick Tomatoes 200 times": {"requirement": 200, "activity_name": "Tomato Harvested"},
-    "Pick Tomatoes 250 times": {"requirement": 250, "activity_name": "Tomato Harvested"},
-    "Pick Grapes 36 times": {"requirement": 36, "activity_name": "Grape Harvested"},
-    "Pick Grapes 44 times": {"requirement": 44, "activity_name": "Grape Harvested"},
-    "Pick Grapes 52 times": {"requirement": 52, "activity_name": "Grape Harvested"},
-    "Pick Bananas 80 times": {"requirement": 80, "activity_name": "Banana Harvested"},
-    "Pick Bananas 90 times": {"requirement": 90, "activity_name": "Banana Harvested"},
-    "Pick Bananas 100 times": {"requirement": 100, "activity_name": "Banana Harvested"},
-    "Pick Bananas 120 times": {"requirement": 120, "activity_name": "Banana Harvested"},
-    "Pick Bananas 150 times": {"requirement": 150, "activity_name": "Banana Harvested"},
-    "Pick Lemons 150 times": {"requirement": 150, "activity_name": "Lemon Harvested"},
-    "Pick Lemons 200 times": {"requirement": 200, "activity_name": "Lemon Harvested"},
-    "Pick Lemons 250 times": {"requirement": 250, "activity_name": "Lemon Harvested"},
-    "Pick 60 Blueberries": {"requirement": 60, "activity_name": "Blueberry Harvested"},
-
-    # ------------------
-    # Tarefas de Coleta (Collect)
-    # ------------------
-    "Collect 15 Honey": {"requirement": 15, "activity_name": "Honey Harvested"},
-    "Collect 18 Honey": {"requirement": 18, "activity_name": "Honey Harvested"},
-    "Collect 21 Honey": {"requirement": 21, "activity_name": "Honey Harvested"},
+    # =================== Collect Tasks ===================
+    # --- Collect Tasks ---
+    "Collect 15 Honey": {"requirement": 15, "activity_name": "Honey Collected"},
+    "Collect 18 Honey": {"requirement": 18, "activity_name": "Honey Collected"},
+    "Collect 21 Honey": {"requirement": 21, "activity_name": "Honey Collected"},
+    "Collect Wool 30 times": {"requirement": 30, "activity_name": "Wool Collected"},
+    "Collect Milk 30 times": {"requirement": 30, "activity_name": "Milk Collected"},
+    "Collect Wool 40 times": {"requirement": 40, "activity_name": "Wool Collected"},
+    "Collect Milk 40 times": {"requirement": 40, "activity_name": "Milk Collected"},
+    "Collect Wool 50 times": {"requirement": 50, "activity_name": "Wool Collected"},
+    "Collect Milk 50 times": {"requirement": 50, "activity_name": "Milk Collected"},
+    "Collect Wool 60 times": {"requirement": 60, "activity_name": "Wool Collected"},
     "Collect Eggs 60 times": {"requirement": 60, "activity_name": "Egg Collected"},
+    "Collect Milk 60 times": {"requirement": 60, "activity_name": "Milk Collected"},
+    "Collect Wool 75 times": {"requirement": 75, "activity_name": "Wool Collected"},
+    "Collect Milk 75 times": {"requirement": 75, "activity_name": "Milk Collected"},
     "Collect Eggs 80 times": {"requirement": 80, "activity_name": "Egg Collected"},
     "Collect Eggs 100 times": {"requirement": 100, "activity_name": "Egg Collected"},
     "Collect Eggs 125 times": {"requirement": 125, "activity_name": "Egg Collected"},
     "Collect Eggs 150 times": {"requirement": 150, "activity_name": "Egg Collected"},
-    "Collect Wool 30 times": {"requirement": 30, "activity_name": "Wool Collected"},
-    "Collect Wool 40 times": {"requirement": 40, "activity_name": "Wool Collected"},
-    "Collect Wool 50 times": {"requirement": 50, "activity_name": "Wool Collected"},
-    "Collect Wool 60 times": {"requirement": 60, "activity_name": "Wool Collected"},
-    "Collect Wool 75 times": {"requirement": 75, "activity_name": "Wool Collected"},
-    "Collect Milk 30 times": {"requirement": 30, "activity_name": "Milk Collected"},
-    "Collect Milk 40 times": {"requirement": 40, "activity_name": "Milk Collected"},
-    "Collect Milk 50 times": {"requirement": 50, "activity_name": "Milk Collected"},
-    "Collect Milk 60 times": {"requirement": 60, "activity_name": "Milk Collected"},
-    "Collect Milk 75 times": {"requirement": 75, "activity_name": "Milk Collected"},
-    
-    # ------------------
-    # Tarefas de Escavação (Dig)
-    # ------------------
-    "Dig 50 times": {"requirement": 50, "activity_name": "Treasure Dug"},
-    "Dig 75 times": {"requirement": 75, "activity_name": "Treasure Dug"},
-    "Dig 100 times": {"requirement": 100, "activity_name": "Treasure Dug"},
-    "Dig 125 times": {"requirement": 125, "activity_name": "Treasure Dug"},
-    "Dig 150 times": {"requirement": 150, "activity_name": "Treasure Dug"},
-    "Dig 175 times": {"requirement": 175, "activity_name": "Treasure Dug"},
-    "Dig 200 times": {"requirement": 200, "activity_name": "Treasure Dug"},
-    "Dig 225 times": {"requirement": 225, "activity_name": "Treasure Dug"},
 
-    # ------------------
-    # Tarefas de Gastos (Spend)
-    # ------------------
+    # =================== Dig Tasks ===================
+    # --- Dig Tasks ---
+    "Dig 50 times": {"requirement": 50, "activity_name": "Dig Dug"},
+    "Dig 75 times": {"requirement": 75, "activity_name": "Dig Dug"},
+    "Dig 100 times": {"requirement": 100, "activity_name": "Dig Dug"},
+    "Dig 125 times": {"requirement": 125, "activity_name": "Dig Dug"},
+    "Dig 150 times": {"requirement": 150, "activity_name": "Dig Dug"},
+    "Dig 175 times": {"requirement": 175, "activity_name": "Dig Dug"},
+    "Dig 200 times": {"requirement": 200, "activity_name": "Dig Dug"},
+    "Dig 225 times": {"requirement": 225, "activity_name": "Dig Dug"},
+
+    # =================== Spend Tasks ===================
+    # --- Spend Tasks ---
     "Spend 32,000 Coins": {"requirement": 32000, "activity_name": "Coins Spent"},
     "Spend 48,000 Coins": {"requirement": 48000, "activity_name": "Coins Spent"},
     "Spend 64,000 Coins": {"requirement": 64000, "activity_name": "Coins Spent"},
+}
+
+# ------------------------------------------------------------------------------
+# 5. ITENS DE BÔNUS DE BILHETES SAZONAIS
+# Fonte: `completeNPCChore.ts` -> CHAPTER_TICKET_BOOST_ITEMS
+# ------------------------------------------------------------------------------
+
+SEASONAL_TICKET_BOOST_ITEMS = {
+    "Solar Flare": ["Cow Scratcher"],
+    "Dawn Breaker": ["Cow Scratcher"],
+    "Witches' Eve": ["Cow Scratcher"],
+    "Catch the Kraken": ["Cow Scratcher"],
+    "Spring Blossom": ["Cow Scratcher"],
+    "Clash of Factions": ["Cow Scratcher"],
+    "Pharaoh's Treasure": ["Cow Scratcher"],
+    "Bull Run": ["Cowboy Hat", "Cowboy Shirt", "Cowboy Trouser"],
+    "Winds of Change": ["Acorn Hat", "Igloo", "Hammock"],
+    "Great Bloom": ["Flower Mask", "Love Charm Shirt", "Heart Air Balloon"],
+    "Better Together": ["Garbage Bin Hat", "Raccoon Onesie", "Recycle Shirt"],
+    # Adicionar futuras temporadas aqui.
 }

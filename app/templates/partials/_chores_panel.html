@@ -1,0 +1,57 @@
+<div class="p-3">
+    {% if chore_analysis and chore_analysis.chores %}
+        <div class="row">
+            {% for chore in chore_analysis.chores.values() %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 dashboard-card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span>
+                                <img src="{{ url_for('static', filename='images/npcs/' + chore.npc_name + '.png') }}" alt="{{ chore.npc_name }}" class="icon icon-2x me-2 rounded-circle">
+                                <strong>{{ chore.npc_name|capitalize }}</strong>
+                            </span>
+                            {% if chore.is_complete %}
+                                <span class="badge bg-success-subtle text-success-emphasis rounded-pill">Completa</span>
+                            {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill">Em Progresso</span>
+                            {% endif %}
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">"{{ chore.name }}"</p>
+                            
+                            <div class="progress progress-thin mb-2" role="progressbar" aria-valuenow="{{ chore.progress_percent }}" aria-valuemin="0" aria-valuemax="100">
+                                <div class="progress-bar {% if chore.is_complete %}bg-success{% else %}bg-primary{% endif %}" style="width: {{ chore.progress_percent }}%;"></div>
+                            </div>
+                            <div class="d-flex justify-content-between small text-muted">
+                                <span>{{ "%.0f"|format(chore.current_progress) }}</span>
+                                <span>{{ "%.0f"|format(chore.requirement) }}</span>
+                            </div>
+                        </div>
+                        <div class="card-footer text-center">
+                            <small class="text-muted">Recompensa:</small>
+                            <div class="d-flex justify-content-center align-items-center gap-2 mt-1">
+                                {% for item, final_amount in chore.final_reward.get('items', {}).items() %}
+                                    {% set base_amount = chore.reward.get('items', {}).get(item, 0) %}
+                                    <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill">
+                                        <img src="{{ get_item_image_path(item) }}" alt="{{ item }}" class="icon icon-1x me-1">
+                                        {{ final_amount }}x {{ item }}
+                                        {# Mostra o bônus se a recompensa final for maior que a base #}
+                                        {% if final_amount > base_amount %}
+                                            <span class="text-success-emphasis small" style="font-weight: 500;">
+                                                (+{{ final_amount - base_amount }})
+                                            </span>
+                                        {% endif %}
+                                    </span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info" role="alert">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            Nenhuma tarefa semanal (chore) encontrada nos dados da fazenda.
+        </div>
+    {% endif %}
+</div>

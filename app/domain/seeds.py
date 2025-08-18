@@ -157,43 +157,43 @@ SEEDS_DATA = {
     # --- Flower Seeds ---
     "Sunpetal Seed": {
         "type": "Seed", "yields": "Flower", "cost_coins": 16, "bumpkin_level": 13,
-        "planting_spot": "Flower Bed", "growtime": 86400, "enabled": True,
+        "planting_spot": "Flower Bed", "plant_seconds": 86400, "enabled": True,
         "seasons": ["spring", "summer", "autumn", "winter"]
     },
     "Bloom Seed": {
         "type": "Seed", "yields": "Flower", "cost_coins": 32, "bumpkin_level": 22,
-        "planting_spot": "Flower Bed", "growtime": 172800, "enabled": True,
+        "planting_spot": "Flower Bed", "plant_seconds": 172800, "enabled": True,
         "seasons": ["spring", "summer", "autumn", "winter"]
     },
     "Lily Seed": {
         "type": "Seed", "yields": "Flower", "cost_coins": 48, "bumpkin_level": 27,
-        "planting_spot": "Flower Bed", "growtime": 432000, "enabled": True,
+        "planting_spot": "Flower Bed", "plant_seconds": 432000, "enabled": True,
         "seasons": ["spring", "summer", "autumn", "winter"]
     },
     "Edelweiss Seed": {
         "type": "Seed", "yields": "Flower", "cost_coins": 96, "bumpkin_level": 35,
-        "planting_spot": "Flower Bed", "growtime": 259200, "enabled": True,
+        "planting_spot": "Flower Bed", "plant_seconds": 259200, "enabled": True,
         "seasons": ["winter"]
     },
     "Gladiolus Seed": {
         "type": "Seed", "yields": "Flower", "cost_coins": 96, "bumpkin_level": 35,
-        "planting_spot": "Flower Bed", "growtime": 259200, "enabled": True,
+        "planting_spot": "Flower Bed", "plant_seconds": 259200, "enabled": True,
         "seasons": ["summer"]
     },
     "Lavender Seed": {
         "type": "Seed", "yields": "Flower", "cost_coins": 96, "bumpkin_level": 35,
-        "planting_spot": "Flower Bed", "growtime": 259200, "enabled": True,
+        "planting_spot": "Flower Bed", "plant_seconds": 259200, "enabled": True,
         "seasons": ["spring"]
     },
     "Clover Seed": {
         "type": "Seed", "yields": "Flower", "cost_coins": 96, "bumpkin_level": 35,
-        "planting_spot": "Flower Bed", "growtime": 259200, "enabled": True,
+        "planting_spot": "Flower Bed", "plant_seconds": 259200, "enabled": True,
         "seasons": ["autumn"]
     },
 
     # --- Special Seeds ---
     "Magic Bean": {
         "type": "Seed", "yields": "ExoticCrop", "cost_coins": 0, "bumpkin_level": 0,
-        "planting_spot": "Special", "growtime": 172800, "enabled": True
+        "planting_spot": "Special", "plant_seconds": 172800, "enabled": True
     },
 }

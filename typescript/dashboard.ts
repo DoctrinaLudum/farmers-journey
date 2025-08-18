@@ -5,49 +5,24 @@ declare const bootstrap: any;
  * Ponto de entrada principal do script.
  * Executa quando todo o conteúdo HTML da página foi carregado.
  */
-document.addEventListener('DOMContentLoaded', () => {
-    
-    // Configura a interatividade do formulário de metas de expansão.
-    setupGoalForm();
-
-    // Configura a interatividade do painel de conquistas de pesca.
-    setupMilestoneInteraction();
-    
-    // Configura o contador regressivo para a expansão em andamento, se existir.
-    setupExpansionCountdown();
-
-    // Configura a largura inicial de todas as barras de progresso na página.
-    setupAllProgressBars();
-
-    // Configura toda a interatividade do mapa de expansão (filtros e tooltips).
-    setupInteractiveMap();
-
-    // Configura a interatividade para cada painel de forma genérica
-    setupPanelInteractivity('fishing');
-    setupPanelInteractivity('flowers');
-
-    // Configura todos os filtros genéricos da página (incluindo o de NPCs)
-    setupGenericFilters();
-
-    // NOVO: Configura o botão de atualização do painel de tesouros.
-    setupTreasureDigUpdater();
-
-    // NOVO: Configura o realce do grid de tesouros ao passar o mouse sobre as dicas.
-    setupHintHighlighter();
-
-    // NOVO: Configura a interatividade do painel de dicas flutuante.
-    setupFloatingHintsPanel();
-    
-    // NOVO: Inicializa todos os componentes interativos do Bootstrap (Popovers, Tooltips).
-    // Isso é necessário para que funcionem em toda a aplicação.
-    setupBootstrapComponents();
-});
-
 /**
  * Inicializa todos os componentes interativos do Bootstrap, como Popovers e Tooltips.
  * Esta função deve ser chamada uma vez, após o carregamento do DOM.
  */
 function setupBootstrapComponents() {
+    // CORREÇÃO: Adiciona um ouvinte de evento explícito para garantir que as abas funcionem.
+    // A inicialização anterior não era suficiente para resolver o conflito.
+    const triggerTabList = document.querySelectorAll('[data-bs-toggle="tab"]');
+    triggerTabList.forEach(triggerEl => {
+        // Cria a instância do Tab do Bootstrap
+        const tab = new bootstrap.Tab(triggerEl);
+        // Adiciona um ouvinte de clique que força a exibição da aba.
+        triggerEl.addEventListener('click', (event: Event) => {
+            event.preventDefault(); // Previne o comportamento padrão do link/botão
+            tab.show(); // Usa o método .show() do Bootstrap para exibir a aba correta
+        });
+    });
+
     // Inicializa todos os Popovers na página.
     const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
     popoverTriggerList.forEach(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl, {
@@ -417,6 +392,666 @@ function setupFloatingHintsPanel() {
 }
 
 /**
+ * NOVO: Configura o redimensionamento dinâmico do mapa da fazenda para evitar barras de rolagem.
+ */
+function setupDynamicMapResizing() {
+    const mapTabEl = document.querySelector('#layout-map-tab');
+    if (!mapTabEl) return;
+
+    // Função para injetar ou remover o estilo dinâmico
+    const updateMapStyle = (numColumns: number, containerWidth: number) => {
+        const existingStyle = document.getElementById('map-resize-style');
+        if (existingStyle) {
+            existingStyle.remove();
+        }
+
+        const baseCellSize = 40; // Tamanho base da célula do style.css
+        const borderSize = 2; // 1px de borda em cada lado
+        const requiredWidth = numColumns * (baseCellSize + borderSize);
+
+        if (requiredWidth > containerWidth) {
+            // Calcula o novo tamanho e garante que não seja muito pequeno
+            const newCellSize = Math.max(20, Math.floor(containerWidth / numColumns) - borderSize);
+            const newIconSize = Math.max(16, newCellSize - 4);
+
+            const style = document.createElement('style');
+            style.id = 'map-resize-style';
+            style.innerHTML = `
+                .farm-layout-cell, .farm-layout-cell-empty {
+                    width: ${newCellSize}px !important;
+                    height: ${newCellSize}px !important;
+                }
+                .amount-label, .cell-badge {
+                    font-size: 0.55rem !important; /* Reduz o tamanho da fonte dos badges */
+                    padding: 1px 3px !important;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    };
+
+    const handleResize = () => {
+        const mapWrapper = document.getElementById('farm-map-table-wrapper');
+        if (!mapWrapper) return;
+        
+        const firstRow = mapWrapper.querySelector('table tbody tr');
+        if (!firstRow) return;
+
+        const numColumns = firstRow.children.length;
+        if (numColumns === 0) return;
+        
+        updateMapStyle(numColumns, mapWrapper.clientWidth);
+    };
+
+    // Listener para quando a aba do mapa se torna visível
+    mapTabEl.addEventListener('shown.bs.tab', () => setTimeout(handleResize, 50));
+
+    // Listener para redimensionamento da janela (com debounce)
+    let resizeTimeout: number;
+    window.addEventListener('resize', () => {
+        if (mapTabEl.classList.contains('active')) {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = window.setTimeout(handleResize, 200);
+        }
+    });
+
+    // Verificação inicial caso a aba já esteja ativa no carregamento da página
+    if (mapTabEl.classList.contains('active')) {
+        setTimeout(handleResize, 150);
+    }
+}
+
+/**
+ * Configura o filtro interativo para o mapa da fazenda.
+ * Lida com cliques nos itens da legenda (recursos e AOE) para destacar
+ * as células relevantes no mapa.
+ */
+function setupFarmMapFilter() {
+    const mapWrapper = document.querySelector('.farm-layout-map');
+    if (!mapWrapper) {
+        return;
+    }
+
+    // CORREÇÃO: Declara allTriggers aqui para que ambos os listeners possam acessá-lo.
+    const allTriggers = mapWrapper.querySelectorAll<HTMLElement>('[data-filter-id]');
+
+    // CORREÇÃO: Seleciona tanto as células da tabela quanto os itens de sobreposição para o filtro.
+    const filterableItems = mapWrapper.querySelectorAll<HTMLElement>('.farm-layout-cell, .map-item-overlay');
+    let activeFilterId: string | null = null;
+
+    const applyFilter = () => {
+        // Se nenhum filtro estiver ativo, remove o escurecimento de todos os itens.
+        if (!activeFilterId) {
+            filterableItems.forEach(item => item.classList.remove('is-dimmed'));
+            return;
+        }
+
+        // A partir daqui, o compilador sabe que activeFilterId é uma string.
+        // Atribuí-lo a uma nova constante ajuda a manter a inferência de tipo dentro do loop.
+        const currentFilter = activeFilterId;
+
+        // Itera sobre cada item (célula ou overlay) para decidir se deve ser destacado ou escurecido.
+        filterableItems.forEach(item => {
+            const aoeSourceId = item.dataset.aoeSourceId;
+            const resourceFilterId = item.dataset.resourceFilterId;
+            const aoeSourcesStr = item.dataset.aoeSources || '';
+            const aoeSources = aoeSourcesStr.split(' ');
+
+            // A célula deve ser destacada se:
+            // 1. É a própria fonte do filtro (seja AOE ou recurso).
+            // 2. É um recurso que corresponde ao filtro.
+            // 3. Está dentro da área de efeito de uma AOE que corresponde ao filtro.
+            const shouldHighlight =
+                aoeSourceId === currentFilter ||
+                resourceFilterId === currentFilter ||
+                aoeSources.includes(currentFilter);
+
+            item.classList.toggle('is-dimmed', !shouldHighlight);
+        });
+    };
+
+    // NOVO: Ouve o evento 'clear-filter' disparado pelo summary_card.ts
+    // para desativar o filtro visual.
+    mapWrapper.addEventListener('clear-filter', () => {
+        activeFilterId = null;
+        allTriggers.forEach(t => t.classList.remove('active'));
+        applyFilter();
+    });
+    // Usa delegação de evento no contêiner do mapa para mais eficiência.
+    mapWrapper.addEventListener('click', (event) => {
+        const target = event.target as HTMLElement;
+        // Encontra o gatilho de filtro mais próximo que foi clicado.
+        const trigger = target.closest<HTMLElement>('[data-filter-id]');
+
+        if (!trigger) {
+            return; // Sai se o clique não foi em um gatilho de filtro.
+        }
+
+        event.preventDefault();
+        const clickedFilterId = trigger.dataset.filterId;
+
+        if (!clickedFilterId) return;
+
+        // Se o gatilho clicado já está ativo, desativa-o.
+        if (trigger.classList.contains('active')) {
+            activeFilterId = null;
+            trigger.classList.remove('active');
+        } else {
+            // Caso contrário, desativa todos os outros e ativa o clicado.
+            allTriggers.forEach(t => t.classList.remove('active'));
+            trigger.classList.add('active');
+            activeFilterId = clickedFilterId;
+
+            // NOVO: Rola a tela para o primeiro recurso correspondente ao filtro
+            if (activeFilterId) {
+                const firstElement = mapWrapper.querySelector<HTMLElement>(
+                    `[data-resource-filter-id="${activeFilterId}"], [data-aoe-source-id="${activeFilterId}"]`
+                );
+        
+                if (firstElement) {
+                    firstElement.scrollIntoView({
+                        behavior: 'smooth', // Rolagem suave
+                        block: 'center'      // Tenta centralizar o elemento verticalmente
+                    });
+                }
+            }
+        }
+
+        applyFilter();
+    });
+}
+
+/**
+ * Configura o card flutuante que exibe informações detalhadas sobre um recurso
+ * quando ele é clicado no mapa da fazenda.
+ */
+function setupResourceInfoCard() {
+    const mapWrapper = document.querySelector<HTMLElement>('.farm-layout-map');
+    const card = document.getElementById('floating-resource-card');
+    const cardHeader = document.getElementById('floating-resource-card-header');
+    const cardTitle = document.getElementById('resource-card-title');
+    const cardIcon = document.getElementById('resource-card-icon') as HTMLImageElement;
+    const cardBody = document.getElementById('resource-card-body');
+    const closeBtn = document.getElementById('resource-card-close-btn');
+    
+    if (!mapWrapper || !card || !cardHeader || !cardTitle || !cardIcon || !cardBody || !closeBtn) {
+        return;
+    }
+
+    // --- Lógica para mostrar e popular o card ---
+    mapWrapper.addEventListener('click', (e: Event) => {
+        const target = e.target as HTMLElement;
+        const trigger = target.closest<HTMLElement>('.resource-info-trigger');
+
+        // CORREÇÃO: A verificação agora só depende do 'trigger', que existe tanto
+        // em células normais quanto em itens de overlay. O 'dataset' é lido
+        // diretamente do 'trigger'.
+        if (!trigger || !trigger.dataset.resourceInfo) {
+            return;
+        }
+
+        try {
+            const data = JSON.parse(trigger.dataset.resourceInfo);
+            
+            // 1. Torna o card "invisível" mas mensurável para obter suas dimensões corretas.
+            card.style.visibility = 'hidden';
+            card.style.display = 'block';
+
+            // 2. Popula o card com os novos dados.
+            populateCard(data);
+
+            // 3. Agora que o card está populado e não é 'display: none', suas dimensões são reais.
+            const cardWidth = card.offsetWidth;
+            const cardHeight = card.offsetHeight;
+            const margin = 10; // Espaçamento da borda da tela e da célula
+
+            const triggerRect = trigger.getBoundingClientRect();
+
+            // 4. Calcula a posição horizontal (esquerda/direita)
+            let left = triggerRect.right + margin;
+            // Se não couber à direita, posiciona à esquerda.
+            if (left + cardWidth > window.innerWidth) {
+                left = triggerRect.left - cardWidth - margin;
+            }
+            // Garante que não saia pela borda esquerda da tela.
+            left = Math.max(margin, left);
+
+            // 5. Calcula a posição vertical (topo/fundo)
+            let top = triggerRect.top;
+            // Se não couber na parte de baixo, alinha com a parte de baixo da tela.
+            if (top + cardHeight > window.innerHeight) {
+                top = window.innerHeight - cardHeight - margin;
+            }
+            // Garante que não saia pelo topo da tela.
+            top = Math.max(margin, top);
+
+            // 6. Aplica a posição final e torna o card visível.
+            card.style.left = `${left}px`;
+            card.style.top = `${top}px`;
+            card.style.visibility = 'visible';
+
+        } catch (err) {
+            console.error("Falha ao analisar os dados do recurso:", err);
+        }
+    });
+
+    // --- Lógica para fechar o card ---
+    closeBtn.addEventListener('click', () => {
+        card.style.display = 'none';
+    });
+
+    // --- Lógica para arrastar o card ---
+    cardHeader.addEventListener('mousedown', (e: MouseEvent) => {
+        e.preventDefault();
+        document.body.classList.add('is-dragging-card');
+
+        const rect = card.getBoundingClientRect();
+        const offsetX = e.clientX - rect.left;
+        const offsetY = e.clientY - rect.top;
+
+        const onMouseMove = (moveEvent: MouseEvent) => {
+            let newLeft = moveEvent.clientX - offsetX;
+            let newTop = moveEvent.clientY - offsetY;
+
+            // Impede que o card seja arrastado para fora da tela
+            newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - card.offsetWidth));
+            newTop = Math.max(0, Math.min(newTop, window.innerHeight - card.offsetHeight));
+
+            card.style.left = `${newLeft}px`;
+            card.style.top = `${newTop}px`;
+        };
+
+        const onMouseUp = () => {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+            document.body.classList.remove('is-dragging-card');
+        };
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    });
+
+    /**
+     * Função auxiliar para calcular e formatar o tempo restante.
+     * @param timestampMs O timestamp final em milissegundos.
+     * @returns Uma string formatada (ex: "1h 15m", "Pronta").
+     */
+    const timeRemaining = (timestampMs: number): string => {
+        if (!timestampMs) return "N/A";
+        const nowMs = Date.now();
+        const remainingSeconds = (timestampMs - nowMs) / 1000;
+
+        if (remainingSeconds <= 0) return "Pronta";
+
+        const days = Math.floor(remainingSeconds / 86400);
+        const hours = Math.floor((remainingSeconds % 86400) / 3600);
+        const minutes = Math.floor((remainingSeconds % 3600) / 60);
+
+        let parts = [];
+        if (days > 0) parts.push(`${days}d`);
+        if (hours > 0) parts.push(`${hours}h`);
+        if (minutes > 0) parts.push(`${minutes}m`);
+        return parts.join(' ') || 'Pronta';
+    }
+
+    // --- Função principal para popular o card com dados ---
+    const populateCard = (data: any) => {
+        const analysisData = data.analysis;
+        const resourceName = analysisData.crop_name || analysisData.fruit_name || analysisData.tree_name || analysisData.resource_name || 'Recurso';
+        cardTitle.textContent = resourceName;
+
+        // LÓGICA ROBUSTA: Pega o caminho do ícone diretamente dos dados JSON.
+        // O caminho completo já é fornecido pelo backend.
+        if (analysisData.icon_path) {
+            cardIcon.src = `/static/${analysisData.icon_path}`;
+        } else {
+            cardIcon.src = ''; // Fallback para evitar erros
+        }
+        
+        cardBody.innerHTML = ''; // Limpa o corpo do card
+
+        const statTemplate = document.getElementById('resource-card-stat-template') as HTMLTemplateElement;
+        const buffTemplate = document.getElementById('resource-card-buff-template') as HTMLTemplateElement;
+        const statsList = document.createElement('ul');
+        statsList.className = 'list-group list-group-flush';
+
+        // CORREÇÃO: A função addStat agora lida com valores que podem ser undefined ou nulos.
+        const addStat = (label: string, value: string | number | undefined | null) => {
+            // Não adiciona a estatística se o valor for nulo/indefinido
+            if (value === undefined || value === null) return;
+
+            const clone = statTemplate.content.cloneNode(true) as HTMLElement;
+            clone.querySelector('.stat-label')!.textContent = label;
+            // Converte o valor para string para garantir que o textContent funcione
+            clone.querySelector('.stat-value')!.textContent = String(value);
+            statsList.appendChild(clone);
+        };
+
+        const addBonusRewards = (rewards: { [key: string]: number }) => {
+            if (!rewards || Object.keys(rewards).length === 0) return;
+
+            const titleEl = document.createElement('h6');
+            titleEl.className = 'mt-2 mb-1 small text-muted';
+            titleEl.textContent = 'Recompensas Bônus';
+            statsList.appendChild(titleEl);
+
+            for (const [itemName, amount] of Object.entries(rewards)) {
+                const clone = buffTemplate.content.cloneNode(true) as HTMLElement;
+                clone.querySelector('.buff-source')!.textContent = itemName;
+                const valueEl = clone.querySelector('.buff-value')!;
+                valueEl.textContent = `+${amount}`;
+                valueEl.classList.add('text-success');
+                statsList.appendChild(clone);
+            }
+        };
+
+        const addBuffs = (title: string, buffs: any[]) => {
+            if (!buffs || buffs.length === 0) return;
+            
+            const sourceTypeToLabel: { [key: string]: string } = {
+                skill: '(Skill)',
+                skill_legacy: '(Skill Legacy)',
+                collectible: '(Collectible)',
+                wearable: '(Wearable)',
+                bud: '(Bud)',
+                game_mechanic: '(Nativo)',
+                fertiliser: '(Fertilizante)',
+                tool: '(Ferramenta)'
+            };
+
+            const titleEl = document.createElement('h6');
+            titleEl.className = 'mt-2 mb-1 small text-muted';
+            titleEl.textContent = title;
+            statsList.appendChild(titleEl);
+
+            buffs.forEach(buff => {
+                const clone = buffTemplate.content.cloneNode(true) as HTMLElement;
+                
+                // ALTERADO: Adiciona o prefixo como uma "tag" visual com cor
+                const prefix = sourceTypeToLabel[buff.source_type] || '';
+                const typeClass = buff.source_type ? `is-type-${buff.source_type}` : '';
+                const prefixTag = prefix ? `<span class="buff-source-tag ${typeClass}">${prefix}</span>` : '';
+                clone.querySelector('.buff-source')!.innerHTML = `${prefixTag} ${buff.source_item}`.trim();
+
+                let valueText = '';
+                const buffValue = buff.value;
+
+                // CORREÇÃO: Adiciona verificação para 'buff.value' para evitar erros com valores não numéricos.
+                if (typeof buffValue === 'number') {
+                    if (buff.operation === 'add') valueText = `+${buffValue.toFixed(2)}`;
+                    else if (buff.operation === 'multiply') valueText = `x${buffValue.toFixed(2)}`;
+                    else if (buff.operation === 'percentage') valueText = `${(buffValue * 100).toFixed(0)}%`;
+                    else valueText = String(buffValue);
+                } else {
+                    valueText = String(buffValue); // Trata valores não numéricos como strings
+                }
+
+                const valueEl = clone.querySelector('.buff-value')!;
+                valueEl.textContent = valueText;
+                if (typeof buffValue === 'number') {
+                    valueEl.classList.add(buffValue > 0 ? 'text-success' : 'text-danger');
+                }
+
+                statsList.appendChild(clone);
+            });
+        };
+
+        // Adiciona estatísticas principais
+        addStat('Estado', analysisData.state_name);        // CORREÇÃO: Só mostra "Pronto em" se o recurso não estiver pronto (nem 'Pronto' nem 'Pronta')
+        const isReady = analysisData.state_name === 'Pronta' || analysisData.state_name === 'Pronto';
+        if (analysisData.ready_at_timestamp_ms && !isReady) {
+            const readyDate = new Date(analysisData.ready_at_timestamp_ms).toLocaleString('pt-BR');
+            addStat('Pronto em', readyDate);
+        }
+        // NOVO: Adiciona o timer de reset da Crimstone, se aplicável.
+        if (analysisData.crimstone_reset_at_ms) {
+            const resetTimeRemaining = timeRemaining(analysisData.crimstone_reset_at_ms);
+            // Só mostra o timer se a rocha ainda não resetou.
+            if (resetTimeRemaining !== 'Pronta') addStat('Reset em', resetTimeRemaining);
+        }
+        const yieldAmount = analysisData.calculations?.yield?.final_deterministic;
+        if (yieldAmount !== undefined && yieldAmount !== null) {
+            addStat('Rendimento Previsto', yieldAmount.toFixed(2));
+        }
+
+        addStat('Minas Restantes', analysisData.mines_left);
+        addStat('Colheitas Restantes', analysisData.harvests_left);
+
+        cardBody.appendChild(statsList);
+
+        // NOVO: Reordenado para mostrar recompensas primeiro
+        if (analysisData.bonus_reward) {
+            addBonusRewards(analysisData.bonus_reward);
+        }
+
+        // Adiciona listas de bônus de rendimento e tempo
+        if (analysisData.calculations?.yield?.applied_buffs) {
+            addBuffs('Bônus de Rendimento', analysisData.calculations.yield.applied_buffs);
+        }
+        const recoveryBuffs = analysisData.calculations?.recovery?.applied_buffs || analysisData.calculations?.growth?.applied_buffs;
+        if (recoveryBuffs) {
+            addBuffs('Bônus de Tempo', recoveryBuffs);
+        }
+
+        // =================================================================
+        // REUTILIZAÇÃO DA ESTRUTURA PARA ESTUFA E CROP MACHINE
+        // =================================================================
+
+        // Lógica para a Estufa
+        if (data.type === 'Greenhouse' && analysisData.pots) {
+            const pots = Object.values(analysisData.pots as any[]);
+
+            if (pots.length === 0) {
+                const noItemsEl = document.createElement('p');
+                noItemsEl.className = 'text-muted small mt-2 mb-0';
+                noItemsEl.textContent = 'Nenhum vaso com plantas.';
+                cardBody.appendChild(noItemsEl);
+            } else {
+                // Agrupa os vasos por um identificador único de estado (planta, estado, rendimento, tempo)
+                const groupedPots = new Map<string, any[]>();
+                pots.forEach((pot: any) => {
+                    const yieldValue = (pot.calculations?.yield?.final_deterministic ?? 0).toFixed(2);
+                    const readyTime = timeRemaining(pot.ready_at_timestamp_ms);
+                    const groupKey = `${pot.plant_name}|${pot.state_name}|${yieldValue}|${readyTime}`;
+
+                    if (!groupedPots.has(groupKey)) {
+                        groupedPots.set(groupKey, []);
+                    }
+                    groupedPots.get(groupKey)!.push(pot);
+                });
+
+                // Renderiza cada grupo de vasos
+                let firstGroup = true;
+                groupedPots.forEach((potGroup: any[]) => {
+                    if (!firstGroup) {
+                        cardBody.appendChild(document.createElement('hr'));
+                    }
+                    firstGroup = false;
+
+                    const firstPot = potGroup[0];
+                    const potIds = potGroup.map(p => `#${p.id}`).join(', ');
+
+                    const potHeader = document.createElement('h6');
+                    potHeader.className = 'd-flex align-items-center small mt-2';
+                    potHeader.innerHTML = `
+                        <img src="/static/${firstPot.icon_path}" class="icon icon-2x me-2">
+                        <span>${firstPot.plant_name} (Vaso ${potIds})</span>
+                    `;
+                    cardBody.appendChild(potHeader);
+
+                    const potStatsList = document.createElement('ul');
+                    potStatsList.className = 'list-group list-group-flush';
+
+                    const addPotStat = (label: string, value: string | number | undefined | null) => {
+                        if (value === undefined || value === null) return;
+                        const clone = statTemplate.content.cloneNode(true) as HTMLElement;
+                        clone.querySelector('.stat-label')!.textContent = label;
+                        clone.querySelector('.stat-value')!.textContent = String(value);
+                        potStatsList.appendChild(clone);
+                    };
+                    
+                    addPotStat('Estado', firstPot.state_name);
+                    addPotStat('Rendimento/Vaso', firstPot.calculations.yield.final_deterministic.toFixed(2));
+                    if (firstPot.state_name !== 'Pronta') {
+                        addPotStat('Pronta em', timeRemaining(firstPot.ready_at_timestamp_ms));
+                    }
+
+                    // Se houver mais de um vaso no grupo, mostra o rendimento total do grupo.
+                    if (potGroup.length > 1) {
+                        const totalYield = potGroup.reduce((sum, p) => sum + p.calculations.yield.final_deterministic, 0);
+                        addPotStat('Rendimento Total (Grupo)', totalYield.toFixed(2));
+                    }
+                    cardBody.appendChild(potStatsList);
+
+                    // NOVO: Adiciona a exibição de bônus para cada grupo de vasos.
+                    // Esta lógica foi omitida na refatoração anterior.
+                    const renderBuffsForPot = (title: string, buffs: any[] | undefined) => {
+                        if (!buffs || buffs.length === 0) return;
+
+                        const titleEl = document.createElement('h6');
+                        titleEl.className = 'mt-3 mb-1 small text-muted';
+                        titleEl.textContent = title;
+                        cardBody.appendChild(titleEl);
+
+                        const buffList = document.createElement('ul');
+                        buffList.className = 'list-group list-group-flush';
+
+                        const sourceTypeToLabel: { [key: string]: string } = {
+                            skill: '(Skill)', skill_legacy: '(Skill Legacy)', collectible: '(Collectible)',
+                            wearable: '(Wearable)', bud: '(Bud)', game_mechanic: '(Nativo)',
+                            fertiliser: '(Fertilizante)', tool: '(Ferramenta)'
+                        };
+
+                        buffs.forEach(buff => {
+                            const clone = (buffTemplate.content.cloneNode(true) as DocumentFragment).firstElementChild as HTMLElement;
+                            const prefix = sourceTypeToLabel[buff.source_type] || '';
+                            
+                            // CORREÇÃO: Usa a mesma lógica de badge colorido da função principal.
+                            const typeClass = buff.source_type ? `is-type-${buff.source_type}` : '';
+                            const prefixTag = prefix ? `<span class="buff-source-tag ${typeClass}">${prefix}</span>` : '';
+                            clone.querySelector('.buff-source')!.innerHTML = `${prefixTag} ${buff.source_item}`.trim();
+
+                            let valueText = '';
+                            const buffValue = buff.value;
+                            if (typeof buffValue === 'number') {
+                                if (buff.operation === 'add') valueText = `+${buffValue.toFixed(2)}`;
+                                else if (buff.operation === 'multiply') valueText = `x${buffValue.toFixed(2)}`;
+                                else if (buff.operation === 'percentage') valueText = `${(buffValue * 100).toFixed(0)}%`;
+                                else valueText = String(buffValue);
+                            } else { 
+                                valueText = String(buffValue); 
+                            }
+
+                            clone.querySelector('.buff-value')!.textContent = valueText;
+                            buffList.appendChild(clone);
+                        });
+                        cardBody.appendChild(buffList);
+                    };
+
+                    renderBuffsForPot('Bônus de Rendimento', firstPot.calculations?.yield?.applied_buffs);
+                    renderBuffsForPot('Bônus de Tempo', firstPot.calculations?.growth?.applied_buffs);
+                });
+            }
+        }
+
+        // Lógica para a Crop Machine
+        if (data.type === 'Crop Machine' && analysisData.queue) {
+            const queue = analysisData.queue as any[];
+            if (queue.length === 0) {
+                const noItemsEl = document.createElement('p');
+                noItemsEl.className = 'text-muted small mt-2 mb-0';
+                noItemsEl.textContent = 'Nenhum pacote na fila.';
+                cardBody.appendChild(noItemsEl);
+            } else {
+                queue.forEach((pack: any, index: number) => {
+                    if (index > 0) {
+                        cardBody.appendChild(document.createElement('hr'));
+                    }
+
+                    const packHeader = document.createElement('h6');
+                    packHeader.className = 'd-flex align-items-center small mt-2';
+                    packHeader.innerHTML = `
+                        <img src="/static/${pack.icon_path}" class="icon icon-2x me-2">
+                        <span>${pack.crop}</span>
+                    `;
+                    cardBody.appendChild(packHeader);
+
+                    const packStatsList = document.createElement('ul');
+                    packStatsList.className = 'list-group list-group-flush';
+
+                    const addPackStat = (label: string, value: string | number | undefined | null) => {
+                        if (value === undefined || value === null) return;
+                        const clone = statTemplate.content.cloneNode(true) as HTMLElement;
+                        clone.querySelector('.stat-label')!.textContent = label;
+                        clone.querySelector('.stat-value')!.textContent = String(value);
+                        packStatsList.appendChild(clone);
+                    };
+
+                    addPackStat('Sementes', pack.seeds);
+                    addPackStat('Rendimento', (pack.yield_info?.final_deterministic ?? 0).toFixed(2));
+                    if (!pack.is_ready) {
+                        addPackStat('Pronto em', timeRemaining(pack.readyAt));
+                    }
+                    cardBody.appendChild(packStatsList);
+                });
+            }
+        }
+    };
+}
+
+/**
+ * NOVO: Configura a lógica para fechar os painéis flutuantes (cards de detalhes, resumo, dicas)
+ * quando o usuário clica em qualquer lugar fora deles.
+ */
+function setupClickAwayClosers(): void {
+    document.addEventListener('mousedown', (event: MouseEvent) => {
+        const target = event.target as HTMLElement;
+
+        // --- Card de Detalhes do Recurso ---
+        const resourceCard = document.getElementById('floating-resource-card');
+        if (resourceCard && resourceCard.style.display !== 'none') {
+            // Não fecha se o clique for dentro do card ou no gatilho que o abriu.
+            if (!resourceCard.contains(target) && !target.closest('.resource-info-trigger')) {
+                resourceCard.style.display = 'none';
+            }
+        }
+
+        // --- Card de Resumo (da legenda) e Filtros de AOE ---
+        const summaryCard = document.getElementById('floating-summary-card');
+        const mapWrapper = document.querySelector<HTMLElement>('.farm-layout-map');
+        // Procura por QUALQUER filtro ativo, seja de recurso ou de AOE.
+        const activeFilter = mapWrapper?.querySelector<HTMLElement>('.resource-filter-trigger.active, .aoe-filter-trigger.active');
+
+        // A lógica de fechar/limpar é acionada se um filtro estiver ativo OU o card de resumo estiver visível.
+        if (activeFilter || (summaryCard && summaryCard.style.display !== 'none')) {
+            // Um clique é considerado "fora" se não for no card de resumo E não for em NENHUM gatilho de filtro.
+            const isClickOnSummaryCard = summaryCard ? summaryCard.contains(target) : false;
+            const isClickOnAnyFilterTrigger = target.closest('.resource-filter-trigger, .aoe-filter-trigger');
+
+            if (!isClickOnSummaryCard && !isClickOnAnyFilterTrigger) {
+                if (mapWrapper) {
+                    // Este evento é capturado por `setupFarmMapFilter` para limpar o filtro visual.
+                    mapWrapper.dispatchEvent(new CustomEvent('clear-filter'));
+                }
+                if (summaryCard) {
+                    summaryCard.style.display = 'none';
+                }
+            }
+        }
+
+        // --- Balão de Dicas (Escavação de Tesouros) ---
+        const hintsBalloon = document.getElementById('hints-balloon');
+        if (hintsBalloon && !hintsBalloon.classList.contains('d-none')) {
+            // Não fecha se o clique for dentro do balão ou no botão que o alterna.
+            if (!hintsBalloon.contains(target) && !target.closest('#toggle-hints-balloon-btn')) {
+                hintsBalloon.classList.add('d-none');
+                updateHintsButtonState(false); // Atualiza o estado do botão "Ver Dicas".
+            }
+        }
+    });
+}
+
+/**
  * Propósito: Ler o valor de progresso de todas as barras e definir a sua largura visual.
  */
 function setupAllProgressBars() {
@@ -674,6 +1309,61 @@ function setupInteractiveMap() {
         });
     });
 }
+
+/**
+ * Ponto de entrada principal do script.
+ * Executa quando todo o conteúdo HTML da página foi carregado.
+ */
+document.addEventListener('DOMContentLoaded', () => {
+    
+    // Configura a interatividade do formulário de metas de expansão.
+    setupGoalForm();
+
+    // Configura a interatividade do painel de conquistas de pesca.
+    setupMilestoneInteraction();
+    
+    // Configura o contador regressivo para a expansão em andamento, se existir.
+    setupExpansionCountdown();
+
+    // Configura a largura inicial de todas as barras de progresso na página.
+    setupAllProgressBars();
+
+    // Configura toda a interatividade do mapa de expansão (filtros e tooltips).
+    setupInteractiveMap();
+
+    // Configura a interatividade para cada painel de forma genérica
+    setupPanelInteractivity('fishing');
+    setupPanelInteractivity('flowers');
+
+    // Configura todos os filtros genéricos da página (incluindo o de NPCs)
+    setupGenericFilters();
+
+    // NOVO: Configura o botão de atualização do painel de tesouros.
+    setupTreasureDigUpdater();
+    
+    // NOVO: Configura o realce do grid de tesouros ao passar o mouse sobre as dicas.
+    setupHintHighlighter();
+
+    // NOVO: Configura a interatividade do painel de dicas flutuante.
+    setupFloatingHintsPanel();
+    
+    // NOVO: Inicializa todos os componentes interativos do Bootstrap (Popovers, Tooltips).
+    // Isso é necessário para que funcionem em toda a aplicação.
+    setupBootstrapComponents();
+
+    // NOVO: Configura o redimensionamento dinâmico do mapa da fazenda.
+    setupDynamicMapResizing();
+
+    // NOVO: Configura o filtro unificado para recursos e AOE no mapa da fazenda.
+    setupFarmMapFilter();
+
+    // CORREÇÃO: A função para configurar o card de informações não estava sendo chamada.
+    // Esta linha ativa o listener de clique para o mapa.
+    setupResourceInfoCard();
+
+    // NOVO: Adiciona a lógica para fechar os painéis flutuantes ao clicar fora.
+    setupClickAwayClosers();
+});
 
 /**
  * Configura a interatividade de um painel (filtros e ordenação da tabela).

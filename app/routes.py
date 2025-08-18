@@ -1,6 +1,7 @@
 # app/routes.py
 import logging
-from datetime import datetime, timezone, timedelta
+from collections import defaultdict
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
 
 from flask import (Blueprint, current_app, json, jsonify, redirect,
@@ -11,13 +12,17 @@ import config
 from . import analysis, game_state, sunflower_api
 from .analysis import build_bumpkin_image_url
 from .cache import cache  # Importa o objeto 'cache' diretamente
+from .domain import crops as crops_domain
 from .domain import expansions
 from .domain import flowers as flower_domain
 from .domain import foods as foods_domain
 from .domain import fruits as fruit_domain
 from .domain import npcs as npc_domain
 from .game_state import GAME_STATE
-from .services import farm_layout_service, bud_service, wood_service, mining_service
+from .services import (bud_service, chop_service, chores_service,
+                       crop_machine_service, crop_service, delivery_service,
+                       farm_layout_service, flower_service, fruit_service,
+                       greenhouse_service, mining_service, pricing_service)
 
 log = logging.getLogger(__name__)
 bp = Blueprint('main', __name__)
@@ -67,6 +72,15 @@ def format_seconds_to_hms(total_seconds):
     
     return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
 
+@bp.app_template_filter()
+def get_item_prices(item_name):
+    """
+    Filtro do Jinja para buscar os preços de um item usando o pricing_service.
+    Retorna um dicionário de preços (ex: {'coins': 10, 'sfl': 1}).
+    """
+    if not item_name: return {}
+    return pricing_service.get_item_prices(item_name)
+
 @bp.route('/', methods=['GET'])
 def index():
     """Exibe a página inicial de boas-vindas com o formulário."""
@@ -95,6 +109,7 @@ def farm_dashboard(farm_id):
         "current_land_type": "basic", "expansion_progress": None,
         "expansion_goals": {}, "fishing_info": None,
         "expansion_construction_info": None, "current_level_nodes": None, "bumpkin_image_url": None,
+        "chore_analysis": None, "crop_machine_analysis": None, "greenhouse_analysis": None,
         # Domínios de dados para uso nos templates
         "flower_domain": flower_domain, "fruit_domain": fruit_domain, "foods_domain": foods_domain,
         # Funções helper para os templates
@@ -113,6 +128,9 @@ def farm_dashboard(farm_id):
     except Exception as e:
         context['error'] = f"Falha crítica ao comunicar com as APIs: {e}"
         return render_template('dashboard.html', title=f"Erro na Fazenda #{farm_id}", **context)
+
+    # NOVO: Adiciona os dados de preços ao contexto para serem usados pelo JavaScript.
+    context['prices_data'] = prices_data
 
     # 3. Processamento de Dados Gerais e de Construção.
     try:
@@ -315,6 +333,13 @@ def farm_dashboard(farm_id):
         log.error(f"Falha ao processar dados de presentes de NPCs: {e}", exc_info=True)
         context['npc_gift_info'] = [] # Garante que a chave exista no contexto
 
+    # 11. Processamento do Quadro de Tarefas (Chore Board)
+    try:
+        context['chore_analysis'] = chores_service.analyze_chore_board(main_farm_data)
+        log.info(f"Análise do Chore Board concluída para a fazenda #{farm_id}.")
+    except Exception as e:
+        log.error(f"Falha ao processar dados do Chore Board: {e}", exc_info=True)
+
     # 11. Processamento de Escavação de Tesouros (Desert Digging)
     try:
         context['treasure_dig_info'] = analysis.analyze_desert_digging_data(
@@ -326,9 +351,25 @@ def farm_dashboard(farm_id):
         # Garante que a estrutura padrão exista em caso de erro para evitar que o template quebre
         context['treasure_dig_info'] = {
             'grid_mirror': [],
-            'stats': {},
-            'patterns': {'current': [], 'completed': []}
+            'stats': {
+                'total_digs': 0,
+                'items_found': {},
+                'tool_usage': {},
+                'streak': {}
+            },
+            'patterns': {'current': [], 'completed': []},
+            'hints': []
         }
+
+    # 12. Processamento de Entregas (Deliveries)
+    try:
+        context['delivery_analysis'] = delivery_service.analyze_deliveries(
+            farm_data=main_farm_data, # A função de delivery agora precisa dos dados completos
+            game_state=game_state.GAME_STATE
+        )
+        log.info(f"Análise de entregas concluída para a fazenda #{farm_id}.")
+    except Exception as e:
+        log.error(f"Falha ao processar dados de entregas: {e}", exc_info=True)
 
     # 12. Processamento de Buffs de Buds (MOVIDO PARA CIMA para ser usado por outros serviços)
     context['bud_analysis'] = None
@@ -349,16 +390,17 @@ def farm_dashboard(farm_id):
     # Lista para agregar todas as análises de recursos para o painel de depuração
     resource_analyses = []
 
-    # 13. Processamento de Recursos de Madeira (Wood)
+    # 13. Processamento de Recursos de Madeira (Wood) - CORRIGIDO
     context['wood_analysis'] = None
+    wood_data = None
     try:
         # Passa a variável 'active_bud_buffs' que acabamos de criar.
         # Agora o serviço de madeira sempre receberá um dicionário, mesmo que vazio.
-        wood_data = wood_service.analyze_wood_resources(main_farm_data, active_bud_buffs)
-
+        wood_data = chop_service.analyze_wood_resources(main_farm_data, active_bud_buffs)
+    
         # Acessa a chave 'view' que contém os dados formatados para o template.
         wood_view_data = wood_data.get("view") if wood_data else None
-
+    
         if wood_view_data and 'summary' in wood_view_data and 'tree_status' in wood_view_data:
             # Passa apenas os dados da view para o contexto, para que o template não precise ser alterado.
             context['wood_analysis'] = wood_view_data
@@ -371,6 +413,7 @@ def farm_dashboard(farm_id):
 
     # 14. Processamento de Recursos de Mineração (Mining)
     context['mining_analysis'] = None
+    mining_data = None
     try:
         mining_data = mining_service.analyze_mining_resources(main_farm_data, active_bud_buffs)
         mining_view_data = mining_data.get("view") if mining_data else None
@@ -384,13 +427,188 @@ def farm_dashboard(farm_id):
     except Exception as e:
         log.error(f"Falha ao analisar dados de mineração: {e}", exc_info=True)
 
-    # Adiciona a lista de análises de recursos ao contexto para o painel de depuração
-    context['resource_analyses'] = resource_analyses
+    # 15. Processamento de Culturas (Crops)
+    context['crop_analysis'] = None
+    crop_data = None
+    try:
+        # Passa os buffs de bud para o serviço de culturas
+        crop_data = crop_service.analyze_crop_resources(main_farm_data, active_bud_buffs)
+        crop_view_data = crop_data.get("view") if crop_data else None
 
-    # 14. Processamento do Mapa da Fazenda
+        if crop_view_data:
+            context['crop_analysis'] = crop_view_data
+            resource_analyses.append({'name': 'Culturas', 'data': crop_view_data})
+            log.info(f"Análise de culturas processada com sucesso para a fazenda #{farm_id}.")
+        else:
+            log.warning(f"Dados de análise de culturas ausentes para a fazenda #{farm_id}.")
+    except Exception as e:
+        log.error(f"Falha ao analisar dados de culturas: {e}", exc_info=True)
+
+    # 16. Processamento da Crop Machine
+    context['crop_machine_analysis'] = None
+    try:
+        machine_data = crop_machine_service.analyze_crop_machine(main_farm_data, active_bud_buffs)
+        if machine_data:
+            context['crop_machine_analysis'] = machine_data.get("view")
+            log.info(f"Análise da Crop Machine processada com sucesso para a fazenda #{farm_id}.")
+    except Exception as e:
+        log.error(f"Falha ao analisar dados da Crop Machine: {e}", exc_info=True)
+
+    # 17. Processamento da Greenhouse
+    context['greenhouse_analysis'] = None
+    try:
+        greenhouse_data = greenhouse_service.analyze_greenhouse_resources(main_farm_data, active_bud_buffs)
+        if greenhouse_data:
+            context['greenhouse_analysis'] = greenhouse_data.get("view")
+            # Adiciona o domínio de culturas ao contexto para que o template da estufa possa usá-lo
+            context['crops_domain'] = crops_domain
+            log.info(f"Análise da Greenhouse processada com sucesso para a fazenda #{farm_id}.")
+    except Exception as e:
+        log.error(f"Falha ao analisar dados da Greenhouse: {e}", exc_info=True)
+
+    # 18. Processamento de Frutas e Flores (para o painel unificado)
+    fruit_data, flower_data, beehive_data = None, None, None
+    try:
+        fruit_data = fruit_service.analyze_fruit_patches(main_farm_data, active_bud_buffs)
+    except Exception as e:
+        log.error(f"Falha ao analisar dados de frutas: {e}", exc_info=True)
+    
+    try:
+        flower_data = flower_service.analyze_flower_beds(main_farm_data, active_bud_buffs)
+    except Exception as e:
+        log.error(f"Falha ao analisar dados de flores: {e}", exc_info=True)
+
+    try:
+        beehive_data = flower_service.analyze_beehives(main_farm_data, active_bud_buffs)
+    except Exception as e:
+        log.error(f"Falha ao analisar dados de colmeias: {e}", exc_info=True)
+
+    # 19. Agregação e Padronização de Dados para o Painel Unificado
+    unified_analyses = []
+    if wood_data and wood_data.get("view"):
+        wood_view = wood_data["view"]
+        wood_resources = {
+            "Wood": {
+                "nodes": wood_view.get("tree_status", {}),
+                "summary": wood_view.get("summary", {})
+            }
+        }
+        unified_analyses.append({
+            "title": "Madeira",
+            "resources": wood_resources
+        })
+    if mining_data and mining_data.get("view"):
+        mining_view = mining_data["view"]
+        nodes_by_type = mining_view.get("nodes_by_type", {})
+        summaries_by_type = mining_view.get("summary_by_type", {})
+        mining_resources = {
+            name: {"nodes": nodes, "summary": summaries_by_type.get(name, {})}
+            for name, nodes in nodes_by_type.items()
+        }
+        unified_analyses.append({
+            "title": "Mineração",
+            "resources": dict(sorted(mining_resources.items()))
+        })
+    if crop_data and crop_data.get("view"):
+        crop_view = crop_data["view"]
+        plots_by_crop = defaultdict(dict)
+        for plot_id, plot_info in crop_view.get("plot_status", {}).items():
+            plots_by_crop[plot_info['crop_name']][plot_id] = plot_info
+        
+        summaries_by_crop = crop_view.get("summary_by_crop", {})
+        crop_resources = {
+            name: {"nodes": nodes, "summary": summaries_by_crop.get(name, {})}
+            for name, nodes in plots_by_crop.items()
+        }
+        unified_analyses.append({
+            "title": "Culturas",
+            "resources": dict(sorted(crop_resources.items()))
+        })
+    if fruit_data and fruit_data.get("view"):
+        fruit_view = fruit_data["view"]
+        patches_by_fruit = defaultdict(dict)
+        for patch_id, patch_info in fruit_view.get("patch_status", {}).items():
+            patches_by_fruit[patch_info['fruit_name']][patch_id] = patch_info
+        
+        summaries_by_fruit = fruit_view.get("summary_by_fruit", {})
+        fruit_resources = {
+            name: {"nodes": nodes, "summary": summaries_by_fruit.get(name, {})}
+            for name, nodes in patches_by_fruit.items()
+        }
+        unified_analyses.append({
+            "title": "Frutas",
+            "resources": dict(sorted(fruit_resources.items()))
+        })
+    if flower_data and flower_data.get("view"):
+        flower_view = flower_data["view"]
+        beds_by_flower = defaultdict(dict)
+        for bed_id, bed_info in flower_view.get("beds", {}).items():
+            beds_by_flower[bed_info['flower_name']][bed_id] = bed_info
+        
+        summaries_by_flower = flower_view.get("summary_by_flower", {})
+        flower_resources = {
+            name: {"nodes": nodes, "summary": summaries_by_flower.get(name, {})}
+            for name, nodes in beds_by_flower.items()
+        }
+        unified_analyses.append({
+            "title": "Flores",
+            "resources": dict(sorted(flower_resources.items()))
+        })
+
+    context['unified_resource_analyses'] = unified_analyses
+
+    # Processamento do Mapa da Fazenda
     context['layout_map'] = None
     try:
-        layout_map_data = farm_layout_service.generate_layout_map(main_farm_data)
+        # NOVO: Consolida todos os nós analisados em um único dicionário para o mapa.
+        # Isso garante que o mapa use os dados calculados (rendimento, minas restantes, etc.)
+        # em vez dos dados brutos da API.
+        all_analyzed_nodes = {}
+        if wood_data and wood_data.get("view"):
+            for tree_id, tree_info in wood_data["view"].get("tree_status", {}).items():
+                all_analyzed_nodes[f"trees-{tree_id}"] = tree_info
+        
+        if mining_data and mining_data.get("view"):
+            for resource_name, nodes in mining_data["view"].get("nodes_by_type", {}).items():
+                api_key = next((key for key, info in mining_service.RESOURCE_NODE_MAP.items() if info["name"] == resource_name), None)
+                if api_key:
+                    for node_id, node_info in nodes.items():
+                        all_analyzed_nodes[f"{api_key}-{node_id}"] = node_info
+
+        if crop_data and crop_data.get("view"):
+            for plot_id, plot_info in crop_data["view"].get("plot_status", {}).items():
+                all_analyzed_nodes[f"crops-{plot_id}"] = plot_info
+
+        if fruit_data and fruit_data.get("view"):
+            for patch_id, patch_info in fruit_data["view"].get("patch_status", {}).items():
+                all_analyzed_nodes[f"fruitPatches-{patch_id}"] = patch_info
+
+        if flower_data and flower_data.get("view"):
+            for bed_id, bed_info in flower_data["view"].get("beds", {}).items():
+                all_analyzed_nodes[f"flowerBeds-{bed_id}"] = bed_info
+
+        # NOVO: Adiciona os dados da Crop Machine e Greenhouse aos nós analisados.
+        # CORREÇÃO: A chave para edifícios deve ser construída usando o ID único do
+        # edifício dos dados do jogo, em vez de um índice fixo como '0'.
+        # Isso garante que o farm_layout_service possa associar os dados de análise
+        # ao edifício correto no mapa.
+        if context.get('crop_machine_analysis'):
+            crop_machine_buildings = main_farm_data.get("buildings", {}).get("Crop Machine", [])
+            if crop_machine_buildings:
+                machine_id = crop_machine_buildings[0].get("id")
+                all_analyzed_nodes[f"Crop Machine-{machine_id}"] = context['crop_machine_analysis']
+        
+        if context.get('greenhouse_analysis'):
+            greenhouse_buildings = main_farm_data.get("buildings", {}).get("Greenhouse", [])
+            if greenhouse_buildings:
+                greenhouse_id = greenhouse_buildings[0].get("id")
+                all_analyzed_nodes[f"Greenhouse-{greenhouse_id}"] = context['greenhouse_analysis']
+
+        if beehive_data and beehive_data.get("view"):
+            for hive_id, hive_info in beehive_data["view"].get("hives", {}).items():
+                all_analyzed_nodes[f"beehives-{hive_id}"] = hive_info
+
+        layout_map_data = farm_layout_service.generate_layout_map(main_farm_data, all_analyzed_nodes)
         if layout_map_data:
             context['layout_map'] = layout_map_data
             log.info(f"Mapa da fazenda gerado com sucesso para a fazenda #{farm_id}.")

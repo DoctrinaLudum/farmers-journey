@@ -48,7 +48,7 @@ RESOURCE_NODES = {
         "name": "Oil Reserve",
         "yields": "Oil",
         "dimensions": {"width": 2, "height": 2},
-        "respawn_time_seconds": 345600,
+        "respawn_time_seconds": 72000,
     },
     "Boulder": {
         "name": "Boulder",

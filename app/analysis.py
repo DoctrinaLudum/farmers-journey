@@ -746,6 +746,11 @@ def get_item_image_path(item_name: str) -> str:
         return "images/resources/coins.webp"
     if item_name == "Gem":
         return "images/resources/gem.webp"
+    # NOVO: Adiciona casos para ícones de UI que aparecem no mapa
+    if item_name == "Yield Fertiliser":
+        return "images/misc/increase_arrow.webp"
+    if item_name == "Bee Swarm":
+        return "images/misc/bee.webp"
 
     path_name = item_name.lower().replace(" ", "_")
 
@@ -763,6 +768,7 @@ def get_item_image_path(item_name: str) -> str:
         "AnimalFood": "animal_food", "AnimalMedicine": "animal_food",
         "Fertiliser": "fertilisers", "GreenhouseCrop": "crops", "ExoticCrop": "crops",
         "Misc": "misc",
+        "Collectibles": "collectables",
     }
 
     # 3. Consulta ao mapa mestre para encontrar a categoria do item

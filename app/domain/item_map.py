@@ -1,8 +1,8 @@
 # app/domain/item_map.py
 import logging
 
-from . import (buildings, crops, fishing, flowers, foods, fruits, nodes,
-               resources, seeds, tools, treasure_dig)
+from . import (buildings, collectiblesItemBuffs, crops, fishing, flowers,
+               foods, fruits, nodes, resources, seeds, tools, treasure_dig)
 
 log = logging.getLogger(__name__)
 
@@ -20,14 +20,15 @@ FIXED_CATEGORY_DOMAINS = [
     (tools.TOOLS_DATA, "Tool"),
     (treasure_dig.DIGGING_TOOLS, "Tool"),
     (buildings.BUILDING_REQUIREMENTS, "Building"),
-    (treasure_dig.TREASURES, "Treasure"), # Movido para aqui para usar uma categoria fixa.
+    (treasure_dig.TREASURES, "Treasure"),
+    (collectiblesItemBuffs.COLLECTIBLES_ITEM_BUFFS, "Collectibles"),
 ]
 
 # Domínios onde a categoria é extraída da chave 'type' de cada item.
 # O segundo elemento da tupla é uma categoria padrão (fallback).
 TYPED_DOMAINS = [
     (resources.RESOURCES_DATA, "Resource"),
-    (crops.CROPS_DATA, "Crop"),
+    (crops.CROPS, "Crop"),
     (foods.CONSUMABLES_DATA, "Food"),
 ]
 

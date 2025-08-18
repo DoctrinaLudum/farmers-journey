@@ -1,0 +1,103 @@
+{% if delivery_analysis and delivery_analysis.all_deliveries %}
+<div class="p-3">
+    <div class="row mb-4 text-center">
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ delivery_analysis.summary.total_available }}</h5>
+                    <p class="card-text text-muted small">Entregas Disponíveis</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ delivery_analysis.summary.fulfillable_now }}</h5>
+                    <p class="card-text text-muted small">Prontas para Entregar</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ delivery_analysis.summary.pending_count }}</h5>
+                    <p class="card-text text-muted small">Pendentes</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ delivery_analysis.summary.completed_count }}</h5>
+                    <p class="card-text text-muted small">Completadas Hoje</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-sm table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th scope="col">NPC</th>
+                    <th scope="col">Itens Requeridos</th>
+                    <th scope="col">Recompensa</th>
+                    <th scope="col" class="text-center">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in delivery_analysis.all_deliveries %}
+                <tr>
+                    <td class="fw-bold">{{ order.npc_name }}</td>
+                    <td>
+                        <ul class="list-unstyled mb-0 small">
+                            {# Itens #}
+                            {% for item, amount in order.requirements['items'].items() %}
+                                <li class="d-flex align-items-center mb-1">
+                                    <img src="{{ url_for('static', filename=get_item_image_path(item)) }}" class="icon icon-2x me-2" alt="{{ item }}">
+                                    <span>{{ amount }}x {{ item }}</span>
+                                </li>
+                            {% endfor %}
+                            {# Custo em SFL #}
+                            {% if order.requirements.sfl > 0 %}
+                                <li class="d-flex align-items-center mb-1">
+                                    <img src="{{ url_for('static', filename=get_item_image_path('SFL')) }}" class="icon icon-2x me-2" alt="SFL">
+                                    <span>{{ order.requirements.sfl }} SFL</span>
+                                </li>
+                            {% endif %}
+                            {# Custo em Moedas #}
+                            {% if order.requirements.coins > 0 %}
+                                <li class="d-flex align-items-center">
+                                    <img src="{{ url_for('static', filename=get_item_image_path('Coins')) }}" class="icon icon-2x me-2" alt="Moedas">
+                                    <span>{{ order.requirements.coins }} Moedas</span>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </td>
+                    <td>
+                        <ul class="list-unstyled mb-0 small">
+                            {% for item_name, amount in order.reward.items() %}
+                                {% include 'macros/reward_item_display.html' with context %}
+                            {% endfor %}
+                        </ul>
+                    </td>
+                    <td class="text-center align-middle">
+                        {% if order.is_completed %}
+                            <span class="badge bg-success">Completada</span>
+                        {% elif order.can_fulfill %}
+                            <span class="badge bg-primary">Pronta para Entregar</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Pendente</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info m-3">
+    Não há entregas disponíveis hoje ou os dados não puderam ser carregados.
+</div>
+{% endif %}

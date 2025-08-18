@@ -1,50 +1,250 @@
 {% if layout_map %}
 <div class="p-3 farm-layout-map">
     <div class="row">
-        <!-- Coluna do Mapa -->
         <div class="col-lg-9">
-            <h5 class="mb-3"><i class="bi bi-map-fill me-2"></i>Layout da Fazenda</h5>
-            <div class="table-responsive">
-                <table class="table table-bordered text-center bg-light">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0"><i class="bi bi-map-fill me-2"></i>Layout da Fazenda</h5>
+                
+                {% if layout_map.dynamic_legend %}
+                <div class="d-flex align-items-center gap-3 map-icon-legend">
+                    {% for key, item in layout_map.dynamic_legend.items() %}
+                    <span class="map-legend-item" title="{{ item.text }}">
+                        {% if item.icon_type == 'bi' %}
+                            <i class="{{ item.icon_class }} me-1"></i>
+                        {% else %}
+                            <img src="{{ url_for('static', filename=item.src) }}" class="me-1" alt="{{ item.text }}">
+                        {% endif %}
+                        <span class="d-none d-md-inline">{{ item.text }}</span>
+                    </span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div id="farm-map-table-wrapper" class="table-responsive farm-layout-grid-container">
+                
+                <table class="table table-bordered text-center">
                     <tbody>
-                        {# Itera do Y maior para o menor para desenhar de cima para baixo #}
-                        {% for y in range(layout_map.max_y, layout_map.min_y - 1, -1) %}
+                        {% for row in layout_map.final_grid_rows %}
                         <tr>
-                            {% for x in range(layout_map.min_x, layout_map.max_x + 1) %}
-                                {% set node = layout_map.grid.get((x, y), None) %}
-                                
-                                {# Apenas renderiza uma célula se for a célula principal (canto inferior esquerdo) de um nó. #}
-                                {# Isso permite que nós maiores (como árvores 2x2) usem rowspan e colspan. #}
-                                {% if node and node.is_primary %}
-                                    <td class="farm-layout-cell" rowspan="{{ node.height }}" colspan="{{ node.width }}"
-                                        style="--cell-width: {{ 40 * node.width }}px; --cell-height: {{ 40 * node.height }}px; --cell-font-size: {{ 1.2 * node.width }}rem;">
-                                        <span title="{{ node.type }}: {{ node.details }}" data-bs-toggle="tooltip">
-                                            {{ node.icon }}
-                                        </span>
+                            {% for cell_data in row %}                                
+                                {# Uma célula é considerada "ativa" se tiver um recurso, for uma fonte de AOE, ou estiver sob o efeito de uma AOE #}
+                                {% set has_content = cell_data.resource or cell_data.aoe_source %}
+                                {% set is_under_aoe = cell_data.aoe_items %}
+                                {% set is_active_cell = has_content or is_under_aoe %}
+
+                                {% if is_active_cell %}
+                                    <td class="farm-layout-cell {% if has_content %}has-content{% endif %} {{ cell_data.aoe_class or '' }} {% if cell_data.resource %}resource-info-trigger{% endif %}"
+                                        style="{{ cell_data.aoe_background_style or '' }}"
+                                        data-resource-filter-id="{{ cell_data.resource.filter_id if cell_data.resource else '' }}"
+                                        data-aoe-source-id="{{ cell_data.aoe_source.filter_id if cell_data.aoe_source else '' }}"
+                                        data-aoe-sources="{{ cell_data.aoe_sources_str or '' }}"
+                                        data-resource-info='{{ cell_data.resource | tojson | e if cell_data.resource else "" }}'>
+                                        <div class="cell-content-wrapper">
+                                            {% if cell_data.resource %}
+                                                <span class="resource-icon">
+                                                    <img src="{{ url_for('static', filename=cell_data.resource.icon) }}" alt="{{ cell_data.resource.analysis.resource_name if cell_data.resource.analysis else 'resource' }}" class="map-item-icon">
+                                                    {% if cell_data.resource.details.amount is defined %}
+                                                        <span class="amount-label">{{ cell_data.resource.details.amount }}</span>
+                                                    {% endif %}
+                                                    {# NOVO: Adiciona um badge para minas/colheitas restantes #}
+                                                    {% if cell_data.resource.details.mines_left is defined and cell_data.resource.details.mines_left is not none %}
+                                                        <span class="cell-badge" title="Minas Restantes">{{ cell_data.resource.details.mines_left }}</span>
+                                                    {% elif cell_data.resource.details.harvests_left is defined and cell_data.resource.details.harvests_left is not none %}
+                                                        <span class="cell-badge" title="Colheitas Restantes">{{ cell_data.resource.details.harvests_left }}</span>
+                                                    {% endif %}
+                                                    {# NOVO: Adiciona badges para bônus, fertilizante e abelhas #}
+                                                    {% if cell_data.resource.details.bonus_reward %}
+                                                        <span class="bonus-reward-badge" title="Recompensa Bônus">
+                                                            <i class="bi bi-gift-fill"></i>
+                                                        </span>
+                                                    {% endif %}
+                                                    {% if cell_data.resource.details.has_yield_fertiliser %}
+                                                        {% set fertiliser_pos_class = 'pos-top-left' if cell_data.resource.type == 'fruitPatches' else 'pos-top-right' %}
+                                                        <img src="{{ url_for('static', filename=cell_data.resource.details.yield_fertiliser_icon) }}" class="yield-fertiliser-badge {{ fertiliser_pos_class }}" title="Fertilizado">
+                                                    {% endif %}
+                                                    {% if cell_data.resource.details.beeSwarm %}
+                                                        <img src="{{ url_for('static', filename=cell_data.resource.details.bee_swarm_icon) }}" class="bee-swarm-badge" title="Polinizado por Abelhas">
+                                                    {% endif %}
+                                                </span>
+                                            {% elif cell_data.aoe_source %}
+                                                <img src="{{ url_for('static', filename=cell_data.aoe_source.icon) }}" alt="{{ cell_data.aoe_source.name }}" class="aoe-source-icon">
+                                            {% elif cell_data.aoe_items %}
+                                                <span class="aoe-effect-icon" title="Efeito de AOE"><i class="bi bi-magic"></i></span>
+                                            {% endif %}
+                                        </div>
                                     </td>
-                                {# Se não houver nó, renderiza uma célula vazia. #}
-                                {% elif node is none %}
+                                {% else %}
                                     <td class="farm-layout-cell-empty"></td>
                                 {% endif %}
-                                {# Se houver um nó, mas não for o principal, não faz nada, pois ele é coberto pelo rowspan/colspan do nó principal. #}
                             {% endfor %}
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
+
+                {# Define o overlay como uma grade CSS com as mesmas dimensões da tabela #}
+                <div class="items-overlay" style="grid-template-columns: repeat({{ layout_map.width }}, 1fr); grid-template-rows: repeat({{ layout_map.height }}, 1fr);">
+                    {% for resource in layout_map.overlay_items %}
+                        {# Calcula as posições na grade em vez de porcentagens CSS #}
+                        {% set col_start = resource.x - layout_map.min_x + 1 %}
+                        {% set row_start = layout_map.max_y - resource.y + 1 %}
+                        {% set col_span = resource.width %}
+                        {% set row_span = resource.height %}
+
+                        <div class="map-item-overlay resource-info-trigger" 
+                             {# Usa as propriedades da grade CSS para posicionamento e dimensionamento #}
+                             style="grid-column: {{ col_start }} / span {{ col_span }}; grid-row: {{ row_start }} / span {{ row_span }};"
+                             data-resource-info='{{ resource | tojson | e }}'
+                             data-greenhouse-plants="{{ resource.greenhouse_plant_filters or '' }}">
+                            {% if resource.base_building_icon %}
+                                <div class="processing-building-container large-building">
+                                    <img src="{{ url_for('static', filename=resource.base_building_icon) }}" alt="{{ resource.type }}" class="map-item-icon base-building">
+                                    <img src="{{ url_for('static', filename=resource.icon) }}" alt="{{ resource.analysis.resource_name if resource.analysis else '' }}" class="map-item-icon processing-content-overlay">
+                                </div>
+                            {% else %}
+                                <img src="{{ url_for('static', filename=resource.icon) }}" 
+                                     alt="{{ resource.analysis.resource_name if resource.analysis else resource.type }}" class="map-item-icon">
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
             </div>
         </div>
         <!-- Coluna da Legenda -->
-        <div class="col-lg-3">
-            <h6 class="mt-3 mt-lg-0"><i class="bi bi-key-fill me-2"></i>Legenda</h6>
-            <ul class="list-unstyled small farm-layout-legend">
-                {% for name, icon in layout_map.legend|dictsort %}{% if name != 'DEFAULT' %}
-                    <li><span class="me-2">{{ icon }}</span> {{ name }}</li>
-                {% endif %}{% endfor %}
-            </ul>
+        {# Adiciona a classe 'legend-column' para o posicionamento 'sticky' #}
+        <div class="col-lg-3 legend-column">
+            {# Macro para renderizar um item da legenda para evitar repetição de código #}
+            {% macro render_legend_item(name, data) %}
+                <li class="d-flex align-items-center mb-2">
+                    <img src="{{ url_for('static', filename=data.icon) }}" alt="{{ name }}" class="me-2 legend-icon">
+                    <div class="d-flex flex-column align-items-start">
+                        {% if data.aoe_info %}
+                            {# Define a variável CSS para o fundo: gradiente se houver cor estendida, senão cor sólida #}
+                            {% set css_vars = "" %}
+                            {% if data.aoe_info.extended_color %}
+                                {% set css_vars = "--aoe-bg: linear-gradient(135deg, " ~ data.aoe_info.base_color ~ ", " ~ data.aoe_info.extended_color ~ ");" %}
+                            {% else %}
+                                {% set css_vars = "--aoe-bg: " ~ data.aoe_info.base_color ~ ";" %}
+                            {% endif %}
+                            <span class="aoe-filter-trigger" data-filter-id="{{ data.aoe_info.filter_id }}" style="{{ css_vars }}" title="Filtrar por {{ name }}">
+                                {{ name }}
+                            </span>
+                            {# Mostra um badge com o nome da skill que estende a AOE #}
+                            {% if data.aoe_info.skill_name %}
+                                <span class="badge bg-primary-subtle text-primary-emphasis mt-1" title="Buff estendido pela skill: {{ data.aoe_info.skill_name }}">
+                                    <i class="bi bi-stars me-1"></i>{{ data.aoe_info.skill_name }}
+                                </span>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </li>
+            {% endmacro %}
+            {# NOVO: Macro para itens de legenda que são apenas filtros de recursos #}
+            {% macro render_resource_legend_item(name, data) %}
+                <li class="d-flex align-items-center mb-2">
+                    <img src="{{ url_for('static', filename=data.icon) }}" alt="{{ name }}" class="me-2 legend-icon">
+                    <span class="resource-filter-trigger" data-filter-id="{{ data.filter_id }}" title="Filtrar por {{ name }}">{{ name }}</span>
+                </li>
+            {% endmacro %}
+
+            {# Definir a ordem estática para os recursos #}
+            {% set static_resource_order = [
+                'Wood', 'Stone', 'Iron', 'Gold', 'Oil', 'Crimstone', 'Sunstone', 'Obsidian'
+            ] %}
+
+            {# Separar os itens da legenda em categorias #}
+            {% set static_resources = {} %}
+            {% set other_resources = {} %}
+            {% set aoe_items = {} %}
+
+            {% for name, data in layout_map.legend.items() %}
+                {% if data.aoe_info %}
+                    {% do aoe_items.update({name: data}) %}
+                {% elif name in static_resource_order %}
+                    {% do static_resources.update({name: data}) %}
+                {% else %}
+                    {% do other_resources.update({name: data}) %}
+                {% endif %}
+            {% endfor %}
+
+            {# Adiciona um wrapper para controlar a rolagem interna da legenda #}
+            <div class="legend-content-wrapper">
+                {# Renderizar a seção de Recursos #}
+                <h6 class="mt-3 mt-lg-0"><i class="bi bi-tree-fill me-2"></i>Recursos</h6>
+                {% set total_resources = static_resources|length + other_resources|length %}
+                <ul class="list-unstyled small farm-layout-legend {% if total_resources > 6 %}multi-column-legend{% endif %}">
+                    {# Renderizar recursos estáticos na ordem definida #}
+                    {% for name in static_resource_order %}
+                        {% if name in static_resources and static_resources[name].filter_id %}
+                            {{ render_resource_legend_item(name, static_resources[name]) }}
+                        {% endif %}
+                    {% endfor %}
+                    {# Renderizar outros recursos (colheitas) em ordem alfabética #}
+                    {% for name, data in other_resources|dictsort %}
+                        {{ render_resource_legend_item(name, data) }}
+                    {% endfor %}
+                </ul>
+
+                {# Renderizar a seção de Itens de AOE #}
+                {% if aoe_items %}
+                <h6 class="mt-4"><i class="bi bi-magic me-2"></i>Itens de AOE</h6>
+                <ul class="list-unstyled small farm-layout-legend">
+                    {% for name, data in aoe_items|dictsort %}
+                        {{ render_legend_item(name, data) }}
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>
 {% else %}
 <div class="alert alert-info m-3">Não foi possível gerar o mapa da fazenda. Verifique se os dados da API estão disponíveis.</div>
 {% endif %}
+
+<!-- Card Flutuante para Informações de Recursos -->
+<!-- Movido de dashboard.html para este partial para manter o código relacionado junto -->
+<div id="floating-resource-card" class="card shadow-lg" style="display: none;">
+    <div class="card-header d-flex justify-content-between align-items-center" id="floating-resource-card-header">
+        <h6 class="mb-0 d-flex align-items-center">
+            <img id="resource-card-icon" src="" class="icon icon-2x me-2">
+            <span id="resource-card-title"></span>
+        </h6>
+        <button type="button" class="btn-close btn-sm" aria-label="Close" id="resource-card-close-btn"></button>
+    </div>
+    <div class="card-body" id="resource-card-body">
+        <!-- O conteúdo será preenchido dinamicamente pelo script -->
+    </div>
+</div>
+
+<!-- NOVO: Template para o card de resumo de recursos (movido de dashboard.html) -->
+<div id="floating-summary-card" class="card" style="display: none;">
+    <div class="card-header d-flex justify-content-between align-items-center" id="floating-summary-card-header">
+        <h6 class="mb-0 d-flex align-items-center">
+            <img id="summary-card-icon" src="" alt="Ícone" class="me-2 item-icon-sm">
+            <span id="summary-card-title">Resumo</span>
+        </h6>
+        <button type="button" class="btn-close btn-close-white" aria-label="Close" id="summary-card-close-btn"></button>
+    </div>
+    <div class="card-body" id="summary-card-body">
+        <!-- O conteúdo será populado dinamicamente pelo JavaScript -->
+    </div>
+</div>
+
+<!-- Template para uma linha de estatística no card -->
+<template id="resource-card-stat-template">
+    <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-1">
+        <span class="stat-label"></span>
+        <strong class="stat-value"></strong>
+    </li>
+</template>
+
+<!-- Template para uma linha de bônus no card -->
+<template id="resource-card-buff-template">
+    <li class="list-group-item px-0 py-1 small">
+        <i class="bi bi-arrow-right-short"></i>
+        <span class="buff-source"></span>:
+        <span class="buff-value fw-bold"></span>
+    </li>
+</template>
