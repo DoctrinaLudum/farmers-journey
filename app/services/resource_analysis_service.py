@@ -131,8 +131,9 @@ def filter_boosts_from_domains(resource_conditions: dict):
             is_direct_yield = boost.get("type") in ["YIELD", "CROP_YIELD", "RESOURCE_YIELD", "CRITICAL_YIELD_BONUS"]
             is_chance_or_other_yield = boost.get("type") in ["BONUS_YIELD_CHANCE", "CRITICAL_CHANCE"]
             is_recovery = boost.get("type") in ["RECOVERY_TIME", "TREE_RECOVERY_TIME", "CROP_GROWTH_TIME", "GROWTH_TIME", "SUPER_TOTEM_TIME_BOOST"]
+            is_sale_price = boost.get("type") == "SALE_PRICE"
 
-            if is_direct_yield or is_chance_or_other_yield or is_recovery:
+            if is_direct_yield or is_chance_or_other_yield or is_recovery or is_sale_price:
                 standardized_boost = boost.copy()
                 # Apenas padroniza os tipos de rendimento direto para 'YIELD'.
                 # Mantém os tipos de chance (CRITICAL_CHANCE) intactos para a lógica de filtragem.
@@ -140,10 +141,12 @@ def filter_boosts_from_domains(resource_conditions: dict):
                     standardized_boost['type'] = 'YIELD'
                 elif is_recovery:
                     standardized_boost['type'] = 'RECOVERY_TIME'
+                elif is_sale_price:
+                    standardized_boost['type'] = 'SALE_PRICE'
                 
                 relevant_boosts.append(standardized_boost)
 
-        if relevant_boosts:
+        if relevant_boosts: 
             # Determina o tipo de origem de forma mais específica
             if item_name in skills_domain.LEGACY_BADGES:
                 source_type = "skill_legacy"
@@ -160,7 +163,6 @@ def filter_boosts_from_domains(resource_conditions: dict):
                 "has_aoe": "aoe" in item_details
             }
 
-    log.info(f"Catalogação concluída. Total de itens encontrados: {len(boost_catalogue)}")
     return boost_catalogue
 
 def get_active_player_boosts(player_items: set, boost_catalogue: dict, non_cumulative_groups: dict = None, farm_data: dict = None) -> list:
@@ -245,7 +247,6 @@ def get_active_player_boosts(player_items: set, boost_catalogue: dict, non_cumul
 
             # CORREÇÃO: Ignora itens com AOE, pois eles são tratados por posição.
             if boost_catalogue[item_name].get("has_aoe"):
-                log.debug(f"Item '{item_name}' tem AOE, será tratado por posição.")
                 continue
 
             item_boosts = boost_catalogue[item_name]["boosts"]
@@ -296,7 +297,6 @@ def get_aoe_boosts_for_resource(resource_position: dict, placed_items: dict, pla
             for effect in skill_details.get("effects", []):
                 if effect.get("name") == "MODIFY_ITEM_AOE" and effect.get("target_item") == item_name:
                     final_aoe = effect["new_aoe"]
-                    # log.info(f"Skill '{skill_name}' modificou a AOE de '{item_name}'.")
                     break
 
         # Itera sobre cada instância do item colocada na fazenda.

@@ -105,10 +105,7 @@
             {% include 'partials/_treasuredig_panel.html' %}
         </div>
         
-        <div class="tab-pane fade" id="resources-pane" role="tabpanel" aria-labelledby="resources-tab">
-            {% include 'partials/_unified_resources_panel.html' %}
-        </div>
-
+       
         <div class="tab-pane fade" id="layout-map-pane" role="tabpanel" aria-labelledby="layout-map-tab">
             {% include 'partials/_layout_map_panel.html' %}
         </div>
@@ -119,84 +116,15 @@
     </div>
 </div>
 
-<template id="goal-list-template">
-    <p class="card-text small text-muted mb-2">
-        Plano para Nível <strong data-template="goal-level"></strong> da Ilha <strong data-template="goal-land-type" class="text-capitalize"></strong>:
-    </p>
-    <div class="d-flex justify-content-around small text-muted border-bottom pb-2 mb-2">
-        <span><i class="bi bi-person-check-fill me-1"></i>Nv. Bumpkin: <strong data-template="bumpkin-level"></strong></span>
-        <span><i class="bi bi-clock-history me-1"></i>Tempo: <strong data-template="total-time"></strong></span>
-    </div>
-    <div class="row small text-muted mb-2 text-center">
-        <div class="col-6">
-            Custo Total<img src="{{ url_for('static', filename='images/resources/flower.webp') }}" alt="SFL" class="mx-1 icon icon-1x">: <strong data-template="total-cost"></strong>
-        </div>
-        <div class="col-6">
-            Custo Relativo<img src="{{ url_for('static', filename='images/resources/flower.webp') }}" alt="SFL" class="mx-1 icon icon-1x">: <strong data-template="total-relative-cost"></strong>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-md-6 pe-md-2"><ul class="list-group list-group-flush" data-column="1"></ul></div>
-        <div class="col-md-6 ps-md-2"><ul class="list-group list-group-flush" data-column="2"></ul></div>
-    </div>
-</template>
+<!-- PAINEL DE CONTROLE FLUTUANTE -->
+{% include 'partials/_floating_controls.html' %}
 
-<template id="goal-list-item-template">
-     <li class="list-group-item d-flex justify-content-between align-items-center compact-list-item px-0">
-         <span class="d-flex align-items-center">
-             <img src="" alt="" class="me-2 icon icon-2x" data-template="icon">
-             <span data-template="name"></span>
-         </span>
-         <div class="text-end">
-             <span class="badge" data-template="shortfall"></span>
-             <small class="text-muted d-block" style="font-size: 0.75em;" data-template="value_of_needed"></small>
-             <small class="text-muted d-block" style="font-size: 0.75em;">
-                <img src="{{ url_for('static', filename='images/resources/flower.webp') }}" alt="SFL" class="icon icon-1x">
-                <span data-template="sfl_value"></span>
-            </small>
-         </div>
-     </li>
-</template>
-
-<template id="unlocks-summary-table-template">
-  <div class="mt-4 pt-3 border-top">
-    <h6 class="fw-bold mb-2">Desbloqueios e Ganhos na Jornada</h6>
-    <div class="table-responsive">
-      <table class="table table-sm table-hover small">
-        <thead>
-            <tr>
-                <th style="width: 40px;"></th> {# Coluna vazia para o ícone #}
-                <th>Item</th>
-                <th class="text-end">Total Ganho</th>
-            </tr>
-        </thead>
-        <tbody data-template="summary-table-body">
-          </tbody>
-      </table>
-    </div>
-  </div>
-</template>
-
-<template id="unlocks-summary-item-template">
-  <tr data-template="item-row">
-    <td class="text-center" style="width: 40px;">
-        <img src="" alt="" class="icon icon-2x" data-template="icon" onerror="this.style.display='none'">
-    </td>
-    <td>
-        <span data-template="name"></span>
-    </td>
-    <td class="text-end fw-bold" data-template="total"></td>
-  </tr>
-</template>
 {% endblock %}
 
 
 {% block scripts %}
-<!-- NOVO: Expõe os dados de preços para o JavaScript -->
-<script>
-    // A função tojson do Flask/Jinja2 converte o dicionário Python em um objeto JSON seguro.
-    window.SFL_PRICES = {{ prices_data | tojson }};
-</script>
 <script src="{{ url_for('static', filename='js/dashboard.js') }}" type="module"></script>
+<script src="{{ url_for('static', filename='js/card_positioner.js') }}" type="module"></script>
+<script src="{{ url_for('static', filename='js/resource_info_card.js') }}" type="module"></script>
 <script src="{{ url_for('static', filename='js/summary_card.js') }}" type="module"></script>
 {% endblock %}

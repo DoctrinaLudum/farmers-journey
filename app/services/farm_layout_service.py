@@ -2,8 +2,10 @@
 
 import hashlib
 import logging
+import json
 import re
 from collections import defaultdict
+from decimal import Decimal
 
 from ..analysis import get_item_image_path
 from ..domain import collectiblesItemBuffs as collectibles_domain
@@ -16,7 +18,7 @@ log = logging.getLogger(__name__)
 API_KEY_TO_NODE_TYPE = {
     "trees": "Tree", "crops": "Crop Plot", "stones": "Stone Rock",
     "iron": "Iron Rock", "gold": "Gold Rock", "crimstones": "Crimstone Rock",
-    "sunstones": "Sunstone Rock", "fruitPatches": "Fruit Patch",
+    "sunstones": "Sunstone Rock", "fruitPatches": "Fruit Patch", "mushrooms": "Mushroom",
     "flowerBeds": "Flower Bed", "beehives": "Beehive",
     "oilReserves": "Oil Reserve", "lavaPits": "Lava Pit",
     "Crop Machine": "Building", "Greenhouse": "Building",
@@ -71,17 +73,20 @@ def generate_layout_map(farm_data: dict, analyzed_nodes: dict = None):
     overlay_items = []
     all_coords = []
     legend_item_names = set()
+    crops_in_machine_list = []
     player_skills = set(farm_data.get("bumpkin", {}).get("skills", {}).keys())
 
     resource_sources = [
         "trees", "crops", "stones", "iron", "gold", "crimstones", "sunstones",
-        "fruitPatches", "flowerBeds", "beehives", "oilReserves", "lavaPits",
+        "fruitPatches", "flowerBeds", "beehives", "oilReserves", "lavaPits", "mushrooms",
         "Crop Machine", "Greenhouse"
     ]
 
     for source_key in resource_sources:
         if source_key == "flowerBeds":
             items = farm_data.get("flowers", {}).get(source_key, {})
+        elif source_key == "mushrooms":
+            items = farm_data.get("mushrooms", {}).get("mushrooms", {})
         elif source_key in ["Crop Machine", "Greenhouse"]:
             items = {p['id']: p for p in farm_data.get("buildings", {}).get(source_key, [])}
         else:
@@ -94,7 +99,8 @@ def generate_layout_map(farm_data: dict, analyzed_nodes: dict = None):
             lookup_key = f"{source_key}-{item_id}"
             analyzed_data = analyzed_nodes.get(lookup_key, {})
 
-            if (source_key == "crops" and not analyzed_data.get("crop_name")) or \
+            if (source_key == "mushrooms" and not analyzed_data.get("name")) or \
+               (source_key == "crops" and not analyzed_data.get("crop_name")) or \
                (source_key == "fruitPatches" and not analyzed_data.get("fruit_name")) or \
                (source_key == "flowerBeds" and not analyzed_data.get("flower_name")):
                 continue
@@ -110,28 +116,51 @@ def generate_layout_map(farm_data: dict, analyzed_nodes: dict = None):
             width, height = dimensions['width'], dimensions['height']
             is_large_building = source_key in ["Crop Machine", "Greenhouse"]
 
-            icon_name, base_building_icon = None, None
+            icon_name, base_building_icon, overlay_icon = None, None, None
             
             if source_key == "Greenhouse":
                 icon_name = "Greenhouse"
+                base_building_icon = get_item_image_path("Greenhouse")
+
                 if analyzed_data:
                     unique_plants = sorted(list(set(p.get("plant_name") for p in analyzed_data.get("pots", {}).values() if p.get("plant_name"))))
                     analyzed_data['growing_plants'] = unique_plants
-                    if unique_plants: legend_item_names.update(unique_plants)
-                    if not unique_plants: analyzed_data['resource_name'] = "Estufa (Vazia)"
+
+                    if unique_plants:
+                        legend_item_names.update(unique_plants)
+                        # NOVO: Passa uma lista de ícones para o frontend para exibir múltiplos overlays.
+                        analyzed_data['overlay_icons'] = [get_item_image_path(plant) for plant in unique_plants]
+
+                    if not unique_plants: 
+                        analyzed_data['resource_name'] = "Estufa (Vazia)"
                     elif len(unique_plants) == 1: analyzed_data['resource_name'] = f"Estufa ({unique_plants[0]})"
                     else: analyzed_data['resource_name'] = f"Estufa ({len(unique_plants)} plantas diferentes)"
+
             elif source_key == "Crop Machine":
-                icon_name = source_key
+                icon_name = "Crop Machine"
+                base_building_icon = get_item_image_path(source_key)
+
                 if analyzed_data and analyzed_data.get("queue") and analyzed_data["queue"]:
-                    active_item = analyzed_data["queue"][0]
-                    base_building_icon = get_item_image_path(icon_name)
-                    icon_name = active_item.get("crop")
-                    analyzed_data['resource_name'] = f"{icon_name} (na Crop Machine)"
+                    # Get unique crop names from the queue
+                    crops_in_queue = sorted(list(set(item.get("crop") for item in analyzed_data["queue"] if item.get("crop"))))
+                    crops_in_machine_list.extend(crops_in_queue)
+                    # Rename to 'growing_plants' to match Greenhouse data structure for the frontend
+                    analyzed_data['growing_plants'] = crops_in_queue
+                    
+                    if crops_in_queue:
+                        # Add the names of the crops in the queue to the legend
+                        legend_item_names.update(crops_in_queue)
+                        # Create a list of overlay icons, just like the Greenhouse
+                        analyzed_data['overlay_icons'] = [get_item_image_path(crop) for crop in crops_in_queue]
+                        analyzed_data['resource_name'] = f"Crop Machine ({', '.join(crops_in_queue)})"
+                else:
+                    analyzed_data['resource_name'] = "Crop Machine (Vazia)"
             else:
                 if node_type == "Crop Plot": icon_name = analyzed_data.get("crop_name")
                 elif node_type == "Fruit Patch": icon_name = analyzed_data.get("fruit_name")
                 elif node_type == "Flower Bed": icon_name = analyzed_data.get("flower_name")
+                elif node_type == "Mushroom":
+                    icon_name = analyzed_data.get("name")
                 else: icon_name = NODE_TYPE_TO_RESOURCE_ICON_NAME.get(node_type, node_type)
                 if icon_name: legend_item_names.add(icon_name)
 
@@ -141,12 +170,19 @@ def generate_layout_map(farm_data: dict, analyzed_nodes: dict = None):
             filter_id = re.sub(r'[^a-z0-9]+', '-', icon_name.lower()).strip('-')
             
             if analyzed_data:
-                analyzed_data.update({'filter_id': filter_id, 'icon_path': icon_path, 'position': {'x': x, 'y': y}})
+                analyzed_data.update({'filter_id': filter_id, 'position': {'x': x, 'y': y}})
                 if 'resource_name' not in analyzed_data or not analyzed_data['resource_name']: analyzed_data['resource_name'] = icon_name
+                # CORREÇÃO: Garante que o 'icon_path' da análise (usado para overlay) não seja
+                # sobrescrito se já foi definido (pela Crop Machine ou Greenhouse).
+                # Para outros recursos, define-o como o ícone principal.
+                if 'icon_path' not in analyzed_data:
+                    analyzed_data['icon_path'] = icon_path
 
             details = {"id": item_id}
             # CORREÇÃO DO ERRO 1: 'none' trocado por 'None'
-            if analyzed_data.get('calculations', {}).get('yield', {}).get('final_deterministic') is not None:
+            if node_type == "Mushroom" and 'total_amount' in analyzed_data:
+                details['amount'] = "%.2f" % analyzed_data['total_amount']
+            elif analyzed_data.get('calculations', {}).get('yield', {}).get('final_deterministic') is not None:
                 details['amount'] = "%.2f" % analyzed_data['calculations']['yield']['final_deterministic']
             details.update({k: v for k, v in analyzed_data.items() if k in ['mines_left', 'harvests_left', 'bonus_reward'] and v is not None})
             if analyzed_data.get('has_yield_fertiliser'):
@@ -164,6 +200,12 @@ def generate_layout_map(farm_data: dict, analyzed_nodes: dict = None):
             if source_key == "Greenhouse" and analyzed_data and 'growing_plants' in analyzed_data:
                 plant_names = analyzed_data['growing_plants']
                 resource_payload['greenhouse_plant_filters'] = " ".join([re.sub(r'[^a-z0-9]+', '-', p.lower()).strip('-') for p in plant_names])
+            
+            # NOVO: Espelha a lógica de filtro da estufa para a crop machine,
+            # permitindo que ela seja filtrada pelos itens que está processando.
+            if source_key == "Crop Machine" and analyzed_data and 'growing_plants' in analyzed_data:
+                crop_names = analyzed_data['growing_plants']
+                resource_payload['greenhouse_plant_filters'] = " ".join([re.sub(r'[^a-z0-9]+', '-', c.lower()).strip('-') for c in crop_names])
             
             if is_large_building:
                 overlay_items.append(resource_payload)
@@ -222,7 +264,9 @@ def generate_layout_map(farm_data: dict, analyzed_nodes: dict = None):
 
     legend_data = {}
     for name in sorted(list(legend_item_names.union(aoe_source_names))):
-        filter_id = re.sub(r'[^a-z0-9]+', '-', name.lower()).strip('-')
+        # Adiciona condicional para ignorar cogumelos na legenda
+        if name == "Mushroom": continue
+        filter_id = re.sub(r'[^a-z0-9]+', '-', name.lower()).strip('-') 
         legend_data[name] = {"icon": get_item_image_path(name), "aoe_info": None, "filter_id": filter_id}
         if name in aoe_source_names:
             details = collectibles_domain.COLLECTIBLES_ITEM_BUFFS.get(name, {})
@@ -238,6 +282,7 @@ def generate_layout_map(farm_data: dict, analyzed_nodes: dict = None):
     
     dynamic_legend = _create_dynamic_legend(grid)
 
+
     return {
         "final_grid_rows": final_grid_rows,
         "overlay_items": overlay_items,
@@ -246,5 +291,12 @@ def generate_layout_map(farm_data: dict, analyzed_nodes: dict = None):
         "width": max_x - min_x + 1,
         "height": max_y - min_y + 1,
         "legend": legend_data,
+        "crops_in_machine": crops_in_machine_list,
         "dynamic_legend": dynamic_legend
     }
+
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Decimal):
+            return float(obj)
+        return super(DecimalEncoder, self).default(obj)

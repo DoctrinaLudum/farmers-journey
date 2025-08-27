@@ -6,7 +6,7 @@
                     <div class="card h-100 dashboard-card">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <span>
-                                <img src="{{ url_for('static', filename='images/npcs/' + chore.npc_name + '.png') }}" alt="{{ chore.npc_name }}" class="icon icon-2x me-2 rounded-circle">
+                                <img src="{{ url_for('static', filename='images/npcs/' + chore.npc_name + '.webp') }}" alt="{{ chore.npc_name }}" class="icon icon-2x me-2 rounded-circle">
                                 <strong>{{ chore.npc_name|capitalize }}</strong>
                             </span>
                             {% if chore.is_complete %}

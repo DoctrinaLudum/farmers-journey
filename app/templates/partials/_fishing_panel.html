@@ -1,4 +1,55 @@
 {# app/templates/partials/_fishing_panel.html (Versão com url_for corrigido) #}
+{% macro fish_log_row(item, get_item_image_path) %}
+{#
+    Macro para renderizar uma linha da tabela de log de pesca e sua linha de detalhes expansível.
+    Args:
+        item (dict): O dicionário contendo os dados de um peixe.
+        get_item_image_path (function): A função helper para obter o caminho da imagem.
+#}
+<tr class="clickable-header {% if item.player_count > 0 %}table-success-light{% endif %}" data-bs-toggle="collapse" data-bs-target="#collapse-{{ item.name|replace(' ', '-')|lower }}" data-seasons="{{ item.seasons|join(',') }}" data-type="{{ item.type }}">
+    <td class="align-middle">
+        <img src="{{ url_for('static', filename=get_item_image_path(item.name)) }}" alt="{{ item.name }}" class="icon icon-2x me-2">
+        <span>{{ item.name }}</span>
+    </td>
+    <td class="align-middle text-center">
+        {% if item.seasons %}
+            {% for season in item.seasons %}
+                <img src="{{ url_for('static', filename='images/seasons/' + season + '.webp') }}" title="{{ season|title }}" class="icon icon-1x">
+            {% endfor %}
+        {% endif %}
+    </td>
+    <td class="text-center align-middle" data-key="player_count" data-value="{{ item.player_count }}">{{ item.player_count }}</td>
+    <td class="text-center align-middle fw-bold" data-key="inventory_count" data-value="{{ item.inventory_count }}">{{ item.inventory_count }}</td>
+</tr>
+<tr>
+    <td colspan="4" class="p-0 border-0">
+        <div id="collapse-{{ item.name|replace(' ', '-')|lower }}" class="accordion-collapse collapse" data-bs-parent="#fishing-log-accordion">
+            <div class="p-2 bg-light-subtle d-flex justify-content-between small">
+                <span class="d-flex align-items-center flex-wrap gap-1">
+                    <strong class="me-1">Iscas:</strong>
+                    {% for bait_name in item.baits %}
+                        <span class="badge bg-secondary fw-normal d-flex align-items-center">
+                            <img src="{{ url_for('static', filename=get_item_image_path(bait_name)) }}" class="icon icon-1x me-1">
+                            {{ bait_name }}
+                        </span>
+                    {% endfor %}
+                </span>
+                <span class="d-flex align-items-center flex-wrap gap-1">
+                    <strong class="me-1">Gostos:</strong>
+                    {% for like_name in item.likes %}
+                        <span class="badge bg-info fw-normal d-flex align-items-center">
+                            <img src="{{ url_for('static', filename=get_item_image_path(like_name)) }}" class="icon icon-1x me-1">
+                             {{ like_name }}
+                        </span>
+                    {% else %}
+                    <span class="badge bg-secondary fw-normal">N/A</span>
+                    {% endfor %}
+                </span>
+            </div>
+        </div>
+    </td>
+</tr>
+{% endmacro %}
 
 {% if fishing_info %}
 <div class="row g-3 mt-1">
@@ -57,51 +108,9 @@
                         </thead>
                         <!-- ID do corpo da tabela padronizado -->
                         <tbody class="accordion" id="fishing-log-accordion">
-                        {% for item in fishing_info.all_fish_sorted %}
-                            <tr class="clickable-header {% if item.player_count > 0 %}table-success-light{% endif %}" data-bs-toggle="collapse" data-bs-target="#collapse-{{ item.name|replace(' ', '-')|lower }}" data-seasons="{{ item.seasons|join(',') }}" data-type="{{ item.type }}">
-                                <td class="align-middle">
-                                    <img src="{{ url_for('static', filename=get_item_image_path(item.name)) }}" alt="{{ item.name }}" class="icon icon-2x me-2">
-                                    <span>{{ item.name }}</span>
-                                </td>
-                                <td class="align-middle text-center">
-                                    {% if item.seasons %}
-                                        {% for season in item.seasons %}
-                                            <img src="{{ url_for('static', filename='images/seasons/' + season + '.webp') }}" title="{{ season|title }}" class="icon icon-1x">
-                                        {% endfor %}
-                                    {% endif %}
-                                </td>
-                                <td class="text-center align-middle" data-key="player_count" data-value="{{ item.player_count }}">{{ item.player_count }}</td>
-                                <td class="text-center align-middle fw-bold" data-key="inventory_count" data-value="{{ item.inventory_count }}">{{ item.inventory_count }}</td>
-                            </tr>
-                            <tr>
-                                <td colspan="4" class="p-0 border-0">
-                                    <div id="collapse-{{ item.name|replace(' ', '-')|lower }}" class="accordion-collapse collapse" data-bs-parent="#fishing-log-accordion">
-                                        <div class="p-2 bg-light-subtle d-flex justify-content-between small">
-                                            <span class="d-flex align-items-center flex-wrap gap-1">
-                                                <strong class="me-1">Iscas:</strong>
-                                                {% for bait_name in item.baits %}
-                                                    <span class="badge bg-secondary fw-normal d-flex align-items-center">
-                                                        <img src="{{ url_for('static', filename=get_item_image_path(bait_name)) }}" class="icon icon-1x me-1">
-                                                        {{ bait_name }}
-                                                    </span>
-                                                {% endfor %}
-                                            </span>
-                                            <span class="d-flex align-items-center flex-wrap gap-1">
-                                                <strong class="me-1">Gostos:</strong>
-                                                {% for like_name in item.likes %}
-                                                    <span class="badge bg-info fw-normal d-flex align-items-center">
-                                                        <img src="{{ url_for('static', filename=get_item_image_path(like_name)) }}" class="icon icon-1x me-1">
-                                                        {{ like_name }}
-                                                    </span>
-                                                {% else %}
-                                                    <span class="badge bg-secondary fw-normal">N/A</span>
-                                                {% endfor %}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                        {% endfor %}
+                            {% for item in fishing_info.all_fish_sorted %}
+                                {{ fish_log_row(item, get_item_image_path) }}
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>

@@ -4,60 +4,142 @@
     <!-- Coluna da Esquerda: Custos, Tesouros e Estatísticas -->
     <div class="col-lg-4 d-flex flex-column gap-4">
         
-        <!-- Card de Custos & Tesouros (Condicional) -->
-        {% if treasure_dig_info and treasure_dig_info.stats.total_digs > 0 %}
+        <!-- Card de Tesouros Vendáveis e Custos -->
+        {% if treasure_dig_info and (treasure_dig_info.sellable_treasures or (treasure_dig_info.stats and treasure_dig_info.stats.tool_usage)) %}
         <div class="card dashboard-card">
-            <div class="card-header"><i class="bi bi-gem me-1"></i> Custos & Tesouros</div>
+            <div class="card-header">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-gem me-1"></i>Tesouros e Custos</h5>
+            </div>
             <div class="card-body">
-                <!-- Seção de Custos -->
-                <h6><i class="bi bi-tools text-warning me-1"></i> Custos (Ferramentas)</h6>
-                <ul class="list-group list-group-flush bg-dark-subtle-item-list">
-                     {% for tool, count in treasure_dig_info.stats.tool_usage.items() %}
-                     <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-secondary py-1">
-                         <span>
-                             <img src="{{ url_for('static', filename=get_item_image_path(tool)) }}" class="item-icon-sm me-2" alt="{{ tool }}">
-                             {{ tool }}
-                         </span>
-                         <span class="badge bg-secondary rounded-pill">{{ count }}</span>
-                     </li>
-                     {% else %}
-                     <li class="list-group-item bg-transparent border-secondary py-1">Nenhuma ferramenta usada.</li>
-                     {% endfor %}
-                 </ul>
-
-                <!-- Seção de Tesouros -->
-                <h6 class="mt-3"><i class="bi bi-treasure-chest-fill text-info me-1"></i> Tesouros (Lucro)</h6>
-                <ul class="list-group list-group-flush bg-dark-subtle-item-list">
-                    {% for item, count in treasure_dig_info.stats.items_found.items() %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-secondary py-1">
-                        <span>
-                            <img src="{{ url_for('static', filename=get_item_image_path(item)) }}" class="item-icon-sm me-2" alt="{{ item }}">
-                            {{ item }}
+                <h6 class="mb-2 small text-uppercase fw-bold text-muted"><i class="bi bi-bar-chart-line-fill me-1"></i>Resumo Financeiro</h6>
+                <ul class="list-group list-group-flush mb-3">
+                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-0 px-0 py-1">
+                        <span class="small"><i class="bi bi-coin me-2 text-success"></i>Valor dos Tesouros</span>
+                        <span class="fw-bold small">
+                            {% if treasure_dig_info.stats.total_coins_value %}{{ treasure_dig_info.stats.total_coins_value }} Coins{% endif %}
+                            {% if treasure_dig_info.stats.total_sfl_value and treasure_dig_info.stats.total_coins_value %}<br>{% endif %}
+                            {% if treasure_dig_info.stats.total_sfl_value %}{{ "%.4f"|format(treasure_dig_info.stats.total_sfl_value) }} SFL{% endif %}
                         </span>
-                        <span class="badge bg-secondary rounded-pill">{{ count }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-0 px-0 py-1">
+                        <span class="small"><i class="bi bi-tools me-2 text-danger"></i>Custo das Ferramentas</span>
+                        <span class="fw-bold small">
+                            {% if treasure_dig_info.stats.total_coins_cost %}{{ treasure_dig_info.stats.total_coins_cost }} Coins{% endif %}
+                            {% if treasure_dig_info.stats.total_sfl_cost and treasure_dig_info.stats.total_coins_cost %}<br>{% endif %}
+                            {% if treasure_dig_info.stats.total_sfl_cost %}{{ "%.4f"|format(treasure_dig_info.stats.total_sfl_cost) }} SFL{% endif %}
+                        </span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-0 px-0 py-1">
+                        <span class="small"><i class="bi bi-graph-up-arrow me-2 {% if treasure_dig_info.stats.total_coins_profit >= 0 and treasure_dig_info.stats.total_sfl_profit >= 0 %}text-success{% else %}text-danger{% endif %}"></i>Lucro/Prejuízo</span>
+                        <span class="fw-bold small {% if treasure_dig_info.stats.total_coins_profit >= 0 and treasure_dig_info.stats.total_sfl_profit >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            {% if treasure_dig_info.stats.total_coins_profit %}{{ treasure_dig_info.stats.total_coins_profit }} Coins{% endif %}
+                            {% if treasure_dig_info.stats.total_sfl_profit and treasure_dig_info.stats.total_coins_profit %}<br>{% endif %}
+                            {% if treasure_dig_info.stats.total_sfl_profit %}{{ "%.4f"|format(treasure_dig_info.stats.total_sfl_profit) }} SFL{% endif %}
+                        </span>
+                    </li>
+                </ul>
+
+                <h6 class="mb-2 small text-uppercase fw-bold text-muted"><i class="bi bi-tools text-danger me-1"></i>Ferramentas Usadas</h6>
+                {% if treasure_dig_info.stats and treasure_dig_info.stats.tool_usage %}
+                <ul class="list-group list-group-flush mb-3">
+                    {% for tool in treasure_dig_info.stats.tool_usage %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-0 px-0 py-1">
+                        <div class="small">
+                            <img src="{{ url_for('static', filename=get_item_image_path(tool.name)) }}" class="icon-small1 me-2" alt="{{ tool.name }}">
+                            {{ tool.amount }}x {{ tool.name }}
+                        </div>
+                        <div class="d-flex flex-column align-items-end small">
+                            {% if tool.sfl_cost %}
+                            <span class="badge bg-danger-subtle text-danger-emphasis rounded-pill mb-1">
+                                {{ "%.4f"|format(tool.sfl_cost) }} SFL
+                            </span>
+                            {% endif %}
+                            {% if tool.coin_cost %}
+                            <span class="badge bg-secondary rounded-pill">
+                                {{ tool.coin_cost }} Coins
+                            </span>
+                            {% endif %}
+                        </div>
                     </li>
                     {% else %}
-                    <li class="list-group-item bg-transparent border-secondary py-1">Nenhum item encontrado.</li>
+                    <li class="list-group-item bg-transparent border-0 px-0 py-1 small">Nenhuma ferramenta usada.</li>
                     {% endfor %}
                 </ul>
+                {% endif %}
+
+                <h6 class="mb-2 small text-uppercase fw-bold text-muted"><i class="bi bi-box-seam-fill text-info me-1"></i>Itens Escavados</h6>
+                {% if treasure_dig_info.stats.items_found %}
+                <div class="table-responsive">
+                    <table class="table table-sm table-borderless mb-3">
+                        <tbody class="accordion" id="treasure-items-accordion">
+                            {% for item in treasure_dig_info.stats.items_found %}
+                            <tr class="clickable-row" data-bs-toggle="collapse" data-bs-target="#collapse-treasure-{{ loop.index }}" style="cursor: pointer;">
+                                <td class="d-flex align-items-center">
+                                    <img src="{{ url_for('static', filename=get_item_image_path(item.name)) }}" class="icon-small1 me-2" alt="{{ item.name }}">
+                                    <span>{{ item.name }}</span>
+                                    <span class="ms-2 text-muted small">x {{ item.amount }}</span>
+                                </td>
+                                <td class="text-end">
+                                    {% if item.boosts %}
+                                        {% set total_boost_value = namespace(value=0) %}
+                                        {% for boost in item.boosts %}
+                                            {% set total_boost_value.value = total_boost_value.value + boost.value %}
+                                        {% endfor %}
+                                        <span class="badge bg-info-subtle text-info-emphasis rounded-pill">+{{ (total_boost_value.value * 100)|int }}% <i class="bi bi-chevron-down"></i></span>
+                                    {% else %}
+                                        <span class="badge bg-light text-dark rounded-pill">0%</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    {% if item.coin_value %}
+                                    <span>
+                                        <img src="{{ url_for('static', filename=get_item_image_path('Coins')) }}" alt="Coins" class="icon-sm-currency">
+                                        {{ item.coin_value }}
+                                    </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="p-0 border-0">
+                                    <div id="collapse-treasure-{{ loop.index }}" class="accordion-collapse collapse" data-bs-parent="#treasure-items-accordion">
+                                        <div class="p-3">
+                                            {% if item.boosts %}
+                                                <div class="d-flex flex-column gap-2">
+                                                    {% for boost in item.boosts %}
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <span class="badge bg-secondary fw-normal align-items-center">
+                                                                <i class="bi bi-arrow-up-right-circle-fill me-1"></i>
+                                                                <strong>{{ boost.name }}:</strong> +{{ (boost.value * 100)|int }}%
+                                                            </span>
+                                                            {% if boost.bonus_coin_value %}
+                                                            <span class="badge bg-info-subtle text-info-emphasis fw-normal align-items-center">
+                                                                +{{ boost.bonus_coin_value }} <img src="{{ url_for('static', filename=get_item_image_path('Coins')) }}" alt="Coins" class="icon-sm-currency">
+                                                            </span>
+                                                            {% endif %}
+                                                        </div>
+                                                    {% endfor %}
+                                                </div>
+                                            {% else %}
+                                                <p class="mb-0 small text-muted">Este item não recebeu bônus de nenhum equipamento ou colecionável.</p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted small mb-3">Nenhum item escavado registrado.</p>
+                {% endif %}
             </div>
         </div>
         {% endif %}
-
-        <!-- Card de Estatísticas Gerais -->
-        <div class="card dashboard-card">
-            <div class="card-header"><i class="bi bi-bar-chart-line-fill me-1"></i> Estatísticas Gerais</div>
-            <div class="card-body">
-                <ul class="list-unstyled mb-0">
-                    <li><strong>Total de Escavações:</strong> {{ treasure_dig_info.stats.total_digs }}</li>
-                    <li><strong>Sequência Atual:</strong> {{ treasure_dig_info.stats.streak.count | default('N/A', true) }}</li>
-                </ul>
-            </div>
-        </div>
     </div>
 
     <!-- Coluna Central: Grid de Escavação -->
-    <div class="col-lg-4">
+    <div class="col-lg-4 d-flex flex-column gap-4">
         <div class="card dashboard-card h-100">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span><i class="bi bi-grid-3x3-gap-fill me-1"></i> Grid de Escavação</span>
@@ -69,6 +151,10 @@
                     <span class="button-text">Ver Dicas</span>
                 </button>
                 {% endif %}
+                <button type="button" class="btn btn-info btn-sm" id="toggle-rules-mask-btn">
+                    <i class="bi bi-eye-fill"></i>
+                    <span>Dicas</span>
+                </button>
                 <div class="btn-group btn-group-sm">
                     <button id="update-treasure-dig-btn" class="btn btn-outline-secondary" title="Atualizar dados" data-farm-id="{{ farm_id }}">
                         <i class="bi bi-arrow-clockwise"></i>
@@ -92,7 +178,12 @@
                         <div class="treasure-grid">
                             {% for y, row in enumerate(treasure_dig_info.grid_mirror) %}
                                 {% for x, cell in enumerate(row) %}
-                                <div class="treasure-grid-cell" data-x="{{ x }}" data-y="{{ y }}">
+                                <div class="treasure-grid-cell" 
+                                     data-x="{{ x }}" 
+                                     data-y="{{ y }}"
+                                     data-sand-block="{{ [x, y] in treasure_dig_info.rules_mask_data.sand_blocks }}"
+                                     data-crab-hint="{{ [x, y] in treasure_dig_info.rules_mask_data.crab_hints }}">
+                                    <div class="rules-mask-overlay active"></div>
                                     {% if cell %}
                                     <img src="{{ url_for('static', filename=cell.image) }}" alt="{{ cell.item_name }}" title="{{ cell.item_name }}" class="treasure-grid-item-icon">
                                     {% endif %}
@@ -112,6 +203,49 @@
                     </div>
                     {% endif %}
                 </div>
+            </div>
+        </div>
+        <!-- Card de Estatísticas Gerais -->
+        <div class="card dashboard-card">
+            <div class="card-header"><i class="bi bi-bar-chart-line-fill me-1"></i> Estatísticas Gerais</div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-grid-3x3-gap me-2 text-primary"></i>Total de Escavações</span>
+                        <strong>{{ treasure_dig_info.stats.total_digs }}</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-fire me-2 text-danger"></i>Sequência Atual</span>
+                        <strong>{{ treasure_dig_info.stats.streak.count | default('N/A', true) }}</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-box-seam me-2 text-info"></i>Total de Itens Cavados</span>
+                        <strong>{{ treasure_dig_info.stats.total_items_dug }}</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><img src="{{ url_for('static', filename=get_item_image_path('Sand Shovel')) }}" class="icon-small1 me-2" alt="Sand Shovel">Pás Criadas</span>
+                        <strong>{{ treasure_dig_info.stats.sand_shovels_crafted }}</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><img src="{{ url_for('static', filename=get_item_image_path('Sand Drill')) }}" class="icon-small1 me-2" alt="Sand Drill">Brocas Criadas</span>
+                        <strong>{{ treasure_dig_info.stats.sand_drills_crafted }}</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-trophy me-2 text-warning"></i>Item Mais Cavado</span>
+                        {% set most_dug = treasure_dig_info.stats.most_dug_item %}
+                        {% if most_dug %}
+                            <div class="d-flex align-items-center">
+                                <img src="{{ url_for('static', filename=most_dug.image) }}" alt="{{ most_dug.name }}" class="icon icon-1x me-2">
+                                <div class="text-end">
+                                    <strong class="d-block">{{ most_dug.name }}</strong>
+                                    <small class="text-muted">{{ most_dug.amount }}</small>
+                                </div>
+                            </div>
+                        {% else %}
+                            <strong>N/A</strong>
+                        {% endif %}
+                    </li>
+                </ul>
             </div>
         </div>
     </div>
@@ -199,3 +333,39 @@
 </div>
 {% endif %}
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const toggleRulesMaskBtn = document.getElementById('toggle-rules-mask-btn');
+    const rulesMaskOverlays = document.querySelectorAll('.rules-mask-overlay');
+
+    // Set initial state of the button and overlays
+    if (toggleRulesMaskBtn && rulesMaskOverlays.length > 0) {
+        // Ensure overlays are active on load
+        rulesMaskOverlays.forEach(overlay => {
+            overlay.classList.add('active');
+        });
+        // Set button text and icon for active state
+        toggleRulesMaskBtn.querySelector('span').textContent = '';
+        toggleRulesMaskBtn.querySelector('i').classList.remove('bi-eye-slash-fill');
+        toggleRulesMaskBtn.querySelector('i').classList.add('bi-eye-fill');
+
+        toggleRulesMaskBtn.addEventListener('click', function() {
+            const isMaskActive = rulesMaskOverlays[0].classList.contains('active'); // Check current state before toggling
+            rulesMaskOverlays.forEach(overlay => {
+                overlay.classList.toggle('active');
+            });
+
+            if (isMaskActive) { // If it was active, it's now inactive
+                toggleRulesMaskBtn.querySelector('span').textContent = '';
+                toggleRulesMaskBtn.querySelector('i').classList.remove('bi-eye-fill');
+                toggleRulesMaskBtn.querySelector('i').classList.add('bi-eye-slash-fill');
+            } else { // If it was inactive, it's now active
+                toggleRulesMaskBtn.querySelector('span').textContent = '';
+                toggleRulesMaskBtn.querySelector('i').classList.remove('bi-eye-slash-fill');
+                toggleRulesMaskBtn.querySelector('i').classList.add('bi-eye-fill');
+            }
+        });
+    }
+});
+</script>

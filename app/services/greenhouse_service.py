@@ -4,7 +4,7 @@ import logging
 import time
 from collections import defaultdict
 from decimal import Decimal
-
+from ..import analysis
 from .. import analysis
 from ..domain import crops as crops_domain
 from ..domain import fruits as fruit_domain
@@ -150,6 +150,7 @@ def analyze_greenhouse_resources(farm_data: dict, active_bud_buffs: dict = None)
         analyzed_pots[pot_id] = {
             "id": pot_id,
             "plant_name": plant_name,
+            "icon_path": analysis.get_item_image_path(plant_name),
             "state_name": state_name,
             "ready_at_timestamp_ms": int(ready_at_ms),
             "calculations": {

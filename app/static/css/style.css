@@ -1,5 +1,5 @@
 /* =================================
-   VARIÁVEIS GLOBAIS E ESTILOS DE BASE
+   VARIÁVEIS GLOBAIS E ESTILOS DE BASE (v2.0)
    ================================= */
 :root {
     --cor-primaria: #0d6efd;
@@ -10,9 +10,17 @@
     --cor-fundo-claro: #f8f9fa;
     --cor-borda: #dee2e6;
 }
+/* Adicionado para evitar seleção de texto durante o arrasto de elementos flutuantes */
+body.is-dragging,
+body.is-dragging-card {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
 
 /* =================================
-   COMPONENTES GERAIS DO PAINEL
+   COMPONENTES GERAIS
    ================================= */
 
 .clickable-header {
@@ -27,7 +35,7 @@
     transform: rotate(180deg);
 }
 
-/* Classe de utilitário para ícones pequenos em listas */
+/* --- Utilitários --- */
 .item-icon-sm {
     height: 24px;
     width: 24px;
@@ -39,9 +47,13 @@
     height: 6px;
 }
 
-/* =================================
-   SISTEMA GLOBAL DE ÍCONES
-   ================================= */
+.bg-dark-subtle-item-list {
+    background-color: rgba(0,0,0,0.15);
+    border-radius: 5px;
+}
+
+/* --- Sistema Global de Ícones --- */
+
 .icon {
     /* Propriedades base para TODOS os ícones */
     display: inline-block;
@@ -49,7 +61,6 @@
     vertical-align: middle;
     object-fit: contain; /* A propriedade mais importante para evitar distorção */
 }
-
 /* Modificadores de Tamanho */
 .icon.icon-1x {
     height: 16px; /* Tamanho pequeno, para botões e texto */
@@ -66,9 +77,7 @@
     max-width: 64px;
 }
 
-/* =================================
-   ESTILOS DOS CARDS DO PAINEL
-   ================================= */
+/* --- Cards do Painel --- */
 
 .dashboard-card {
     height: 100%;
@@ -89,22 +98,10 @@
 }
 
 /* =================================
-   PAINEL DE PRESENTES (NPCs)
+   PAINÉIS ESPECÍFICOS
    ================================= */
 
-#npc-gift-accordion .progress-bar {
-    width: var(--progress-percent);
-}
-
-/* Aumenta o tamanho do avatar do NPC na lista */
-#npc-gift-accordion .npc-avatar {
-    height: 40px;
-    width: 40px;
-    object-fit: cover; /* Garante que a imagem preencha o círculo, cortando se necessário */
-}
-/* =================================
-   PAINEL DE EXPANSÃO
-   ================================= */
+/* --- Painel de Expansão --- */
 
 /* --- Card: Você está aqui --- */
 .expansion-timer-card {
@@ -191,23 +188,6 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
-
-.node-item {
-    display: flex;
-    align-items: center;
-    padding: 0.3rem 0;
-    font-size: 0.85rem;
-}
-
-/*.node-icon {
-    height: auto;
-    width: auto;
-    max-height: 30px;
-    max-width: 45px;
-    margin-right: 0.75rem;
-    object-fit: contain;
-}
-
 /* --- Card: Planejador de Expansão --- */
 @media (min-width: 992px) {
     .border-end-lg-custom {
@@ -221,10 +201,6 @@
         border-right: 1px solid var(--cor-borda);
     }
 }
-
-
-
-
 
 .map-controls {
     display: flex;
@@ -351,9 +327,15 @@
 }
 
 @keyframes pulse-blue {
-    0% { box-shadow: 0 0 5px 0px rgba(13, 110, 253, 0.7); }
-    50% { box-shadow: 0 0 12px 4px rgba(13, 110, 253, 1); }
-    100% { box-shadow: 0 0 5px 0px rgba(13, 110, 253, 0.7); }
+    0% {
+        box-shadow: 0 0 5px 0px rgba(13, 110, 253, 0.7);
+    }
+    50% {
+        box-shadow: 0 0 12px 4px rgba(13, 110, 253, 1);
+    }
+    100% {
+        box-shadow: 0 0 5px 0px rgba(13, 110, 253, 0.7);
+    }
 }
 
 /* Legenda e Tooltip do Mapa */
@@ -433,10 +415,8 @@
     margin-top: 0.5rem;
     color: var(--cor-texto);
 }
-/* =================================
-   PAINEL DE PESCA
-   ================================= */
 
+/* --- Painel de Pesca e Conquistas --- */
 
 .table-success-light,
 .table-success-light > th,
@@ -576,26 +556,8 @@
     text-transform: uppercase;
     color: var(--bs-secondary-color);
 }
-/* =================================
-   REFINO VISUAL DOS FILTROS DE PESCA
-   ================================= */
-#fishtype-filter-buttons .btn {
-    border-radius: 20px; /* Bordas arredondadas para parecer uma "tag" */
-    border: 1px solid var(--cor-borda);
-    color: var(--bs-secondary-color);
-    padding: 0.1rem 0.6rem;
-    font-size: 0.75rem;
-}
 
-#fishtype-filter-buttons .btn.active {
-    background-color: var(--cor-primaria);
-    color: white;
-    font-weight: bold;
-}
-
-/* =================================
-   PAINEL DE ESCAVAÇÃO DE TESOUROS
-   ================================= */
+/* --- Painel de Escavação de Tesouros --- */
 .treasure-grid-wrapper {
     display: grid;
     /* Define um grid com uma coluna para o eixo Y e uma para o grid principal */
@@ -770,15 +732,21 @@
     border-radius: 5px;
 }
 
-/* --- Estilos para o Balão de Dicas Flutuante --- */
+/* --- Painel de Presentes (NPCs) --- */
 
-/* Adicionado para evitar seleção de texto durante o arrasto */
-body.is-dragging {
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
+#npc-gift-accordion .progress-bar {
+    width: var(--progress-percent);
 }
+
+/* Aumenta o tamanho do avatar do NPC na lista */
+#npc-gift-accordion .npc-avatar {
+    height: 40px;
+    width: 40px;
+    object-fit: cover; /* Garante que a imagem preencha o círculo, cortando se necessário */
+}
+
+/* --- Painel de Mapa da Fazenda (Layout) --- */
+
 /* --- Estilos para o Balão de Dicas Flutuante --- */
 
 .floating-hints-balloon {
@@ -921,10 +889,6 @@ body.is-dragging {
     display: inline-block;
 }
 
-/* =================================
-   PAINEL DE MAPA DA FAZENDA (LAYOUT)
-   ================================= */
-
 .farm-layout-map .table {
     border-collapse: collapse;
     table-layout: fixed;
@@ -1059,13 +1023,8 @@ body.is-dragging {
 
 /* NOVO: Estilos para a visualização de processamento em edifícios */
 .processing-building-container {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
+    position: relative; /* Garante que os ícones de sobreposição sejam posicionados em relação a este container */
+    display: inline-block; /* Ajusta o container ao tamanho da imagem base, criando a âncora correta */
 }
 
 .processing-building-container .base-building {
@@ -1073,16 +1032,20 @@ body.is-dragging {
     filter: grayscale(30%);
 }
 
+/* Ícone de sobreposição para um único item (ex: Crop Machine) */
 .processing-building-container .processing-content-overlay {
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);    
-    /* Define um tamanho base para o ícone de sobreposição, mas permite que ele encolha */
-    width: 38px;
-    height: 38px;
-    max-width: 70%; /* Não permite que o ícone seja maior que 70% do contêiner */
-    max-height: 70%;
+    transform: translate(-50%, -50%);
+    /* NOVO: Estilo unificado para sobreposição, similar aos ícones da estufa */
+    width: 20px;
+    height: 20px;
+    border: 1px solid #e0a85c;
+    background-color: #fce4b3;
+    border-radius: 3px;
+    padding: 2px;
+    box-sizing: border-box;
     z-index: 1; /* Garante que fique por cima */
 }
 
@@ -1288,22 +1251,7 @@ body.is-dragging-card {
     cursor: pointer;
 }
 
-
-/* =================================
-   MEDIA QUERIES PARA RESPONSIVIDADE
-   ================================= */
-@media (max-width: 991px) {
-    #inventory-grid {
-        column-count: 2;
-    }
-}
-
-@media (max-width: 576px) {
-    #inventory-grid {
-        column-count: 1;
-    }
-}
-
+/* --- Overlay de Itens (Edifícios, etc.) --- */
 .farm-layout-grid-container {
     position: relative; /* Contexto para o posicionamento dos itens */
 }
@@ -1335,7 +1283,7 @@ body.is-dragging-card {
     z-index: 10;
 }
 
-/* Estilo para a "tag" de origem do bônus */
+/* --- Tags de Origem de Bônus --- */
 .buff-source-tag {
     display: inline-block;
     padding: 0.1em 0.4em 0.15em;
@@ -1352,11 +1300,7 @@ body.is-dragging-card {
     border: 1px solid var(--bs-border-color-translucent);
 }
 
-/* ================================================================== */
-/* Cores para os Badges de Prefixo de Bônus                           */
-/* ================================================================== */
-
-/* Padrão (cinza) - já definido em .buff-source-tag */
+/* Cores para os Badges de Prefixo de Bônus */
 
 /* Skill (Azul) */
 .buff-source-tag.is-type-skill,
@@ -1386,4 +1330,291 @@ body.is-dragging-card {
     background-color: var(--bs-success-bg-subtle);
     color: var(--bs-success-text-emphasis);
     border-color: var(--bs-success-border-subtle);
+}
+
+/* =================================
+   COMPONENTES FLUTUANTES
+   ================================= */
+
+.currency-container {
+    /* REATORAÇÃO: Usa display: grid para empilhar os elementos de moeda.
+       Isso resolve o problema de "blur" ao garantir que o container pai
+       sempre tenha um tamanho definido, evitando saltos de layout durante a animação. */
+    display: inline-grid;
+    align-items: center;
+    perspective: 800px; /* Cria o espaço 3D para a animação de flip */
+    /* Define uma altura mínima para evitar que o layout "salte" durante a troca */
+    min-height: 1.0em; /* Ajuste conforme o tamanho da fonte */
+}
+
+/* --- Card Flutuante de Resumo --- */
+#floating-summary-card {
+    position: fixed;
+    z-index: 1057; /* Um pouco acima do card de detalhes para garantir a sobreposição */
+    width: 240px;
+    border: 1px solid var(--cor-borda);
+    background-color: rgba(var(--bs-body-bg-rgb), 0.9);
+    backdrop-filter: blur(8px);
+    border-radius: 0.5rem;
+    display: none;
+    font-size: 0.8rem;
+}
+
+#floating-summary-card .card-header {
+    cursor: move;
+    padding: 0.4rem 0.8rem;
+}
+
+#floating-summary-card .card-body {
+    padding: 0.8rem;
+    max-height: 350px;
+    overflow-y: auto;
+}
+/* NOVO: Estilo para o container dos badges de taxa no card de resumo */
+#floating-summary-card .tax-disclaimer-badges {
+    font-size: 0.75rem;
+}
+
+/* NOVO: Estilo para o botão de acordeão compacto dentro dos cards flutuantes */
+.accordion-button-sm {
+    font-size: 0.75rem;
+    color: var(--bs-secondary-color);
+    font-weight: 600;
+}
+.accordion-button-sm:not(.collapsed) {
+    color: var(--bs-primary);
+    background-color: transparent !important;
+}
+
+
+/* --- Card Flutuante de Detalhes do Recurso --- */
+#floating-resource-card {
+    position: fixed;
+    z-index: 1056; /* Acima da maioria dos outros elementos */
+    width: 280px; /* Reduzido de 320px */
+    border: 1px solid var(--cor-borda);
+    background-color: rgba(var(--bs-body-bg-rgb), 0.9);
+    backdrop-filter: blur(8px);
+    border-radius: 0.5rem; /* Reduzido de 0.75rem */
+    display: none; /* Escondido por padrão */
+    font-size: 0.8rem; /* Reduz o tamanho da fonte base para o card */
+}
+
+#floating-resource-card .card-header {
+    cursor: move; /* Indica que o cabeçalho é arrastável */
+    padding: 0.4rem 0.8rem; /* Reduzido de 0.5rem 1rem */
+}
+
+#floating-resource-card .card-header h6 {
+    font-size: 0.9rem; /* Reduz o tamanho do título */
+    margin-bottom: 0;
+}
+
+/* --- Sistema de Conversão de Moeda (Animação) --- */
+.currency-value-display {
+    /* REATORAÇÃO: Usa flexbox para alinhar perfeitamente o ícone (bandeira) e o texto do valor.
+       Isso resolve o problema de "blur" ao garantir que o container pai
+       sempre tenha um tamanho definido, evitando saltos de layout durante a animação.
+    display: inline-flex;
+    align-items: center;
+
+    transition: transform 0.4s ease-in-out, opacity 0.2s ease-in-out;
+    backface-visibility: hidden; /* Esconde a parte de trás do elemento durante a rotação */
+    transform-style: preserve-3d;
+    white-space: nowrap; /* Evita que o texto quebre a linha durante a animação */
+    /* NOVO: Coloca todos os spans na mesma célula da grade para empilhá-los */
+    grid-area: 1 / 1;
+}
+
+/* Estado padrão para todos os valores: rotacionados e invisíveis */
+.currency-container .currency-value-display {
+    /* CORREÇÃO: Adiciona translateZ(0) para forçar a renderização 3D e evitar o "blur" no ícone */
+    transform: rotateX(90deg) translateZ(0);
+    opacity: 0;
+}
+
+/* Estado para o valor que deve ser visível */
+/* REFINAMENTO: Agrupa os seletores para reduzir a repetição. */
+body.show-flower .currency-flower,
+body.show-usd .currency-usd,
+body.show-brl .currency-brl {
+    transform: rotateX(0deg) translateZ(0);
+    opacity: 1;
+}
+/* Fallback para o carregamento inicial: se nenhuma classe 'show-*' estiver no body, mostra SFL (Flower). */
+body:not([class*='show-']) .currency-flower {
+    transform: rotateX(90deg) translateZ(0);
+    opacity: 0;
+}
+
+/* --- Painel de Controles Flutuante (Moeda) --- */
+.floating-controls-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1040; /* Acima da maioria dos conteúdos, mas abaixo de modais */
+    display: flex;
+    flex-direction: column-reverse; /* Inverte a ordem para o painel aparecer acima do botão */
+    align-items: flex-end;
+    gap: 10px;
+    /* NOVO: Adiciona uma transição suave para o efeito de esmaecer */
+    transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out;
+}
+
+/* NOVO: Classe para o estado ocioso (esmaecido) */
+/* Aplica o efeito apenas quando o painel não está aberto */
+.floating-controls-container.is-idle:not(.open) {
+    opacity: 0.4; /* Reduz a opacidade */
+    transform: translateY(10px); /* Move ligeiramente para baixo */
+    cursor: pointer; /* Indica que pode ser "acordado" com um clique */
+}
+
+#floating-controls-toggle {
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    transition: transform 0.2s ease-in-out;
+}
+
+#floating-controls-toggle:hover {
+    transform: scale(1.1);
+}
+
+.floating-controls-panel {
+    background-color: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(5px);
+    border: 1px solid var(--cor-borda);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+}
+
+.floating-controls-container.open .floating-controls-panel {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.currency-selector .form-check-label {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+}
+
+/* --- Lógica de Exibição da Bandeira --- */
+.currency-flag-container {
+    /* REATORAÇÃO: Usa flexbox para garantir que o ícone da bandeira (seja img ou span)
+       fique perfeitamente centralizado dentro do botão. */
+    display: flex;
+    align-items: center;
+}
+
+.currency-flag-container .currency-flag-display {
+    display: none;
+}
+body.show-flower .currency-flag-display.currency-flower {
+    display: inline-block;
+}
+
+body.show-usd .currency-flag-display.currency-usd {
+    display: inline-block;
+}
+
+body.show-brl .currency-flag-display.currency-brl {
+    display: inline-block;
+}
+
+/* =================================
+   ÍCONE PERSONALIZADO PARA O SISTEMA DE BANDEIRAS
+   ================================= */
+.fi-flower {
+    background-image: url('/static/images/resources/flower.webp');
+    background-size: contain; /* Adicionado para garantir que o ícone não seja cortado */
+}
+
+/* Container para múltiplos ícones de sobreposição (ex: Estufa) */
+.multi-overlay-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-wrap: wrap; /* Permite que os ícones quebrem para a próxima linha */
+    gap: 3px; /* Espaço entre os ícones */
+    justify-content: center; /* Centraliza os ícones horizontalmente */
+    align-items: center; /* Centraliza os ícones verticalmente */
+    z-index: 2;
+}
+
+/* Estilo individual para cada ícone na sobreposição múltipla */
+.multi-overlay-icon {
+    width: 14px; /* Tamanho menor para caber múltiplos ícones */
+    height: 14px;
+    border: 1px solid #e0a85c;
+    background-color: #fce4b3;
+    border-radius: 3px;
+    padding: 1px;
+    box-sizing: border-box; /* Garante que padding e borda estejam inclusos no tamanho */
+}
+
+
+
+/* =================================
+   MEDIA QUERIES PARA RESPONSIVIDADE
+   ================================= */
+@media (max-width: 991px) {
+    #inventory-grid {
+        column-count: 2;
+    }
+}
+
+@media (max-width: 576px) {
+    #inventory-grid {
+        column-count: 1;
+    }
+}
+
+/* =================================
+   Estilos para a Máscara de Dicas de Posição
+   ================================= */
+.rules-mask-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: transparent; /* Fundo transparente por padrão */
+    z-index: 5; /* Acima do item, mas abaixo de qualquer highlight */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-weight: bold;
+    font-size: 0.8em;
+    pointer-events: none; /* Permite cliques através do overlay */
+    opacity: 0; /* Escondido por padrão */
+    transition: opacity 0.3s ease-in-out;
+}
+
+.rules-mask-overlay.active {
+    opacity: 1; /* Visível quando ativo */
+}
+
+/* Estilos específicos para células de areia (sand_blocks) */
+.treasure-grid-cell[data-sand-block="True"] .rules-mask-overlay {
+    background-color: rgba(238, 60, 5, 0.3); /* Laranja para areia, mais discreto */
+}
+
+/* Estilos específicos para células com dica de caranguejo (crab_hints) */
+.treasure-grid-cell[data-crab-hint="True"] .rules-mask-overlay {
+    background-color: rgba(49, 196, 62, 0.3); /* Verde para caranguejo, mais discreto */
 }

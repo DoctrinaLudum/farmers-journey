@@ -1,0 +1,33 @@
+<div class="floating-controls-container">
+    <div class="floating-controls-panel">
+        <div class="currency-selector">
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="currency-selector" id="currency-flower" value="Flower" checked>
+                <label class="form-check-label" for="currency-flower">
+                    <img src="{{ url_for('static', filename='images/resources/flower.webp') }}" alt="SFL" class="icon icon-1x me-2"> Flower
+                </label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="currency-selector" id="currency-brl" value="BRL">
+                <label class="form-check-label" for="currency-brl">
+                    <span class="fi fi-br me-2"></span> BRL
+                </label>
+            </div>
+
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="currency-selector" id="currency-usd" value="USD">
+                <label class="form-check-label" for="currency-usd">
+                    <span class="fi fi-us me-2"></span> USD
+                </label>
+            </div>
+            
+        </div>
+    </div>
+    <button id="floating-controls-toggle" class="btn btn-light btn-lg shadow-sm" type="button">
+        <span class="currency-flag-container">
+            <img src="{{ url_for('static', filename='images/resources/flower.webp') }}" alt="SFL" class="icon icon-2x currency-flag-display currency-flower">
+            <span class="fi fi-us fs-4 currency-flag-display currency-usd"></span>
+            <span class="fi fi-br fs-4 currency-flag-display currency-brl"></span>
+        </span>
+    </button>
+</div>

@@ -1,5 +1,8 @@
 {% if layout_map %}
-<div class="p-3 farm-layout-map">
+{# NOVO: Adiciona os data-attributes para o tipo de ilha e status VIP.
+   O script summary_card.ts usará estes dados para calcular as taxas de venda. #}
+<div class="p-3 farm-layout-map" 
+     data-island-type="{{ current_land_type }}" data-is-vip="{{ is_vip|lower }}">
     <div class="row">
         <div class="col-lg-9">
             <div class="d-flex justify-content-between align-items-center mb-3">
@@ -100,7 +103,20 @@
                             {% if resource.base_building_icon %}
                                 <div class="processing-building-container large-building">
                                     <img src="{{ url_for('static', filename=resource.base_building_icon) }}" alt="{{ resource.type }}" class="map-item-icon base-building">
-                                    <img src="{{ url_for('static', filename=resource.icon) }}" alt="{{ resource.analysis.resource_name if resource.analysis else '' }}" class="map-item-icon processing-content-overlay">
+                                    {# Lógica para exibir um ou múltiplos ícones de sobreposição #}
+                                    {% if resource.analysis %}
+                                        {# Se for a Estufa com múltiplos ícones #}
+                                        {% if resource.analysis.overlay_icons %}
+                                            <div class="multi-overlay-container">
+                                                {% for icon_path in resource.analysis.overlay_icons %}
+                                                    <img src="{{ url_for('static', filename=icon_path) }}" class="map-item-icon multi-overlay-icon" title="{{ resource.analysis.growing_plants }}">
+                                                {% endfor %}
+                                            </div>
+                                        {# Se for a Crop Machine ou outro com um único ícone #}
+                                        {% elif resource.analysis.icon_path %}
+                                            <img src="{{ url_for('static', filename=resource.analysis.icon_path) }}" alt="{{ resource.analysis.resource_name if resource.analysis else '' }}" class="map-item-icon processing-content-overlay">
+                                        {% endif %}
+                                    {% endif %}
                                 </div>
                             {% else %}
                                 <img src="{{ url_for('static', filename=resource.icon) }}" 
@@ -108,6 +124,8 @@
                             {% endif %}
                         </div>
                     {% endfor %}
+
+                    
                 </div>
             </div>
         </div>
@@ -148,52 +166,136 @@
                 </li>
             {% endmacro %}
 
-            {# Definir a ordem estática para os recursos #}
-            {% set static_resource_order = [
-                'Wood', 'Stone', 'Iron', 'Gold', 'Oil', 'Crimstone', 'Sunstone', 'Obsidian'
-            ] %}
-
-            {# Separar os itens da legenda em categorias #}
-            {% set static_resources = {} %}
-            {% set other_resources = {} %}
+            {# NOVO: Agrupa os itens da legenda por categoria para uma organização mais clara,
+               usando os domínios de dados diretamente no template. #}
+            {% set resources = {} %}
+            {% set crops = {} %}
+            {% set fruits = {} %}
+            {% set flowers = {} %}
+            {% set greenhouse = {} %}
+            {% set crop_machine = {} %}
             {% set aoe_items = {} %}
 
             {% for name, data in layout_map.legend.items() %}
                 {% if data.aoe_info %}
                     {% do aoe_items.update({name: data}) %}
-                {% elif name in static_resource_order %}
-                    {% do static_resources.update({name: data}) %}
+                {# NOVO: Verifica se o item está na lista da Crop Machine, antes de outras verificações de cultura #}
+                {% elif name in layout_map.crops_in_machine %}
+                    {% do crop_machine.update({name: data}) %}
+                {# A verificação da estufa deve vir primeiro, pois os itens também podem estar em CROPS/FRUITS #}
+                {% elif name in crops_domain.GREENHOUSE_CROPS or name in fruit_domain.GREENHOUSE_FRUIT %}
+                    {% do greenhouse.update({name: data}) %}
+                {% elif name in crops_domain.CROPS %}
+                    {% do crops.update({name: data}) %}
+                {% elif name in fruit_domain.PATCH_FRUIT %}
+                    {% do fruits.update({name: data}) %}
+                {% elif name in flower_domain.FLOWER_DATA %}
+                    {% do flowers.update({name: data}) %}
                 {% else %}
-                    {% do other_resources.update({name: data}) %}
+                    {# Fallback para Recursos como Madeira, Pedra, etc. #}
+                    {% do resources.update({name: data}) %}
                 {% endif %}
             {% endfor %}
 
-            {# Adiciona um wrapper para controlar a rolagem interna da legenda #}
             <div class="legend-content-wrapper">
-                {# Renderizar a seção de Recursos #}
-                <h6 class="mt-3 mt-lg-0"><i class="bi bi-tree-fill me-2"></i>Recursos</h6>
-                {% set total_resources = static_resources|length + other_resources|length %}
-                <ul class="list-unstyled small farm-layout-legend {% if total_resources > 6 %}multi-column-legend{% endif %}">
-                    {# Renderizar recursos estáticos na ordem definida #}
-                    {% for name in static_resource_order %}
-                        {% if name in static_resources and static_resources[name].filter_id %}
-                            {{ render_resource_legend_item(name, static_resources[name]) }}
-                        {% endif %}
-                    {% endfor %}
-                    {# Renderizar outros recursos (colheitas) em ordem alfabética #}
-                    {% for name, data in other_resources|dictsort %}
-                        {{ render_resource_legend_item(name, data) }}
-                    {% endfor %}
-                </ul>
+                {# Define a ordem estática para a categoria 'Resource' #}
+                {% set resource_order = ['Wood', 'Stone', 'Iron', 'Gold', 'Oil', 'Crimstone', 'Sunstone', 'Obsidian'] %}
+
+                {# NOVO: Usa um container flex para agrupar categorias pequenas lado a lado #}
+                <div class="d-flex flex-wrap align-items-start" style="gap: 1rem 2rem;">
+                    {# Renderizar Recursos #}
+                    {% if resources %}
+                        {% set is_large_category = resources|length > 4 %}
+                        <div class="legend-category-group {% if is_large_category %}w-100{% endif %}">
+                            <h6 class="mt-3 mt-lg-0"><i class="bi bi-tree-fill me-2"></i>Recursos</h6>
+                            <ul class="list-unstyled small farm-layout-legend {% if is_large_category %}multi-column-legend{% endif %}">
+                                {# Renderiza recursos estáticos na ordem definida #}
+                                {% for name in resource_order %}{% if name in resources %}{{ render_resource_legend_item(name, resources[name]) }}{% endif %}{% endfor %}
+                                {# Renderiza outros recursos em ordem alfabética #}
+                                {% for name, data in resources|dictsort %}{% if name not in resource_order %}{{ render_resource_legend_item(name, data) }}{% endif %}{% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    {# Renderizar Colheitas #}
+                    {% if crops %}
+                        {% set is_large_category = crops|length > 4 %}
+                        <div class="legend-category-group {% if is_large_category %}w-100{% endif %}">
+                            <h6 class="mt-3 mt-lg-0"><i class="bi bi-basket-fill me-2"></i>Colheitas</h6>
+                            <ul class="list-unstyled small farm-layout-legend {% if is_large_category %}multi-column-legend{% endif %}">
+                                {% for name, data in crops|dictsort %}{{ render_resource_legend_item(name, data) }}{% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    {# Renderizar Frutas #}
+                    {% if fruits %}
+                        {% set is_large_category = fruits|length > 4 %}
+                        <div class="legend-category-group {% if is_large_category %}w-100{% endif %}">
+                            <h6 class="mt-3 mt-lg-0"><i class="bi bi-apple me-2"></i>Frutas</h6>
+                            <ul class="list-unstyled small farm-layout-legend {% if is_large_category %}multi-column-legend{% endif %}">
+                                {% for name, data in fruits|dictsort %}{{ render_resource_legend_item(name, data) }}{% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    {# Renderizar Flores #}
+                    {% if flowers %}
+                        {% set is_large_category = flowers|length > 4 %}
+                        <div class="legend-category-group {% if is_large_category %}w-100{% endif %}">
+                            <h6 class="mt-3 mt-lg-0"><i class="bi bi-flower1 me-2"></i>Flores</h6>
+                            <ul class="list-unstyled small farm-layout-legend {% if is_large_category %}multi-column-legend{% endif %}">
+                                {% for name, data in flowers|dictsort %}{{ render_resource_legend_item(name, data) }}{% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    {# Renderizar Estufa #}
+                    {% if greenhouse %}
+                        {% set is_large_category = greenhouse|length > 4 %}
+                        <div class="legend-category-group {% if is_large_category %}w-100{% endif %}">
+                            <h6 class="mt-3 mt-lg-0"><i class="bi bi-house-heart-fill me-2"></i>Greenhouse</h6>
+                            <ul class="list-unstyled small farm-layout-legend {% if is_large_category %}multi-column-legend{% endif %}">
+                                {% for name, data in greenhouse|dictsort %}{{ render_resource_legend_item(name, data) }}{% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    {# Renderizar Crop Machine #}
+                    {% if layout_map.crop_machine_legend %}
+                        {% set is_large_category = layout_map.crop_machine_legend|length > 4 %}
+                        <div class="legend-category-group {% if is_large_category %}w-100{% endif %}">
+                            <h6 class="mt-3 mt-lg-0"><i class="bi bi-gear-fill me-2"></i>Crop Machine</h6>
+                            <ul class="list-unstyled small farm-layout-legend {% if is_large_category %}multi-column-legend{% endif %}">
+                                {% for name, data in layout_map.crop_machine_legend|dictsort %}
+                                    {{ render_resource_legend_item(name, data) }}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    {# NOVO: Renderizar Crop Machine #}
+                    {% if crop_machine %}
+                        {% set is_large_category = crop_machine|length > 4 %}
+                        <div class="legend-category-group {% if is_large_category %}w-100{% endif %}">
+                            <h6 class="mt-3 mt-lg-0"><i class="bi bi-gear-fill me-2"></i>Crop Machine</h6>
+                            <ul class="list-unstyled small farm-layout-legend {% if is_large_category %}multi-column-legend{% endif %}">
+                                {% for name, data in crop_machine|dictsort %}
+                                    {{ render_resource_legend_item(name, data) }}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                </div>
 
                 {# Renderizar a seção de Itens de AOE #}
                 {% if aoe_items %}
-                <h6 class="mt-4"><i class="bi bi-magic me-2"></i>Itens de AOE</h6>
-                <ul class="list-unstyled small farm-layout-legend">
-                    {% for name, data in aoe_items|dictsort %}
-                        {{ render_legend_item(name, data) }}
-                    {% endfor %}
-                </ul>
+                    <div class="w-100 mt-4"> {# Garante que a seção AOE ocupe a largura total #}
+                        <h6><i class="bi bi-magic me-2"></i>Itens de AOE</h6>
+                        <ul class="list-unstyled small farm-layout-legend {% if aoe_items|length > 4 %}multi-column-legend{% endif %}">
+                            {% for name, data in aoe_items|dictsort %}{{ render_legend_item(name, data) }}{% endfor %}
+                        </ul>
+                    </div>
                 {% endif %}
             </div>
         </div>

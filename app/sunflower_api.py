@@ -10,6 +10,7 @@ log = logging.getLogger(__name__)
 SFL_API_BASE_URL = "https://api.sunflower-land.com/community/farms/"
 SFL_WORLD_API_URL = "https://sfl.world/api/v1.1/" 
 SFL_PRICE_URL = "https://sfl.world/api/v1/prices"
+EXCHANGE_API_URL = "https://sfl.world/api/v1.1/exchange"
 
 # ---> FUNÇÃO AUXILIAR DADOS LAND ---
 @cache.cached(make_cache_key=lambda farm_id, endpoint: f"sfl_world_{farm_id}_{endpoint}")
@@ -67,6 +68,29 @@ def get_prices_data():
         log.error("Erro inesperado ao buscar dados de preços.", exc_info=True)
         return None, "Um erro inesperado ocorreu ao buscar os dados de preços."
 # ---> FIM FUNÇÃO AUXILIAR PREÇOS ---
+
+# ---> FUNÇÃO AUXILIAR COTAÇÕES ---
+@cache.memoize(timeout=900) # Cache de 15 minutos, igual ao do serviço original
+def get_exchange_data():
+    """
+    Busca os dados de cotação da API sfl.world.
+    """
+    try:
+        log.info(f"Buscando dados de cotação na API: {EXCHANGE_API_URL}")
+        response = requests.get(EXCHANGE_API_URL, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        return data, None
+    except JSONDecodeError:
+        log.error("Erro ao decodificar JSON da API de cotação.", exc_info=True)
+        return None, "Não foi possível ler os dados de cotação da API (resposta inválida)."
+    except requests.exceptions.HTTPError as http_err:
+        log.error("Erro HTTP ao buscar dados de cotação. Status: %s", http_err.response.status_code, exc_info=True)
+        return None, f"Erro na API de cotação (Status {http_err.response.status_code})."
+    except Exception as e:
+        log.error(f"Erro inesperado ao buscar dados de cotação: {e}", exc_info=True)
+        return None, "Um erro inesperado ocorreu ao buscar os dados de cotação."
+# ---> FIM FUNÇÃO AUXILIAR COTAÇÕES ---
 
 
 # ---> FUNÇÃO PRINCIPAL  ---

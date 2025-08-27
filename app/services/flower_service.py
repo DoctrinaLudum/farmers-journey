@@ -5,6 +5,8 @@ import time
 from collections import defaultdict
 from decimal import Decimal
 
+from app import analysis
+
 from ..domain import collectiblesItemBuffs as collectibles_domain
 from ..domain import flowers as flower_domain
 from ..domain import seeds as seeds_domain
@@ -265,54 +267,17 @@ def analyze_beehives(farm_data: dict, active_bud_buffs: dict = None) -> dict:
             
         yield_info = _get_honey_yield_amount(farm_data)
         
-        analyzed_hives[hive_id] = {
+        analysis_details = {
             "id": hive_id, "resource_name": "Beehive",
             "state_name": state_name, "ready_at_timestamp_ms": int(ready_at_ms),
             "calculations": {"yield": yield_info, "recovery": production_time_info},
             "bonus_reward": None
         }
 
-    return {"view": {"hives": dict(sorted(analyzed_hives.items()))}}
+        # Verifica se há um enxame (swarm)
+        if hive_data.get("swarm"):
+            analysis_details['beeSwarm'] = True
 
-def analyze_beehives(farm_data: dict, active_bud_buffs: dict = None) -> dict:
-    """
-    Analisa todas as colmeias, calcula bônus e retorna um relatório completo.
-    """
-    beehives_api_data = farm_data.get("beehives", {})
-    if not beehives_api_data:
-        return None
-
-    analyzed_hives = {}
-    current_timestamp_ms = int(time.time() * 1000)
-
-    for hive_id, hive_data in beehives_api_data.items():
-        honey_details = hive_data.get("honey", {})
-        
-        # Calcula o tempo de produção de mel
-        production_time_info = _get_honey_production_time(farm_data, hive_data)
-        final_production_time_seconds = production_time_info.get("final", DEFAULT_HONEY_PRODUCTION_TIME_SECONDS)
-        
-        # Lógica de updateBeehives.ts para calcular o progresso atual
-        honey_updated_at = honey_details.get("updatedAt", 0)
-        honey_produced_at_last_update = honey_details.get("produced", 0)
-        time_since_update_seconds = (current_timestamp_ms - honey_updated_at) / 1000
-        new_honey_produced = honey_produced_at_last_update + time_since_update_seconds
-        
-        total_honey_produced_seconds = min(new_honey_produced, final_production_time_seconds)
-        
-        is_ready = total_honey_produced_seconds >= final_production_time_seconds
-        state_name = "Pronta" if is_ready else "Produzindo"
-        
-        time_to_full_seconds = final_production_time_seconds - total_honey_produced_seconds
-        ready_at_ms = current_timestamp_ms + (time_to_full_seconds * 1000)
-            
-        yield_info = _get_honey_yield_amount(farm_data)
-        
-        analyzed_hives[hive_id] = {
-            "id": hive_id, "resource_name": "Beehive",
-            "state_name": state_name, "ready_at_timestamp_ms": int(ready_at_ms),
-            "calculations": {"yield": yield_info, "recovery": production_time_info},
-            "bonus_reward": None
-        }
+        analyzed_hives[hive_id] = analysis_details
 
     return {"view": {"hives": dict(sorted(analyzed_hives.items()))}}

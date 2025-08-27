@@ -1315,7 +1315,7 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "operation": "add",
                 "value": 0.2,
                 "conditions": {
-                    "resource": "Mushroom"
+                    "resource": "Wild Mushroom"
                 }
             }
         ]
@@ -1497,11 +1497,11 @@ COLLECTIBLES_ITEM_BUFFS = {
         "boost_category": "Treasure",
         "boosts": [
             {
-                "type": "SELL_PRICE",
+                "type": "SALE_PRICE",
                 "operation": "percentage",
                 "value": 0.20,
                 "conditions": {
-                    "category": "Beach Bounty"
+                    "category": "TREASURE_SALE"
                 }
             }
         ]
@@ -1957,11 +1957,11 @@ COLLECTIBLES_ITEM_BUFFS = {
                 }
             },
             {
-                "type": "SELL_PRICE",
+                "type": "SALE_PRICE",
                 "operation": "percentage",
                 "value": 0.30,
                 "conditions": {
-                    "category": "Artefact Shop Bounty"
+                    "category": "TREASURE_SALE"
                 }
             }
         ]

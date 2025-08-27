@@ -1,9 +1,9 @@
 # app/routes.py
 import logging
 from collections import defaultdict
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
-
+from markupsafe import Markup
 from flask import (Blueprint, current_app, json, jsonify, redirect,
                    render_template, request, url_for)
 
@@ -20,8 +20,9 @@ from .domain import fruits as fruit_domain
 from .domain import npcs as npc_domain
 from .game_state import GAME_STATE
 from .services import (bud_service, chop_service, chores_service,
-                       crop_machine_service, crop_service, delivery_service,
-                       farm_layout_service, flower_service, fruit_service,
+                       crop_machine_service, crop_service, delivery_service, exchange_service,
+                       farm_layout_service, flower_service, mushrooms_service,
+                       fruit_service, treasure_dig_service,
                        greenhouse_service, mining_service, pricing_service)
 
 log = logging.getLogger(__name__)
@@ -81,6 +82,42 @@ def get_item_prices(item_name):
     if not item_name: return {}
     return pricing_service.get_item_prices(item_name)
 
+@bp.app_template_filter()
+def generate_currency_html(sfl_value, prefix=""):
+    """
+    Filtro do Jinja para gerar a estrutura HTML com todos os valores de moeda pré-calculados.
+    Isso espelha a funcionalidade de `generateCurrencyHTML` no TypeScript.
+    """
+    if sfl_value is None:
+        return ""
+        
+    try:
+        sfl_value = Decimal(sfl_value)
+    except (InvalidOperation, TypeError):
+        return ""
+
+    rates = exchange_service.get_exchange_rates().get('sfl', {})
+    
+    usd_rate = Decimal(str(rates.get('usd', 0)))
+    brl_rate = Decimal(str(rates.get('brl', 0)))
+
+    usd_value = sfl_value * usd_rate
+    brl_value = sfl_value * brl_rate
+
+# Replica a lógica de formatação do TypeScript, incluindo as bandeiras
+    sfl_flag = '<img src="/static/images/resources/flower.webp" alt="SFL" class="icon icon-1x me-1">'
+    usd_flag = '<span class="fi fi-us me-2"></span>'
+    brl_flag = '<span class="fi fi-br me-2"></span>'
+    sfl_formatted = f"{sfl_flag}{prefix}{sfl_value:,.2f} Flower"
+    usd_formatted = f"{usd_flag}{prefix}US$ {usd_value:,.2f}"
+    brl_formatted = f"{brl_flag}{prefix}R$ {brl_value:,.2f}"
+    html = f"""<span class="currency-container">
+        <span class="currency-value-display currency-flower">{sfl_formatted}</span>
+        <span class="currency-value-display currency-usd">{usd_formatted}</span>
+        <span class="currency-value-display currency-brl">{brl_formatted}</span>
+    </span>"""    
+    return Markup(html)
+
 @bp.route('/', methods=['GET'])
 def index():
     """Exibe a página inicial de boas-vindas com o formulário."""
@@ -93,6 +130,20 @@ def handle_farm_request():
     if farm_id and farm_id.isdigit():
         return redirect(url_for('main.farm_dashboard', farm_id=farm_id))
     return redirect(url_for('main.index'))
+
+@bp.route('/api/exchange-rates')
+@cache.cached(timeout=600)  # Cache de 10 minutos para este endpoint
+def api_exchange_rates():
+    """
+    Endpoint da API para fornecer as taxas de câmbio em formato JSON.
+    O frontend chamará este endpoint para inicializar o conversor de moeda.
+    """
+    try:
+        rates = exchange_service.get_exchange_rates()
+        return jsonify(rates)
+    except Exception as e:
+        log.error(f"Erro ao buscar taxas de câmbio para a API: {e}", exc_info=True)
+        return jsonify({"error": "Não foi possível buscar as taxas de câmbio"}), 500
 
 @bp.route('/farm/<int:farm_id>')
 def farm_dashboard(farm_id):
@@ -110,9 +161,11 @@ def farm_dashboard(farm_id):
         "expansion_goals": {}, "fishing_info": None,
         "expansion_construction_info": None, "current_level_nodes": None, "bumpkin_image_url": None,
         "chore_analysis": None, "crop_machine_analysis": None, "greenhouse_analysis": None,
+
         # Domínios de dados para uso nos templates
         "flower_domain": flower_domain, "fruit_domain": fruit_domain, "foods_domain": foods_domain,
         # Funções helper para os templates
+        "crops_domain": crops_domain,
         "get_item_image_path": analysis.get_item_image_path,
         "enumerate": enumerate
     }
@@ -129,20 +182,32 @@ def farm_dashboard(farm_id):
         context['error'] = f"Falha crítica ao comunicar com as APIs: {e}"
         return render_template('dashboard.html', title=f"Erro na Fazenda #{farm_id}", **context)
 
-    # NOVO: Adiciona os dados de preços ao contexto para serem usados pelo JavaScript.
+    
+
+    # CORREÇÃO: Adiciona os dados de preços ao contexto para serem usados no `base.html`.
     context['prices_data'] = prices_data
 
     # 3. Processamento de Dados Gerais e de Construção.
     try:
         current_land_level = secondary_farm_data.get('land', {}).get('level', 0)
         current_land_type = secondary_farm_data.get('land', {}).get('type', 'basic')
+        
+        # CORREÇÃO: Determina se o usuário é VIP verificando a data de expiração
+        # na chave 'vip' dos dados da API. Esta é a forma correta e robusta.
+        vip_data = main_farm_data.get("vip")
+        is_vip = False
+        if vip_data and "expiresAt" in vip_data:
+            now_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
+            is_vip = vip_data["expiresAt"] > now_ms
+
         context.update({
             'username': main_farm_data.get('username', f"Fazenda #{farm_id}"),
             'sfl': Decimal(main_farm_data.get('balance', '0')),
             'coins': int(main_farm_data.get('coins', 0)),
             'bumpkin_level': secondary_farm_data.get('bumpkin', {}).get('level', 0),
             'current_land_level': current_land_level,
-            'current_land_type': current_land_type
+            'current_land_type': current_land_type,
+            'is_vip': is_vip
         })
         
         expansion_construction = main_farm_data.get("expansionConstruction")
@@ -163,6 +228,11 @@ def farm_dashboard(farm_id):
     try:
         bumpkin_data = main_farm_data.get("bumpkin", {})
         equipped_items = bumpkin_data.get("equipped")
+
+        # NOVO: Corrige o nome do item "Parsnip" vindo da API para "Parsnip Sword"
+        if equipped_items and equipped_items.get("Tool") == "Parsnip":
+            log.info("API retornou 'Parsnip' como ferramenta, corrigindo para 'Parsnip Sword'.")
+            equipped_items["Tool"] = "Parsnip Sword"
             
         if equipped_items:
             # Passa o dicionário de itens para a função de construção
@@ -342,7 +412,7 @@ def farm_dashboard(farm_id):
 
     # 11. Processamento de Escavação de Tesouros (Desert Digging)
     try:
-        context['treasure_dig_info'] = analysis.analyze_desert_digging_data(
+        context['treasure_dig_info'] = treasure_dig_service.analyze_desert_digging_data(
             main_farm_data,
             seasonal_artefact=game_state.GAME_STATE.get('current_artefact_name')
         )
@@ -448,13 +518,15 @@ def farm_dashboard(farm_id):
     context['crop_machine_analysis'] = None
     try:
         machine_data = crop_machine_service.analyze_crop_machine(main_farm_data, active_bud_buffs)
+        # A lógica de processamento foi movida para o crop_machine_service.
+        # O serviço agora retorna os dados prontos para o template.
         if machine_data:
             context['crop_machine_analysis'] = machine_data.get("view")
             log.info(f"Análise da Crop Machine processada com sucesso para a fazenda #{farm_id}.")
     except Exception as e:
         log.error(f"Falha ao analisar dados da Crop Machine: {e}", exc_info=True)
 
-    # 17. Processamento da Greenhouse
+    # 17. Processamento da Greenhouse (continua abaixo)
     context['greenhouse_analysis'] = None
     try:
         greenhouse_data = greenhouse_service.analyze_greenhouse_resources(main_farm_data, active_bud_buffs)
@@ -555,6 +627,25 @@ def farm_dashboard(farm_id):
             "resources": dict(sorted(flower_resources.items()))
         })
 
+    # NOVO: Processamento de Cogumelos (movido para o local correto)
+    mushroom_data = None
+    try:
+        mushroom_data = mushrooms_service.analyze_mushroom_spawns(main_farm_data, active_bud_buffs)
+        if mushroom_data and mushroom_data.get("view"):
+            mushroom_view = mushroom_data["view"]
+            mushroom_resources = {
+                "Cogumelos": {
+                    "nodes": mushroom_view.get("mushroom_status", {}),
+                    "summary": mushroom_view.get("summary", {})
+                }
+            }
+            unified_analyses.append({
+                "title": "Cogumelos",
+                "resources": mushroom_resources
+            })
+    except Exception as e:
+        log.error(f"Falha ao analisar dados de cogumelos: {e}", exc_info=True)
+
     context['unified_resource_analyses'] = unified_analyses
 
     # Processamento do Mapa da Fazenda
@@ -586,6 +677,10 @@ def farm_dashboard(farm_id):
         if flower_data and flower_data.get("view"):
             for bed_id, bed_info in flower_data["view"].get("beds", {}).items():
                 all_analyzed_nodes[f"flowerBeds-{bed_id}"] = bed_info
+        
+        if mushroom_data and mushroom_data.get("view"):
+            for mushroom_id, mushroom_info in mushroom_data["view"].get("mushroom_status", {}).items():
+                all_analyzed_nodes[f"mushrooms-{mushroom_id}"] = mushroom_info
 
         # NOVO: Adiciona os dados da Crop Machine e Greenhouse aos nós analisados.
         # CORREÇÃO: A chave para edifícios deve ser construída usando o ID único do
@@ -606,6 +701,8 @@ def farm_dashboard(farm_id):
 
         if beehive_data and beehive_data.get("view"):
             for hive_id, hive_info in beehive_data["view"].get("hives", {}).items():
+                # ADICIONADO: Garante que o nome do recurso seja 'Honey' para a busca de preços.
+                hive_info['resource_name'] = 'Honey'
                 all_analyzed_nodes[f"beehives-{hive_id}"] = hive_info
 
         layout_map_data = farm_layout_service.generate_layout_map(main_farm_data, all_analyzed_nodes)
@@ -739,7 +836,7 @@ def api_treasure_dig_update(farm_id):
             return jsonify({'success': False, 'error': 'Erro interno: Estado do jogo não inicializado.'}), 500
 
         # Passar o argumento necessário para a função de análise.
-        treasure_dig_info = analysis.analyze_desert_digging_data(main_farm_data, seasonal_artefact)
+        treasure_dig_info = treasure_dig_service.analyze_desert_digging_data(main_farm_data, seasonal_artefact)
 
         # 4. Renderiza apenas o painel parcial com os novos dados
         updated_html = render_template(

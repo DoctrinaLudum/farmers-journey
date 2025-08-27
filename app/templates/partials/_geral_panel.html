@@ -23,8 +23,8 @@
                     <div class="col-md-4 d-flex align-items-center mb-3 mb-md-0">
                         <img src="{{ url_for('static', filename='images/resources/Flower.png') }}" alt="SFL Token" class="icon icon-3x me-3">
                         <div>
-                            <h6 class="card-title mb-0">SFL</h6>
-                            <span class="card-text fs-5 fw-bold">{{ "%.4f"|format(sfl|float) }}</span>
+                            <h6 class="card-title mb-0">Saldo</h6>
+                            <span class="card-text fs-5 fw-bold">{{ sfl | generate_currency_html | safe }}</span>
                         </div>
                     </div>
                     <div class="col-md-4 d-flex align-items-center mb-3 mb-md-0">

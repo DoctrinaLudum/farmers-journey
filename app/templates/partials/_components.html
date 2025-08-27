@@ -35,13 +35,26 @@
                             </thead>
                             <tbody>
                                 {% for item in items %}
+                                {# 1. Usa o filtro global para obter os preços do item #}
+                                {% set prices = item.name | get_item_prices %}
                                 <tr>
                                     <td>
                                         <img src="{{ item.icon }}" alt="{{ item.name }}" class="me-2 resource-icon-list" onerror="this.style.display='none'">
                                         {{ item.name }}
+                                        {# 2. Mostra o preço por unidade se disponível #}
+                                        {% if prices.coins %}
+                                            <small class="text-muted d-block" style="font-size: 0.75em;">
+                                                <img src="{{ url_for('static', filename='images/ui/icon_coin.png') }}" class="icon-tiny me-1" title="Preço de Venda">
+                                                {{ "%.4f"|format(prices.coins|float) }} / unidade
+                                            </small>
+                                        {% endif %}
                                     </td>
                                     <td class="text-end">{{ "%.2f"|format(item.amount|float) }}</td>
-                                    <td class="text-end fw-bold">{{ "%.2f"|format(item.value|float) }}</td>
+                                    <td class="text-end fw-bold">
+                                        {# 3. Calcula o valor total em moedas e passa para o filtro de conversão #}
+                                        {% set total_coins = item.amount|float * prices.get('coins', 0)|float %}
+                                        {{ total_coins | generate_currency_html(from_currency='coins') | safe }}
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>

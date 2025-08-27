@@ -103,7 +103,7 @@ WEARABLES_ITEM_BUFFS = {
         ],
         "enabled": True
     },
-    "Parsnip": {
+    "Parsnip Sword": {
         "id": 56,
         "part": "Tool",
         "boost_category": "Crop",
@@ -196,7 +196,7 @@ WEARABLES_ITEM_BUFFS = {
                 "type": "YIELD",
                 "operation": "add",
                 "value": 0.1,
-                "conditions": {"resource": "Mushroom"}
+                "conditions": {"resource": "Wild Mushroom"}
             }
         ],
         "enabled": True

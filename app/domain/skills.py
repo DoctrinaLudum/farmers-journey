@@ -1798,11 +1798,14 @@ BUMPKIN_REVAMP_SKILLS = {
                 "type": "GROWTH_TIME",
                 "operation": "multiply",
                 "value": 0.95,
+                "conditions": {"building": "Crop Machine"},
             },
             {
                 "type": "OIL_COST",
                 "operation": "multiply",
                 "value": 1.10,
+                "conditions": {"building": "Crop Machine"},
+
             },
         ],
     },
@@ -1813,9 +1816,11 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-10% Oil consumption in Crop Machine",
         "effects": [
             {
-                "type": "CROP_MACHINE_OIL_COST",
+                "type": "OIL_COST",
                 "operation": "multiply",
                 "value": 0.90,
+                "conditions": {"building": "Crop Machine"},
+
             },
         ],
     },
