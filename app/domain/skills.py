@@ -1720,13 +1720,22 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "10% chance of +1 Flower",
         "effects": [
             {
-                "type": "YIELD_CHANCE",
-                "operation": "set_chance",
-                "value": 0.10,
-                "bonus_amount": 1,
-                "conditions": {"category": "Flower"},
+                "type": "YIELD",
+                "operation": "add",
+                "value": 1,
+                "conditions": {
+                    "category": "Flower"
+                }
             },
-        ],
+            {
+                "type": "CRITICAL_CHANCE",
+                "operation": "percentage",
+                "value": 0.10,
+                "conditions": {
+                    "category": "Flower"
+                }
+            }
+        ]
     },
     "Bee Collective": {
         "tree": "Bees & Flowers",

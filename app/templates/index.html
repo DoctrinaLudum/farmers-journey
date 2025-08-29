@@ -7,12 +7,11 @@
 <div class="container my-5">
 
     <div class="p-5 text-center bg-white rounded-3 shadow-sm mb-5">
-        <i class="bi bi-sun-fill display-4 text-warning"></i>
+        <img src="{{ url_for('static', filename='images/resources/sunflower.png') }}" alt="Sunflower" class="mb-3" style="width: 80px;">
         <h1 class="display-5 fw-bold">Jornada do Fazendeiro</h1>
         <div class="col-lg-8 mx-auto">
             <p class="lead mb-4">
-                Seu diário e assessor pessoal para otimizar sua fazenda em Sunflower Land.
-                Insira o ID da sua fazenda para começar a acompanhar seu progresso.
+                Um painel avançado para sua fazenda em Sunflower Land. Otimize a colheita, planeje expansões e maximize sua eficiência.
             </p>
             
             <form action="{{ url_for('main.handle_farm_request') }}" method="POST" class="d-inline-flex flex-wrap justify-content-center gap-2">
@@ -30,36 +29,82 @@
     </div>
 
     <div class="row g-4 text-center">
-        <div class="col-md-4">
+        <!-- Mapa Interativo -->
+        <div class="col-lg-4">
             <div class="card h-100 shadow-sm">
                 <div class="card-body">
-                    <i class="bi bi-grid-1x2-fill fs-2 text-info"></i>
-                    <h5 class="card-title mt-3">Painel de Bordo</h5>
+                    <i class="bi bi-map-fill fs-2 text-primary"></i>
+                    <h5 class="card-title mt-3">Mapa Interativo da Fazenda</h5>
                     <p class="card-text small text-muted">
-                        Tenha uma visão geral e em tempo real dos seus recursos, entregas e tarefas ativas.
+                        Visualize toda a sua fazenda em um mapa detalhado. Clique em qualquer recurso para ver informações em tempo real, como tempos de recuperação e rendimentos.
                     </p>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <!-- Análise de Recursos -->
+        <div class="col-lg-4">
             <div class="card h-100 shadow-sm">
                 <div class="card-body">
-                    <i class="bi bi-journal-check fs-2 text-success"></i>
-                    <h5 class="card-title mt-3">Diário Automatizado</h5>
+                    <i class="bi bi-bar-chart-line-fill fs-2 text-success"></i>
+                    <h5 class="card-title mt-3">Análise Detalhada de Recursos</h5>
                     <p class="card-text small text-muted">
-                        Acompanhe seu progresso. Veja o que você ganhou e gastou desde a sua última visita. (Em breve!)
+                        Painéis completos para madeira, pedra, plantações e mais. Todos os bônus de NFTs, buds e skills são calculados automaticamente para você.
                     </p>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <!-- Planejador de Expansão -->
+        <div class="col-lg-4">
             <div class="card h-100 shadow-sm">
                 <div class="card-body">
-                    <i class="bi bi-bullseye fs-2 text-danger"></i>
-                    <h5 class="card-title mt-3">Planejador de Metas</h5>
+                    <i class="bi bi-arrows-fullscreen fs-2 text-info"></i>
+                    <h5 class="card-title mt-3">Planejador de Expansão</h5>
                     <p class="card-text small text-muted">
-                        Defina metas para craftar itens e veja o que falta para alcançá-las. (Em breve!)
+                        Acompanhe visualmente seu progresso de expansão e use o simulador para calcular exatamente o que você precisa para alcançar o próximo nível.
                     </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seção "E tem mais..." -->
+    <div class="mt-5 pt-4 border-top">
+        <h3 class="text-center mb-4">E tem mais...</h3>
+        <div class="row g-4 text-center">
+            <!-- Motor de Bônus -->
+            <div class="col-lg-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <i class="bi bi-calculator-fill fs-2 text-warning"></i>
+                        <h5 class="card-title mt-3">Motor de Bônus Abrangente</h5>
+                        <p class="card-text small text-muted">
+                            Nosso sistema calcula automaticamente todos os bônus de Skills, Buds, Wearables e Colecionáveis para garantir a precisão dos dados.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <!-- Diário de Pesca e Entregas -->
+            <div class="col-lg-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <i class="bi bi-book-fill fs-2 text-danger"></i>
+                        <h5 class="card-title mt-3">Diário de Pesca e Entregas</h5>
+                        <p class="card-text small text-muted">
+                            Acompanhe seu histórico de pesca, recordes de tamanho e gerencie todas as entregas para os NPCs da vila.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <!-- Gestão de Tarefas e Inventário -->
+            <div class="col-lg-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <i class="bi bi-check2-square fs-2" style="color: #6f42c1;"></i>
+                        <h5 class="card-title mt-3">Tarefas e Inventário</h5>
+                        <p class="card-text small text-muted">
+                            Visualize as tarefas diárias do seu Bumpkin e tenha um resumo completo do seu inventário com valores de mercado atualizados.
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>

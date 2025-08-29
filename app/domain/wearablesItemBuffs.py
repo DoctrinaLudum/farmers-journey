@@ -22,7 +22,7 @@ WEARABLES_ITEM_BUFFS = {
                 "type": "YIELD",
                 "operation": "add",
                 "value": 0.10,
-                "conditions": {"crop": "Sunflower"}
+                "conditions": {"resource": "Sunflower"}
             }
         ],
         "enabled": True
@@ -33,10 +33,10 @@ WEARABLES_ITEM_BUFFS = {
             "boost_category": "Crop",
             "boosts": [
                 {
-                    "type": "GROWTH_TIME",
-                    "operation": "percentage",
-                    "value": -0.20,
-                    "conditions": {"crop": "Carrot"}
+                "type": "RECOVERY_TIME",
+                "operation": "percentage",
+                "value": -0.20,
+                "conditions": {"resource": "Carrot"}
                 }
             ],
             "enabled": True
@@ -50,7 +50,7 @@ WEARABLES_ITEM_BUFFS = {
                 "type": "YIELD",
                 "operation": "add",
                 "value": 0.20,
-                "conditions": {"crop": "Beetroot"}
+                "conditions": {"resource": "Beetroot"}
             }
         ],
         "enabled": True
@@ -84,7 +84,7 @@ WEARABLES_ITEM_BUFFS = {
                 "type": "SEED_COST",
                 "operation": "equals",
                 "value": 0,
-                "conditions": {"crop": "Sunflower"}
+                "conditions": {"resource": "Sunflower"}
             }
         ],
         "enabled": True
@@ -112,7 +112,7 @@ WEARABLES_ITEM_BUFFS = {
                 "type": "YIELD",
                 "operation": "add",
                 "value": 0.20,
-                "conditions": {"crop": "Parsnip"}
+                "conditions": {"resource": "Parsnip"}
             }
         ],
         "enabled": True
@@ -182,7 +182,7 @@ WEARABLES_ITEM_BUFFS = {
                 "type": "YIELD",
                 "operation": "add",
                 "value": 0.1,
-                "conditions": {"crop": "Eggplant"}
+                "conditions": {"resource": "Eggplant"}
             }
         ],
         "enabled": True
@@ -190,7 +190,7 @@ WEARABLES_ITEM_BUFFS = {
     "Mushroom Hat": {
         "id": 128,
         "part": "Hat",
-        "boost_category": "Resource",
+        "boost_category": "Crop",
         "boosts": [
             {
                 "type": "YIELD",
@@ -252,7 +252,7 @@ WEARABLES_ITEM_BUFFS = {
                 "type": "YIELD",
                 "operation": "add",
                 "value": 0.1,
-                "conditions": {"crop": "Corn"}
+                "conditions": {"resource": "Corn"}
             }
         ],
         "enabled": True
@@ -376,7 +376,7 @@ WEARABLES_ITEM_BUFFS = {
                 "type": "YIELD",
                 "operation": "add",
                 "value": 0.5,
-                "conditions": {"crop": "Banana"}
+                "conditions": {"resource": "Banana"}
             }
         ],
         "enabled": True
@@ -387,10 +387,10 @@ WEARABLES_ITEM_BUFFS = {
         "boost_category": "Fruit",
         "boosts": [
             {
-                "type": "GROWTH_TIME",
+                "type": "RECOVERY_TIME",
                 "operation": "percentage",
                 "value": -0.20,
-                "conditions": {"crop": "Banana"}
+                "conditions": {"resource": "Banana"}
             }
         ],
         "enabled": True
@@ -412,7 +412,7 @@ WEARABLES_ITEM_BUFFS = {
     "Bee Suit": {
         "id": 276,
         "part": "Suit",
-        "boost_category": "Resource",
+        "boost_category": "Crop",
         "boosts": [
             {
                 "type": "HONEY_YIELD",
@@ -426,7 +426,7 @@ WEARABLES_ITEM_BUFFS = {
     "Beekeeper Hat": {
         "id": 278,
         "part": "Hat",
-        "boost_category": "Resource",
+        "boost_category": "Crop",
         "boosts": [
             {
                 "type": "HONEY_PRODUCTION_SPEED",
@@ -440,7 +440,7 @@ WEARABLES_ITEM_BUFFS = {
     "Crimstone Armor": {
         "id": 282,
         "part": "Shirt",
-        "boost_category": "Resource",
+        "boost_category": "Crop",
         "boosts": [
             {
                 "type": "YIELD",
@@ -454,14 +454,14 @@ WEARABLES_ITEM_BUFFS = {
     "Crimstone Hammer": {
         "id": 284,
         "part": "Tool",
-        "boost_category": "Resource",
+        "boost_category": "Crop",
         "boosts": [
             {
                 "type": "YIELD",
                 "operation": "add",
                 "value": 2,
                 "conditions": {
-                    "resource": "Crimstone", 
+                    "crop": "Crimstone", 
                     "minesLeft":1
                 }
             }
@@ -471,7 +471,7 @@ WEARABLES_ITEM_BUFFS = {
     "Crimstone Amulet": {
         "id": 285,
         "part": "Necklace",
-        "boost_category": "Resource",
+        "boost_category": "Crop",
         "boosts": [
             {
                 "type": "RECOVERY_TIME",
@@ -485,7 +485,7 @@ WEARABLES_ITEM_BUFFS = {
     "Honeycomb Shield": {
         "id": 291,
         "part": "SecondaryTool",
-        "boost_category": "Resource",
+        "boost_category": "Crop",
         "boosts": [
             {
                 "type": "HONEY_YIELD",
@@ -499,7 +499,7 @@ WEARABLES_ITEM_BUFFS = {
     "Hornet Mask": {
         "id": 292,
         "part": "Hat",
-        "boost_category": "Resource",
+        "boost_category": "Crop",
         "boosts": [
             {
                 "type": "BEE_SWARM_CHANCE",
@@ -533,7 +533,7 @@ WEARABLES_ITEM_BUFFS = {
                 "type": "YIELD",
                 "operation": "add",
                 "value": 1,
-                "conditions": {"crop": "Rice"}
+                "conditions": {"resource": "Rice"}
             }
         ],
         "enabled": True
@@ -541,7 +541,7 @@ WEARABLES_ITEM_BUFFS = {
     "Oil Can": {
         "id": 308,
         "part": "Tool",
-        "boost_category": "Resource",
+        "boost_category": "Crop",
         "boosts": [
             {
                 "type": "YIELD",
@@ -561,7 +561,7 @@ WEARABLES_ITEM_BUFFS = {
                 "type": "YIELD",
                 "operation": "add",
                 "value": 1,
-                "conditions": {"crop": "Olive"}
+                "conditions": {"resource": "Olive"}
             }
         ],
         "enabled": True
@@ -609,7 +609,7 @@ WEARABLES_ITEM_BUFFS = {
                 "type": "YIELD",
                 "operation": "add",
                 "value": 0.25,
-                "conditions": {"crop": "Olive"}
+                "conditions": {"resource": "Olive"}
             }
         ],
         "enabled": True
@@ -623,7 +623,7 @@ WEARABLES_ITEM_BUFFS = {
                 "type": "YIELD",
                 "operation": "add",
                 "value": 0.1,
-                "conditions": {"crop": "Soybean"}
+                "conditions": {"resource": "Soybean"}
             }
         ],
         "enabled": True
@@ -925,7 +925,7 @@ WEARABLES_ITEM_BUFFS = {
     "Dev Wrench": {
         "id": 354,
         "part": "Tool",
-        "boost_category": "Resource",
+        "boost_category": "Crop",
         "boosts": [
             {
                 "type": "RECOVERY_TIME",
@@ -939,7 +939,7 @@ WEARABLES_ITEM_BUFFS = {
     "Oil Overalls": {
         "id": 360,
         "part": "Pants",
-        "boost_category": "Resource",
+        "boost_category": "Crop",
         "boosts": [
             {
                 "type": "YIELD",
@@ -967,7 +967,7 @@ WEARABLES_ITEM_BUFFS = {
     "Infernal Drill": {
         "id": 370,
         "part": "SecondaryTool",
-        "boost_category": "Resource",
+        "boost_category": "Crop",
         "boosts": [
             {
                 "type": "DRILL_WITHOUT_OIL_DRILL",
@@ -987,7 +987,7 @@ WEARABLES_ITEM_BUFFS = {
                 "type": "YIELD",
                 "operation": "add",
                 "value": 1,
-                "conditions": {"crop": "Lemon"}
+                "conditions": {"resource": "Lemon"}
             }
         ],
         "enabled": True
@@ -1001,7 +1001,7 @@ WEARABLES_ITEM_BUFFS = {
                 "type": "YIELD",
                 "operation": "add",
                 "value": 0.2,
-                "conditions": {"crop": "Grape"}
+                "conditions": {"resource": "Grape"}
             }
         ],
         "enabled": True
@@ -1127,7 +1127,7 @@ WEARABLES_ITEM_BUFFS = {
     "Bumpkin Shield": {
         "id": 380,
         "part": "SecondaryTool",
-        "boost_category": "Resource",
+        "boost_category": "Crop",
         "boosts": [
             {
                 "type": "YIELD",
@@ -1147,7 +1147,7 @@ WEARABLES_ITEM_BUFFS = {
     "Goblin Shield": {
         "id": 381,
         "part": "SecondaryTool",
-        "boost_category": "Resource",
+        "boost_category": "Crop",
         "boosts": [
             {
                 "type": "YIELD",
@@ -1167,7 +1167,7 @@ WEARABLES_ITEM_BUFFS = {
     "Nightshade Shield": {
         "id": 382,
         "part": "SecondaryTool",
-        "boost_category": "Resource",
+        "boost_category": "Crop",
         "boosts": [
             {
                 "type": "YIELD",
@@ -1187,7 +1187,7 @@ WEARABLES_ITEM_BUFFS = {
     "Sunflorian Shield": {
         "id": 383,
         "part": "SecondaryTool",
-        "boost_category": "Resource",
+        "boost_category": "Crop",
         "boosts": [
             {
                 "type": "YIELD",
@@ -1461,7 +1461,7 @@ WEARABLES_ITEM_BUFFS = {
                 "type": "YIELD",
                 "operation": "add",
                 "value": 2,
-                "conditions": {"crop": "Wheat"}
+                "conditions": {"resource": "Wheat"}
             }
         ],
         "enabled": True
@@ -1475,7 +1475,7 @@ WEARABLES_ITEM_BUFFS = {
                 "type": "COIN_COST",
                 "operation": "percentage",
                 "value": -0.25,
-                "conditions": {"crop": "Onion"}
+                "conditions": {"resource": "Onion"}
             }
         ],
         "enabled": True
@@ -1528,7 +1528,7 @@ WEARABLES_ITEM_BUFFS = {
         "boost_category": "Crop",
         "boosts": [
             {
-                "type": "GROWTH_TIME",
+                "type": "RECOVERY_TIME",
                 "operation": "percentage",
                 "value": -0.50,
                 "conditions": {"season": "Autumn"}
@@ -1570,14 +1570,14 @@ WEARABLES_ITEM_BUFFS = {
         "id": 457,
         "part": "Necklace",
         "description": "A shard of molten earth turned elegant charm, pulsing softly with ancient, dormant power.",
-        "boost_category": "Resource",
+        "boost_category": "Crop",
         "boosts": [
             {
                 "type": "COOLDOWN",
                 "operation": "percentage",
                 "value": -0.50,
                 "conditions": {
-                    "resource": "Obsidian"
+                    "crop": "Obsidian"
                 }
             }
         ],

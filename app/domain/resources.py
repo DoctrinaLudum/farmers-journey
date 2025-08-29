@@ -11,6 +11,9 @@ RESOURCES_DATA = {
         "type": "Resource",
         "source": "Tree",
         "enabled": True,
+        "tool_required": "Axe",
+        "skill_tree": "Trees",
+        "boost_categories": ["Resource", "Wood"],
         "details": {
             "cycle": {
                 # O ciclo de vida de uma árvore
@@ -19,16 +22,6 @@ RESOURCES_DATA = {
                     "recovery_time_seconds": 7200,  # 2 horas
                     "hp": 3,
                 },
-                "Stump": {
-                    "yield_amount": 1,
-                    "recovery_time_seconds": 14400,  # 4 horas
-                    "hp": 2,
-                },
-                "Sapling": {
-                    "yield_amount": 1,
-                    "recovery_time_seconds": 28800,  # 8 horas
-                    "hp": 1,
-                },
             },
         }
     },
@@ -36,6 +29,9 @@ RESOURCES_DATA = {
         "type": "Resource",
         "source": "Stone Rock",
         "enabled": True,
+        "tool_required": "Pickaxe",
+        "skill_tree": "Mining",
+        "boost_categories": ["Resource", "Mining"],
         "details": {
             "cycle": {
                 "Stone Rock": {
@@ -49,6 +45,9 @@ RESOURCES_DATA = {
         "type": "Resource",
         "source": "Iron Rock",
         "enabled": True,
+        "tool_required": "Stone Pickaxe",
+        "skill_tree": "Mining",
+        "boost_categories": ["Resource", "Mining"],
         "details": {
             "cycle": {
                 "Iron Rock": {
@@ -62,6 +61,9 @@ RESOURCES_DATA = {
         "type": "Resource",
         "source": "Gold Rock",
         "enabled": True,
+        "tool_required": "Iron Pickaxe",
+        "skill_tree": "Mining",
+        "boost_categories": ["Resource", "Mining"],
         "details": {
             "cycle": {
                 "Gold Rock": {
@@ -75,6 +77,9 @@ RESOURCES_DATA = {
         "type": "Resource", 
         "source": "Crimstone Rock", 
         "enabled": True,
+        "tool_required": "Gold Pickaxe",
+        "skill_tree": "Mining",
+        "boost_categories": ["Resource", "Mining"],
         "details": { 
             "cycle": { 
                 "Crimstone Rock": { 
@@ -88,6 +93,9 @@ RESOURCES_DATA = {
         "type": "Resource", 
         "source": "Sunstone Rock", 
         "enabled": True,
+        "tool_required": "Gold Pickaxe",
+        "skill_tree": "Mining",
+        "boost_categories": ["Resource", "Mining"],
         "details": { 
             "cycle": { 
                 "Sunstone Rock": { 
@@ -101,6 +109,9 @@ RESOURCES_DATA = {
         "type": "Resource", 
         "source": "Oil Reserve", 
         "enabled": True,
+        "tool_required": "Oil Drill",
+        "skill_tree": "Machinery",
+        "boost_categories": ["Resource", "Machinery"],
         "details": { 
             "cycle": { 
                 "Oil Reserve": { 
