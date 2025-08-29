@@ -8,7 +8,7 @@ log = logging.getLogger(__name__)
 
 def _get_tool_cost(resource_name):
     """Gets the cost of the tool required to harvest a resource."""
-    for tool, data in tools_domain.TOOLS.items():
+    for tool, data in tools_domain.TOOLS_DATA.items():
         if resource_name in data.get("collects", []):
             return pricing_service.get_item_prices(tool)
     return {}
