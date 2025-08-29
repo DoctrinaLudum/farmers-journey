@@ -650,8 +650,8 @@ def farm_dashboard(farm_id):
 
     # Processamento do Painel de Análise de Recursos
     try:
-        context['resource_dashboard_analysis'] = resource_dashboard_service.analyze_resources_for_dashboard(
-            unified_analyses, main_farm_data
+        context['resource_dashboard_analysis'] = resource_dashboard_service.analyze_all_resources_for_dashboard(
+            main_farm_data
         )
         log.info(f"Análise de recursos para o dashboard concluída para a fazenda #{farm_id}.")
     except Exception as e:
