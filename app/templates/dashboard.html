@@ -20,6 +20,11 @@
             </button>
         </li>
         <li class="nav-item" role="presentation">
+            <button class="nav-link" id="resource-analysis-tab" data-bs-toggle="tab" data-bs-target="#resource-analysis-pane" type="button" role="tab" aria-controls="resource-analysis-pane" aria-selected="false">
+                <i class="bi bi-bar-chart-line-fill me-1"></i> Análise de Recursos
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
             <button class="nav-link" id="inventory-tab" data-bs-toggle="tab" data-bs-target="#inventory-pane" type="button" role="tab" aria-controls="inventory-pane" aria-selected="false">
                 <i class="bi bi-box-seam-fill me-1"></i> Inventario
             </button>
@@ -70,6 +75,10 @@
     <div class="tab-content" id="dashboardTabsContent">
         <div class="tab-pane fade show active" id="overview-pane" role="tabpanel" aria-labelledby="overview-tab">
             {% include 'partials/_geral_panel.html' %}
+        </div>
+
+        <div class="tab-pane fade" id="resource-analysis-pane" role="tabpanel" aria-labelledby="resource-analysis-tab">
+            {% include 'partials/_resource_dashboard_panel.html' %}
         </div>
 
         <div class="tab-pane fade" id="expansion-pane" role="tabpanel" aria-labelledby="expansion-tab">

@@ -23,7 +23,7 @@ from .services import (bud_service, chop_service, chores_service,
                        crop_machine_service, crop_service, delivery_service, exchange_service,
                        farm_layout_service, flower_service, mushrooms_service,
                        fruit_service, treasure_dig_service,
-                       greenhouse_service, mining_service, pricing_service)
+                       greenhouse_service, mining_service, pricing_service, resource_dashboard_service)
 
 log = logging.getLogger(__name__)
 bp = Blueprint('main', __name__)
@@ -647,6 +647,16 @@ def farm_dashboard(farm_id):
         log.error(f"Falha ao analisar dados de cogumelos: {e}", exc_info=True)
 
     context['unified_resource_analyses'] = unified_analyses
+
+    # Processamento do Painel de Análise de Recursos
+    try:
+        context['resource_dashboard_analysis'] = resource_dashboard_service.analyze_resources_for_dashboard(
+            unified_analyses, main_farm_data
+        )
+        log.info(f"Análise de recursos para o dashboard concluída para a fazenda #{farm_id}.")
+    except Exception as e:
+        log.error(f"Falha ao processar dados para o dashboard de recursos: {e}", exc_info=True)
+        context['resource_dashboard_analysis'] = None
 
     # Processamento do Mapa da Fazenda
     context['layout_map'] = None
