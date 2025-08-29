@@ -1,0 +1,65 @@
+<!-- app/templates/partials/_resource_dashboard_panel.html -->
+<div class="p-3">
+    <h4 class="mb-4">Análise de Recursos</h4>
+
+    {% if resource_dashboard_analysis and resource_dashboard_analysis.analyses %}
+        {% for group in resource_dashboard_analysis.analyses %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>{{ group.title }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Recurso</th>
+                                    <th>Preço (SFL)</th>
+                                    <th>Yield (Min-Max)</th>
+                                    <th>Yield (Médio)</th>
+                                    <th>Tempo de Recuperação</th>
+                                    <th>Custo da Ferramenta (SFL)</th>
+                                    <th>Lucro/Ciclo (Min-Max)</th>
+                                    <th>SFL/Hora (Médio)</th>
+                                    <th>Bônus Ativos</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for name, data in group.resources.items() %}
+                                    <tr>
+                                        <td>
+                                            <img src="{{ get_item_image_path(name) }}" alt="{{ name }}" class="icon me-2">
+                                            {{ name }}
+                                        </td>
+                                        <td>{{ "%.4f"|format(data.sfl_price) }}</td>
+                                        <td>{{ data.yield_range }}</td>
+                                        <td>{{ data.yield_avg }}</td>
+                                        <td>{{ data.recovery_time | format_seconds_to_hms }}</td>
+                                        <td>{{ "%.4f"|format(data.tool_cost_sfl) if data.tool_cost_sfl > 0 else '-' }}</td>
+                                        <td>{{ "%.4f"|format(data.profit_per_cycle_min) }} - {{ "%.4f"|format(data.profit_per_cycle_max) }}</td>
+                                        <td>{{ "%.4f"|format(data.sfl_per_hour) }}</td>
+                                        <td>
+                                            {% if data.bonuses %}
+                                                <ul>
+                                                {% for bonus in data.bonuses %}
+                                                    <li>{{ bonus.source_item }}: {{ bonus.description }}</li>
+                                                {% endfor %}
+                                                </ul>
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="alert alert-info">
+            Nenhuma análise de recurso disponível.
+        </div>
+    {% endif %}
+</div>
