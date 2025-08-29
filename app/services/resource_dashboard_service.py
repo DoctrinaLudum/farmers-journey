@@ -8,9 +8,15 @@ log = logging.getLogger(__name__)
 
 def _get_tool_cost(resource_name):
     """Gets the cost of the tool required to harvest a resource."""
-    for tool, data in tools_domain.TOOLS.items():
-        if resource_name in data.get("collects", []):
-            return pricing_service.get_item_prices(tool)
+    tool_name = None
+    if resource_name in tools_domain.TOOLS_DATA:
+        tool_name = "Axe"
+    elif resource_name in tools_domain.TOOLS_DATA:
+        tool_name = "Pickaxe"
+    # Add other tools as necessary
+
+    if tool_name:
+        return pricing_service.get_item_prices(tool_name)
     return {}
 
 def analyze_all_resources_for_dashboard(farm_data: dict) -> dict:
@@ -27,10 +33,10 @@ def analyze_all_resources_for_dashboard(farm_data: dict) -> dict:
 
     # Define all resources from domain
     all_resources = {
-        "Recursos Básicos": list(resources_domain.RESOURCES.keys()),
+        "Recursos Básicos": list(resources_domain.RESOURCES_DATA.keys()),
         "Culturas": list(crops_domain.CROPS.keys()),
-        "Frutas": list(fruits_domain.FRUITS.keys()),
-        "Flores": list(flowers_domain.FLOWER_SEEDS.keys()),
+        "Frutas": list(fruits_domain.FRUIT_DATA.keys()),
+        "Flores": list(flowers_domain.FLOWER_DATA.keys()),
     }
 
     processed_analyses = []
@@ -44,7 +50,7 @@ def analyze_all_resources_for_dashboard(farm_data: dict) -> dict:
 
             # Get base data from domain
             if category == "Recursos Básicos":
-                base_data = resources_domain.RESOURCES.get(resource_name, {})
+                base_data = resources_domain.RESOURCES_DATA.get(resource_name, {})
                 base_yield = base_data.get('yield', 1)
                 base_recovery_time = base_data.get('recovery_time', 0)
             elif category == "Culturas":
@@ -52,13 +58,13 @@ def analyze_all_resources_for_dashboard(farm_data: dict) -> dict:
                 base_yield = 1 # Crops yield is always 1, bonuses are additive
                 base_recovery_time = base_data.get('harvestSeconds', 0)
             elif category == "Frutas":
-                base_data = fruits_domain.FRUITS.get(resource_name, {})
+                base_data = fruits_domain.FRUIT_DATA.get(resource_name, {})
                 base_yield = base_data.get('yield', 1)
                 base_recovery_time = base_data.get('harvestSeconds', 0)
             elif category == "Flores":
                 # For flowers, we are interested in the seed
                 seed_name = f"{resource_name} Seed"
-                base_data = flowers_domain.FLOWER_SEEDS.get(seed_name, {})
+                base_data = flowers_domain.FLOWER_DATA.get(seed_name, {})
                 base_yield = 1 # Flowers yield is 1
                 base_recovery_time = base_data.get('plantSeconds', 0)
             else:
