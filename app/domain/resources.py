@@ -155,7 +155,21 @@ RESOURCES_DATA = {
     "Merino Wool":    {"type": "Animal Product", "enabled": True},
     "Feather":        {"type": "Animal Product", "enabled": True},
     "Milk":           {"type": "Animal Product", "enabled": True},
-    "Honey":          {"type": "Animal Product", "enabled": True},
+    "Honey": {
+        "type": "Animal Product",
+        "source": "Beehive",
+        "enabled": True,
+        "skill_tree": "Bees & Flowers",
+        "boost_categories": ["Honey", "Animal"],
+        "details": {
+            "cycle": {
+                "Beehive": {
+                    "yield_amount": 1,
+                    "recovery_time_seconds": 86400  # 24 horas
+                }
+            }
+        }
+    },
 
     # --- Mushrooms ---
     "Wild Mushroom":  {"type": "Mushroom",       "enabled": True},
@@ -166,9 +180,42 @@ RESOURCES_DATA = {
     "Grub":           {"type": "CompostWorm",    "enabled": True},
     "Red Wiggler":    {"type": "CompostWorm",    "enabled": True},
     "Fishing Lure":   {"type": "CompostWorm",    "enabled": True},
-    "Sprout Mix":     {"type": "Fertiliser",     "composter": "Compost Bin", "enabled": True},
-    "Fruitful Blend": {"type": "Fertiliser",     "composter": "Turbo Composter", "enabled": True},
-    "Rapid Root":     {"type": "Fertiliser",     "composter": "Premium Composter", "enabled": True},
+        "Sprout Mix": {
+        "type": "Fertiliser",
+        "composter": "Compost Bin",
+        "boost_category": "Crop",
+        "enabled": True,
+        "boosts": [{
+            "type": "YIELD",
+            "operation": "add",
+            "value": 0.20,
+            "conditions": {"category": "Crop"}
+        }]
+    },
+    "Fruitful Blend": {
+        "type": "Fertiliser",
+        "composter": "Turbo Composter",
+        "boost_category": "Fruit",
+        "enabled": True,
+        "boosts": [{
+            "type": "YIELD",
+            "operation": "add",
+            "value": 0.10,
+            "conditions": {"category": "Fruit"}
+        }]
+    },
+    "Rapid Root": {
+        "type": "Fertiliser",
+        "composter": "Premium Composter",
+        "boost_category": "Crop",
+        "enabled": True,
+        "boosts": [{
+            "type": "RECOVERY_TIME",
+            "operation": "multiply",
+            "value": 0.50,
+            "conditions": {"category": "Crop"}
+        }]
+    },
 
     # --- Animal Food & Medicine ---
     "Kernel Blend":   {"type": "AnimalFood",     "ingredients": {"Corn": 1}, "enabled": True},

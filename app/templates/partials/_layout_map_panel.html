@@ -64,7 +64,10 @@
                                                     {% endif %}
                                                     {% if cell_data.resource.details.has_yield_fertiliser %}
                                                         {% set fertiliser_pos_class = 'pos-top-left' if cell_data.resource.type == 'fruitPatches' else 'pos-top-right' %}
-                                                        <img src="{{ url_for('static', filename=cell_data.resource.details.yield_fertiliser_icon) }}" class="yield-fertiliser-badge {{ fertiliser_pos_class }}" title="Fertilizado">
+                                                        <img src="{{ url_for('static', filename=cell_data.resource.details.yield_fertiliser_icon) }}" class="yield-fertiliser-badge {{ fertiliser_pos_class }}" title="Fertilizado (Rendimento)">
+                                                    {% endif %}
+                                                    {% if cell_data.resource.details.has_time_fertiliser %}
+                                                        <img src="{{ url_for('static', filename=cell_data.resource.details.time_fertiliser_icon) }}" class="time-fertiliser-badge pos-top-right" title="Fertilizado (Tempo)">
                                                     {% endif %}
                                                     {% if cell_data.resource.details.beeSwarm %}
                                                         <img src="{{ url_for('static', filename=cell_data.resource.details.bee_swarm_icon) }}" class="bee-swarm-badge" title="Polinizado por Abelhas">

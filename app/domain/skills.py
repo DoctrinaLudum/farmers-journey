@@ -38,7 +38,7 @@ BUMPKIN_REVAMP_SKILLS = {
                 "type": "YIELD",
                 "operation": "add",
                 "value": 0.1,
-                "conditions": {"target_category": "BasicCrop"},
+                "conditions": {"target_category": "Basic Crops"},
             },
         ],
     },
@@ -52,7 +52,7 @@ BUMPKIN_REVAMP_SKILLS = {
                 "type": "YIELD",
                 "operation": "add",
                 "value": 0.1,
-                "conditions": {"target_category": "MediumCrop"},
+                "conditions": {"target_category": "Medium Crops"},
             },
         ],
     },
@@ -66,7 +66,7 @@ BUMPKIN_REVAMP_SKILLS = {
                 "type": "YIELD",
                 "operation": "add",
                 "value": 0.1,
-                "conditions": {"target_category": "AdvancedCrop"},
+                "conditions": {"target_category": "Advanced Crops"},
             },
         ],
     },
@@ -94,7 +94,7 @@ BUMPKIN_REVAMP_SKILLS = {
                 "type": "GROWTH_TIME",
                 "operation": "multiply",
                 "value": 0.90,
-                "conditions": {"target_category": "AdvancedCrop"},
+                "conditions": {"target_category": "Advanced Crops"},
             },
         ],
     },
@@ -156,7 +156,7 @@ BUMPKIN_REVAMP_SKILLS = {
                 "type": "GROWTH_TIME",
                 "operation": "multiply",
                 "value": 0.90,
-                "conditions": {"target_category": "BasicCrop"},
+                "conditions": {"target_category": "Basic Crops"},
             },
         ],
     },
@@ -188,7 +188,7 @@ BUMPKIN_REVAMP_SKILLS = {
                 "type": "YIELD",
                 "operation": "add",
                 "value": 0.1,
-                "conditions": {"target_category": "MediumCrop"},
+                "conditions": {"target_category": "Medium Crops"},
             },
         ],
     },
@@ -220,7 +220,7 @@ BUMPKIN_REVAMP_SKILLS = {
                 "type": "YIELD",
                 "operation": "add",
                 "value": 0.1,
-                "conditions": {"target_category": "AdvancedCrop"},
+                "conditions": {"target_category": "Advanced Crops"},
             },
         ],
     },
@@ -247,14 +247,14 @@ BUMPKIN_REVAMP_SKILLS = {
             {
                 "type": "YIELD",
                 "operation": "add",
-                "value": 1,
-                "conditions": {"target_category": "AdvancedCrop"},
+                "value": 1.00,
+                "conditions": {"target_category": "Advanced Crops"},
             },
             {
                 "type": "YIELD",
                 "operation": "subtract",
-                "value": 0.5,
-                "conditions": {"target_category": ["BasicCrop", "MediumCrop"]},
+                "value": 0.50,
+                "conditions": {"target_category": ["Basic Crops", "Medium Crops"]},
             },
         ],
     },
@@ -267,14 +267,14 @@ BUMPKIN_REVAMP_SKILLS = {
             {
                 "type": "YIELD",
                 "operation": "add",
-                "value": 1,
-                "conditions": {"target_category": ["BasicCrop", "MediumCrop"]},
+                "value": 1.00,
+                "conditions": {"target_category": ["Basic Crops", "Medium Crops"]},
             },
             {
                 "type": "YIELD",
                 "operation": "subtract",
-                "value": 0.5,
-                "conditions": {"target_category": "AdvancedCrop"},
+                "value": 0.50,
+                "conditions": {"target_category": "Advanced Crops"},
             },
         ],
     },
@@ -416,12 +416,17 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "20% chance of +1 fruit yield",
         "effects": [
             {
-                "type": "BONUS_YIELD_CHANCE",
+                "type": "YIELD",
+                "operation": "add",
+                "value": 1.0,
+                "conditions": {"resource": "Fruit"},
+            },
+            {
+                "type": "CRITICAL_CHANCE",
                 "operation": "set_chance",
                 "value": 0.20,
-                "bonus_amount": 1,
-                "conditions": {"target_category": "Fruit"},
-            },
+                "conditions": {"resource": "Fruit"},
+            }
         ],
     },
     "Long Pickings": {
@@ -865,6 +870,26 @@ BUMPKIN_REVAMP_SKILLS = {
             },
         ],
     },
+    "Featherweight": {
+        "tree": "Animals",
+        "tier": 1,
+        "island": "spring",
+        "description": "+0.25 Feather yield, -0.35 Leather & Merino Wool yield",
+        "effects": [
+            {
+                "type": "YIELD",
+                "operation": "add",
+                "value": 0.25,
+                "conditions": {"resource": "Feather"},
+            },
+            {
+                "type": "YIELD",
+                "operation": "subtract",
+                "value": 0.35,
+                "conditions": {"resource": ["Leather", "Merino Wool"]},
+            },
+        ],
+    },
     "Fine Fibers": {
         "tree": "Animals",
         "tier": 1,
@@ -946,6 +971,26 @@ BUMPKIN_REVAMP_SKILLS = {
             },
         ],
     },
+    "Merino Whisperer": {
+        "tree": "Animals",
+        "tier": 2,
+        "island": "spring",
+        "description": "+0.25 Merino Wool yield,-0.35 Leather & Feather yield",
+        "effects": [
+            {
+                "type": "YIELD",
+                "operation": "add",
+                "value": 0.25,
+                "conditions": {"resource": "Merino Wool"},
+            },
+            {
+                "type": "YIELD",
+                "operation": "subtract",
+                "value": 0.35,
+                "conditions": {"resource": ["Leather", "Feather"]},
+            },
+        ],
+    },
     "Clucky Grazing": {
         "tree": "Animals",
         "tier": 3,
@@ -1022,6 +1067,26 @@ BUMPKIN_REVAMP_SKILLS = {
                 "type": "FEED_COST",
                 "operation": "multiply",
                 "value": 1.50,
+            },
+        ],
+    },
+    "Leathercraft Mastery": {
+        "tree": "Animals",
+        "tier": 3,
+        "island": "spring",
+        "description": "+0.25 Leather yield, -0.35 Feather & Merino Wool yield",
+        "effects": [
+            {
+                "type": "YIELD",
+                "operation": "add",
+                "value": 0.25,
+                "conditions": {"resource": "Leather"},
+            },
+            {
+                "type": "YIELD",
+                "operation": "subtract",
+                "value": 0.35,
+                "conditions": {"resource": ["Feather", "Merino Wool"]},
             },
         ],
     },
@@ -1639,10 +1704,11 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+0.1 Honey production speed",
         "effects": [
             {
-                "type": "PRODUCTION_SPEED",
-                "operation": "multiply",
-                "value": 1.10,
-            },
+                "type": "RECOVERY_TIME",
+                "operation": "percentage",
+                "value": -0.10,
+                "conditions": {"resource": "Beehive"}
+            }
         ],
     },
     "Blooming Boost": {
@@ -1771,13 +1837,15 @@ BUMPKIN_REVAMP_SKILLS = {
         "effects": [
             {
                 "type": "PRODUCTION_SPEED",
-                "operation": "multiply",
-                "value": 1.50,
+                "operation": "add",
+                "value": 0.5,
+                "conditions": {"resource": "Beehive"}
             },
             {
                 "type": "GROWTH_TIME",
                 "operation": "multiply",
                 "value": 1.50,
+                "conditions": {"category": "Flower"}
             },
         ],
     },
@@ -1929,6 +1997,22 @@ BUMPKIN_REVAMP_SKILLS = {
                 "value": -0.20,
                 "conditions": {"resource": "Oil Reserve"},
             },
+        ],
+    },
+    "Oil Rig": {
+        "tree": "Machinery",
+        "tier": 2,
+        "island": "desert",
+        "description": "Oil Drill requires 20 Wool instead of Leather to craft",
+        "effects": [
+            {
+                "type": "ITEM_MODIFICATION",
+                "target_item": "Oil Drill",
+                "target_property": "INGREDIENTS",
+                "operation": "replace",
+                "from": {"item": "Leather", "quantity": 10},
+                "to": {"item": "Wool", "quantity": 20},
+            }
         ],
     },
     "Field Expansion Module": {
@@ -2097,15 +2181,16 @@ BUMPKIN_REVAMP_SKILLS = {
         "tree": "Compost",
         "tier": 2,
         "island": "basic",
-        "description": "Double Fruitful Blend's Effect",
+        "description": "Doubles the yield bonus of Fruitful Blend",
         "effects": [
             {
-                "type": "COLLECTIBLE_EFFECT_MULTIPLIER",
+                "type": "ITEM_MODIFICATION",
+                "target_item": "Fruitful Blend",
+                "target_property": "YIELD",
                 "operation": "multiply",
-                "value": 2,
-                "conditions": {"item": "Fruitful Blend"},
-            },
-        ],
+                "value": 2
+            }
+        ]
     },
     "Composting Overhaul": {
         "tree": "Compost",

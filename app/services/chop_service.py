@@ -28,12 +28,6 @@ NON_CUMULATIVE_BOOST_GROUPS = {
     "beavers": ["Foreman Beaver", "Apprentice Beaver", "Woody the Beaver"],
 }
 
-# Mapeamento para bônus de Buds.
-BUD_BUFF_TO_WOOD_BOOST_MAPPING = {
-    'WOOD_YIELD': {'type': 'YIELD', 'operation': 'add'},
-    'TREE_RECOVERY_TIME': {'type': 'RECOVERY_TIME', 'operation': 'percentage'}
-}
-
 # O catálogo de bônus de madeira é criado uma única vez.
 WOOD_BOOST_CATALOGUE = resource_analysis_service.filter_boosts_from_domains(WOOD_RESOURCE_CONDITIONS)
 
@@ -68,7 +62,7 @@ def _get_tree_recovery_time(active_boosts: list) -> dict:
 # FUNÇÃO PRINCIPAL (ORQUESTRADOR)
 # ==============================================================================
 
-def analyze_wood_resources(farm_data: dict, active_bud_buffs: dict = None) -> dict:
+def analyze_wood_resources(farm_data: dict) -> dict:
     """
     Analisa todas as árvores, calcula os bônus de madeira e retorna um
     relatório completo, espelhando a lógica de chop.ts.
@@ -87,18 +81,7 @@ def analyze_wood_resources(farm_data: dict, active_bud_buffs: dict = None) -> di
         farm_data
     )
 
-    active_item_names = {item for item in player_items if item in WOOD_BOOST_CATALOGUE}
-    if active_bud_buffs:
-        active_item_names.add("Buds")
-
-    if active_bud_buffs:
-        for bud_buff_name, mapping in BUD_BUFF_TO_WOOD_BOOST_MAPPING.items():
-            if bud_buff_name in active_bud_buffs and active_bud_buffs[bud_buff_name] != 0:
-                boost = mapping.copy()
-                boost["source_item"] = "Buds"
-                boost["value"] = active_bud_buffs[bud_buff_name]
-                boost["source_type"] = "bud"
-                active_boosts.append(boost)
+    active_item_names = {b['source_item'] for b in active_boosts}
 
     temporal_boosts, active_boosts, temporal_item_names = resource_analysis_service.extract_and_process_temporal_boosts(
         active_boosts, farm_data

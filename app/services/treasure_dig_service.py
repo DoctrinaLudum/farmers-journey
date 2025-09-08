@@ -5,8 +5,7 @@ from decimal import Decimal
 
 from .. import analysis
 from ..domain import treasure_dig as treasure_domain
-from ..services import pricing_service
-from ..services import resource_analysis_service
+from ..services import pricing_service, resource_analysis_service
 
 log = logging.getLogger(__name__)
 

@@ -6,13 +6,10 @@ from decimal import Decimal, InvalidOperation
 
 import requests
 
-from .domain import buildings
 from .domain import bumpkin as bumpkin_domain
-from .domain import expansions
 from .domain import fishing as fishing_data_domain
 from .domain import flowers as flower_domain
 from .domain import foods as foods_domain
-from .domain import fruits as fruit_domain
 from .domain import item_map
 from .domain import npcs as npc_domain
 from .domain import seeds as seeds_domain
@@ -45,148 +42,6 @@ def format_seconds_to_str(seconds: int) -> str:
         parts.append(f"{minutes}m")
     
     return " ".join(parts) if parts else "0m"
-
-# ---> FUNÇÃO PARA ANÁLISE DE EXPANSÃO ---
-def analyze_expansion_progress(secondary_data: dict, main_data: dict):
-    """
-    Analisa o progresso do jogador para a próxima expansão de terra.
-    """
-    if not secondary_data or not main_data:
-        return None
-
-    try:
-        land_info = secondary_data.get("land", {})
-        land_type = land_info.get("type")
-        current_level = land_info.get("level")
-
-        if not land_type or current_level is None:
-            log.warning("Dados de tipo ou nível da ilha ausentes nos dados secundários.")
-            return None
-
-        next_level = current_level + 1
-        
-        # ALTERADO: Busca os detalhes da nova estrutura unificada
-        expansion_details = expansions.EXPANSION_DATA.get(land_type, {}).get(next_level)
-        
-        if not expansion_details:
-            log.info(f"Nenhum requisito de expansão encontrado para {land_type} nível {next_level}.")
-            return {"requirements_met": True}
-
-        # Acessa a sub-chave 'requirements'
-        requirements = expansion_details.get("requirements", {})
-        if not requirements:
-             return {"requirements_met": True}
-
-        progress = {
-            "land_type": land_type,
-            "next_level": next_level,
-            "bumpkin_level_req": requirements.get("Bumpkin Level", 0),
-            "time_req": requirements.get("Time", "N/A"),
-            "resources": []
-        }
-
-        inventory = main_data.get("inventory", {})
-        sfl_balance = Decimal(main_data.get("balance", "0"))
-        coins_balance = Decimal(main_data.get("coins", "0"))
-
-        for item, required_amount in requirements.items():
-            if item in ["Bumpkin Level", "Time"]:
-                continue
-
-            have_amount = 0
-            if item == "SFL":
-                have_amount = sfl_balance
-            elif item == "Coins":
-                have_amount = coins_balance
-            else:
-                have_amount = Decimal(inventory.get(item, "0"))
-
-            percentage = 0
-            if required_amount > 0:
-                percentage = min((have_amount / Decimal(str(required_amount))) * 100, 100)
-
-            progress["resources"].append({
-                "name": item, "have": have_amount,
-                "required": required_amount, "percentage": percentage
-            })
-        
-        return progress
-
-    except Exception as e:
-        log.exception(f"Erro ao analisar o progresso da expansão: {e}")
-        return None
-
-# ---> FUNÇÃO PARA CÁLCULO DE META TOTAL ---
-def calculate_total_requirements(current_land_type, current_level, goal_land_type, goal_level):
-    """calculate_total_requirements
-    Calcula o total de recursos, o tempo acumulado e o nível máximo de Bumpkin
-    necessários para ir do nível atual até um nível objetivo, usando a fonte de dados unificada.
-    """
-    total_needed = defaultdict(Decimal)
-    total_seconds = 0
-    max_bumpkin_level = 0
-    
-    island_order = expansions.ISLAND_ORDER
-    all_expansions = expansions.EXPANSION_DATA 
-
-    try:
-        current_level = int(current_level)
-        goal_level = int(goal_level)
-
-        current_island_index = island_order.index(current_land_type)
-        goal_island_index = island_order.index(goal_land_type)
-    except (ValueError, TypeError):
-        return {}
-
-    is_invalid_goal = goal_island_index < current_island_index or \
-                      (goal_island_index == current_island_index and goal_level <= current_level)
-    
-    if is_invalid_goal:
-        return {}
-
-    for i in range(current_island_index, goal_island_index + 1):
-        island_name = island_order[i]
-        
-         # 2. Converte a chave para string ANTES de chamar .isdigit()
-        island_data = {int(k): v for k, v in all_expansions.get(island_name, {}).items() if str(k).isdigit()}
-        if not island_data:
-            continue
-
-        start_range = current_level + 1 if i == current_island_index else min(island_data.keys())
-        end_range = goal_level if i == goal_island_index else max(island_data.keys())
-
-        for level in range(start_range, end_range + 1):
-            level_details = island_data.get(level)
-            if not level_details:
-                continue
-            
-            level_reqs = level_details.get("requirements", {})
-            if not level_reqs:
-                continue
-
-            max_bumpkin_level = max(max_bumpkin_level, level_reqs.get("Bumpkin Level", 0))
-            total_seconds += parse_time_to_seconds(level_reqs.get("Time", "00:00:00"))
-
-            for item, amount in level_reqs.items():
-                if item not in ["Bumpkin Level", "Time"]:
-                    try:
-                        total_needed[item] += Decimal(str(amount))
-                    except InvalidOperation:
-                        log.warning(f"Valor inválido para o item {item}: {amount}")
-
-    final_requirements = {
-        item: int(val) if val % 1 == 0 else float(val)
-        for item, val in total_needed.items()
-    }
-    
-    result = {
-        "requirements": dict(sorted(final_requirements.items())),
-        "max_bumpkin_level": max_bumpkin_level,
-        "total_time_str": format_seconds_to_str(total_seconds)
-    }
-
-    return result
-# ---> FIM DA FUNÇÃO DE CÁLCULO DE META TOTAL <---
 
 # ---> FUNÇÃO PARA ANÁLISE DE PESCA ---
 def analyze_fishing_data(main_data: dict, secondary_data: dict):
@@ -306,7 +161,6 @@ def analyze_fishing_data(main_data: dict, secondary_data: dict):
     fish_only_list = [f for f in all_fish_list if f.get('type') != 'treasure']
     most_caught_fish_data = max(fish_only_list, key=lambda x: x['player_count'], default=None) if fish_only_list else None
     
-    # Prepara um dicionário detalhado para o peixe mais capturado, similar ao das flores.
     most_caught_fish_details = {
         "name": "N/A",
         "count": 0,
@@ -338,99 +192,6 @@ def analyze_fishing_data(main_data: dict, secondary_data: dict):
     }
 # ---> FIM FUNÇÃO PARA ANÁLISE DE PESCA ---
 
-# --->  FUNÇÃO GANHO DA EXPANSÂO ---
-def calculate_total_gains(start_land_type: str, start_level: int, goal_land_type: str, goal_level: int):
-    """
-    Calcula os ganhos de nodes e edifícios dentro do intervalo da simulação
-    e retorna um resumo agregado.
-    """
-    gains_by_level = defaultdict(lambda: {"nodes": defaultdict(int), "buildings": []})
-    
-    island_order = expansions.ISLAND_ORDER
-    expansion_data = expansions.EXPANSION_DATA
-    building_reqs = buildings.BUILDING_REQUIREMENTS
-
-    try:
-        start_level = int(start_level)
-        goal_level = int(goal_level)
-        
-        start_island_index = island_order.index(start_land_type)
-        goal_island_index = island_order.index(goal_land_type)
-    except (ValueError, TypeError):
-        log.error(f"Tipo de ilha inválido fornecido: start={start_land_type}, goal={goal_land_type}")
-        return {}
-
-    for i in range(start_island_index, goal_island_index + 1):
-        island_name = island_order[i]
-        
-        island_data = {int(k): v for k, v in expansion_data.get(island_name, {}).items() if str(k).isdigit()}
-        if not island_data:
-            continue
-        
-        levels_on_this_island = sorted(island_data.keys())
-        
-        for level in levels_on_this_island:
-            if (i == start_island_index and level <= start_level) or \
-               (i == goal_island_index and level > goal_level):
-                continue
-            
-            level_details = island_data.get(level)
-            if not level_details: continue
-
-            nodes_at_this_level = level_details.get("nodes", {})
-            previous_level = level - 1
-            nodes_at_previous_level = {}
-
-            if previous_level in island_data:
-                nodes_at_previous_level = island_data.get(previous_level, {}).get("nodes", {})
-            elif i == start_island_index and previous_level == start_level:
-                 start_island_data_int = {int(k): v for k, v in expansion_data.get(start_land_type, {}).items() if str(k).isdigit()}
-                 nodes_at_previous_level = start_island_data_int.get(start_level, {}).get("nodes",{})
-            elif i > start_island_index:
-                prev_island_name = island_order[i - 1]
-                prev_island_data = {int(k): v for k, v in expansion_data.get(prev_island_name, {}).items() if str(k).isdigit()}
-                if prev_island_data:
-                    last_level_of_prev_island = max(prev_island_data.keys())
-                    nodes_at_previous_level = prev_island_data.get(last_level_of_prev_island, {}).get("nodes", {})
-
-            for node, current_count in nodes_at_this_level.items():
-                previous_count = nodes_at_previous_level.get(node, 0)
-                gain = current_count - previous_count
-                if gain > 0:
-                    gains_by_level[level]["nodes"][node] += gain
-            
-            for building, reqs in building_reqs.items():
-                if reqs.get("unlocksAtLevel") == level and reqs.get("unlocksOnIsland") == island_name and reqs.get("enabled", False):
-                    gains_by_level[level]["buildings"].append(building)
-
-    # --- Parte 2: Lógica de resumo ---
-    summarized_gains = defaultdict(lambda: {"total": 0, "details": defaultdict(int)})
-
-    for level, gains in gains_by_level.items():
-        for building in gains.get("buildings", []):
-            summarized_gains[building]["total"] += 1
-            summarized_gains[building]["details"][level] += 1
-            summarized_gains[building]["type"] = "building"
-
-        for node, count in gains.get("nodes", {}).items():
-            # CORREÇÃO 2: Especifica que estamos a somar ao valor "total"
-            summarized_gains[node]["total"] += count
-            summarized_gains[node]["details"][level] += count
-            summarized_gains[node]["type"] = "node"
-
-    summary_list = []
-    for name, data in summarized_gains.items():
-        summary_list.append({
-            "name": name,
-            "total": data["total"],
-            "details": dict(sorted(data["details"].items())),
-            "type": data["type"],
-            "icon": get_item_image_path(name)
-        })
-    
-    return {"summary": sorted(summary_list, key=lambda x: x['name'])}
-# ---> FIM FUNÇÃO GANHO DA EXPANSÂO ---
-
 # --->  FUNÇÃO MONTAGEM IMG BUMPKIN ---
 def build_bumpkin_image_url(equipped_items: dict) -> str:
     """
@@ -440,7 +201,6 @@ def build_bumpkin_image_url(equipped_items: dict) -> str:
     try:
         log.info(f"Itens equipados recebidos para construir imagem: {equipped_items}")
 
-        # Inicializa a lista de IDs com todos os slots possíveis
         ids_numericos = [0] * len(bumpkin_domain.PART_ORDER)
 
         for part_name_api, item_name in equipped_items.items():
@@ -453,13 +213,11 @@ def build_bumpkin_image_url(equipped_items: dict) -> str:
             except ValueError:
                 log.warning(f"A parte do corpo '{part_name_api}' não foi encontrada na PART_ORDER e será ignorada.")
 
-        # Remove os zeros do final da lista
         while ids_numericos and ids_numericos[-1] == 0:
             ids_numericos.pop()
 
         string_de_ids = "_".join(map(str, ids_numericos))
         
-        # Monta a URL final com a base correta
         url_imagem_final = f"https://animations.sunflower-land.com/bumpkin_image/0_v1_{string_de_ids}/100"
 
         log.info(f"URL da imagem final construída: {url_imagem_final}")
@@ -478,8 +236,6 @@ def process_flower_info(main_farm_data):
     estáticos para criar um diário de cultivos.
     """
     # 1. Obter dados do jogador
-    # CORREÇÃO: Os dados de flores podem estar na raiz do save ou dentro do objeto 'bumpkin'.
-    # Esta lógica verifica ambos os locais para garantir que os dados sejam encontrados.
     flowers_data = main_farm_data.get("flowers", {})
     if not flowers_data:
         flowers_data = main_farm_data.get("bumpkin", {}).get("flowers", {})
@@ -503,7 +259,6 @@ def process_flower_info(main_farm_data):
                 most_harvested_flower["name"] = key.replace(" Harvested", "")
                 most_harvested_flower["count"] = value
 
-    # Adiciona o caminho do ícone para a flor mais colhida
     if most_harvested_flower["name"] != "N/A":
         most_harvested_flower["icon"] = get_item_image_path(most_harvested_flower["name"])
     else:
@@ -514,7 +269,6 @@ def process_flower_info(main_farm_data):
     # 2. Iterar sobre a nossa base de dados de flores
     for flower_name, data in flower_domain.FLOWER_DATA.items():
         
-        # Faz uma cópia para não alterar o dicionário original
         flower_info = data.copy()
         flower_info['type'] = data.get('type', 'Unknown').lower()
         
@@ -531,49 +285,39 @@ def process_flower_info(main_farm_data):
         # 3.6. Lógica de Sazonalidade ---
         seed_name = flower_info.get("seed")
         if seed_name:
-            # CORREÇÃO: Busca os dados da semente na fonte centralizada (seeds.py)
             seed_data = seeds_domain.SEEDS_DATA.get(seed_name, {})
             flower_info['seasons'] = seed_data.get("seasons", [])
         else:
             flower_info['seasons'] = []
 
         # 4. Status de Descoberta
-        # CORREÇÃO: Considera uma flor descoberta se ela foi colhida ou está no inventário,
-        # além de verificar a lista de descobertas da API. Isso torna a lógica mais robusta
-        # contra inconsistências nos dados do save.
         is_discovered = (
             flower_name in discovered_flower_names or
             harvest_count > 0 or
             inventory_count > 0
         )
         
-        # Adiciona o nome à lista de descobertas se a nova lógica for verdadeira,
-        # garantindo que o contador total de descobertas e a lógica de cross-breed funcionem.
         if is_discovered:
             discovered_flower_names.add(flower_name)
 
         if is_discovered:
             flower_info['status'] = "Discovered"
         else:
-            # Verifica se o jogador pode descobrir esta flor
             if 'cross_breed' in data:
                 parent1, parent2 = data['cross_breed']
                 if parent1 in discovered_flower_names and parent2 in discovered_flower_names:
-                    flower_info['status'] = "Available" # Pode ser descoberta
+                    flower_info['status'] = "Available"
                 else:
-                    flower_info['status'] = "Locked" # Ainda não pode ser descoberta
+                    flower_info['status'] = "Locked"
             else:
-                # Flores básicas que vêm de sementes são sempre "Available" para tentar
                 flower_info['status'] = "Available"
         
-        # Adiciona o caminho do ícone para o template
         icon_name = flower_name.lower().replace(" ", "_")
         flower_info['icon'] = f'images/flowers/{icon_name}.webp'
         
         processed_flowers.append(flower_info)
 
     # 5. Agrupar flores por semente para exibição no template
-    # Filtra o dicionário de sementes para obter apenas as de flores
     flower_seeds_data = {name: data for name, data in seeds_domain.SEEDS_DATA.items() if data.get("planting_spot") == "Flower Bed"}
 
     flowers_by_seed = {}
@@ -582,10 +326,8 @@ def process_flower_info(main_farm_data):
             flower for flower in processed_flowers if flower.get("seed") == seed_name
         ]
 
-    # Define a ordem de ordenação das sementes com base na sua definição
     seed_order = list(flower_seeds_data.keys())
     
-    # Ordena as flores primeiro pela ordem da semente, depois pelo nome
     all_flowers_sorted = sorted(
         processed_flowers,
         key=lambda x: (seed_order.index(x['seed']) if x.get('seed') in seed_order else len(seed_order), x['name'])
@@ -598,7 +340,6 @@ def process_flower_info(main_farm_data):
             "total_flowers": len(flower_domain.FLOWER_DATA),
             "total_harvested": total_harvested,
             "flowers_by_seed": flowers_by_seed,
-            # Adiciona as novas estatísticas ao contexto
             "most_harvested_flower": most_harvested_flower,
             "all_flowers_sorted": all_flowers_sorted,
             "current_season": current_season,
@@ -618,70 +359,56 @@ def process_npc_gifts(main_farm_data: dict):
 
     # Itera sobre os dados brutos dos NPCs
     for npc_id, npc_data in npc_domain.NPC_DATA.items():
-        # Formata o nome do arquivo da imagem de forma segura
         image_filename = npc_id.replace("'", "").replace(" ", "_") + '.webp'
         
-        # --- NOVO: Lógica para verificar se o NPC dá chaves, movida do template para o backend. ---
-        # Isso melhora a separação de responsabilidades e a legibilidade.
         gives_key = False
         all_rewards_data = npc_data.get("rewards", {})
         
-        # Verifica as recompensas planejadas
         planned_rewards = all_rewards_data.get("planned", [])
         for reward_info in planned_rewards:
             reward_items = reward_info.get("reward", {}).get("items", {})
             if any("Key" in item_name for item_name in reward_items.keys()):
                 gives_key = True
-                break  # Encontrou, não precisa continuar
+                break
         
-        # Se ainda não encontrou, verifica as recompensas repetíveis
         if not gives_key and "repeats" in all_rewards_data:
             repeat_reward_items = all_rewards_data["repeats"].get("reward", {}).get("items", {})
             if any("Key" in item_name for item_name in repeat_reward_items.keys()):
                 gives_key = True
 
-        # Junta os nomes das flores em uma única string
         flowers_text = ", ".join(npc_data.get("flowers", {}).keys())
 
-        # --- Lógica de Progresso de Amizade (Refinada) ---
         player_friendship = player_npcs_data.get(npc_id, {}).get("friendship", {})
         current_points = player_friendship.get("points", 0)
         last_claimed_points = player_friendship.get("giftClaimedAtPoints", 0)
 
-        # Encontra a próxima recompensa para calcular a barra de progresso
         all_planned_rewards = sorted(npc_data.get("rewards", {}).get("planned", []), key=lambda r: r['points_required'])
         next_reward_points = 0
         next_reward_info = None
         is_repeat_reward = False
 
-        # 1. Tenta encontrar a próxima recompensa na lista 'planned'
         for reward in all_planned_rewards:
             if reward['points_required'] > last_claimed_points:
                 next_reward_points = reward['points_required']
                 next_reward_info = reward.get('reward')
                 break
         
-        # 2. Se não encontrou (entrou no loop de repetição), calcula a próxima meta repetível
         if not next_reward_points and npc_data.get("rewards", {}).get("repeats"):
             repeats_data = npc_data["rewards"]["repeats"]
             repeat_points_needed = repeats_data.get('points_required', 0)
             if repeat_points_needed > 0:
-                # A próxima meta é a última recompensa resgatada + os pontos de repetição
                 next_reward_points = last_claimed_points + repeat_points_needed
                 next_reward_info = repeats_data.get('reward')
                 is_repeat_reward = True
 
-        # --- NOVO: Lógica para o filtro específico de repetição de chaves ---
         gives_repeating_key = False
         if is_repeat_reward:
-            # Reutiliza a variável 'repeats_data' que pode ter sido definida acima
             repeats_data = npc_data.get("rewards", {}).get("repeats", {})
             if repeats_data:
                 repeat_reward_items = repeats_data.get("reward", {}).get("items", {})
                 if any("Key" in item_name for item_name in repeat_reward_items.keys()):
                     gives_repeating_key = True
 
-        # 3. Calcula o progresso para o nível/loop atual
         progress_percent = 0
         points_in_level = 0
         total_for_level = 0
@@ -695,7 +422,6 @@ def process_npc_gifts(main_farm_data: dict):
                 progress_percent = 100
                 points_in_level = total_for_level
 
-        # 4. Calcula o progresso total em relação a todas as recompensas planejadas
         total_possible_points = all_planned_rewards[-1]['points_required'] if all_planned_rewards else 0
         total_progress_percent = 0
         if total_possible_points > 0:
@@ -705,9 +431,8 @@ def process_npc_gifts(main_farm_data: dict):
             "name": npc_data["name"],
             "image_filename": image_filename,
             "flowers_text": flowers_text,
-            "flowers": npc_data.get("flowers", {}), # Passa o dicionário completo de flores
-            "rewards": npc_data.get("rewards", {}),  # Passa o dicionário completo de recompensas
-            # Novos dados de progresso para o template
+            "flowers": npc_data.get("flowers", {}),
+            "rewards": npc_data.get("rewards", {}),
             "friendship_current": current_points,
             "friendship_last_claimed": last_claimed_points,
             "friendship_next_reward": next_reward_points,
@@ -718,11 +443,10 @@ def process_npc_gifts(main_farm_data: dict):
             "friendship_total_progress_percent": total_progress_percent,
             "friendship_next_reward_info": next_reward_info,
             "friendship_is_repeat_reward": is_repeat_reward,
-            "gives_repeating_key": gives_repeating_key, # Nova flag para o filtro
-            "gives_key": gives_key, # Adiciona o resultado da verificação ao contexto
+            "gives_repeating_key": gives_repeating_key,
+            "gives_key": gives_key,
         })
     
-    # Retorna a lista ordenada por nome para uma exibição consistente
     return sorted(npc_list, key=lambda x: x['name'])
 # ---> FIM DA FUNÇÃO PARA ANÁLISE DE PRESENTES DE NPCS ---
 
@@ -738,14 +462,14 @@ def get_item_image_path(item_name: str) -> str:
     # 1. Casos especiais que não se encaixam no mapeamento padrão
     if item_name == "SFL":
         return "images/resources/flower.webp"
-    # Adiciona casos para moedas, que não estão em domínios padrão
     if item_name == "Coins":
         return "images/resources/coins.webp"
     if item_name == "Gem":
         return "images/resources/gem.webp"
-    # NOVO: Adiciona casos para ícones de UI que aparecem no mapa
     if item_name == "Yield Fertiliser":
         return "images/misc/increase_arrow.webp"
+    if item_name == "Time Fertiliser":
+        return "images/misc/stopwatch.webp"
     if item_name == "Bee Swarm":
         return "images/misc/bee.webp"
     
@@ -775,11 +499,10 @@ def get_item_image_path(item_name: str) -> str:
     category = item_map.MASTER_ITEM_MAP.get(item_name)
 
     if category:
-        # Caso especial para bolos, que ficam numa subpasta de 'food'
         if category == "Food" and ("Cake" in item_name or foods_domain.CONSUMABLES_DATA.get(item_name, {}).get("building") == "Bakery"):
             folder = CATEGORY_TO_FOLDER["Cake"]
         else:
-            folder = CATEGORY_TO_FOLDER.get(category, "resources") # Usa 'resources' como fallback
+            folder = CATEGORY_TO_FOLDER.get(category, "resources")
         
         return f"images/{folder}/{path_name}.webp"
 

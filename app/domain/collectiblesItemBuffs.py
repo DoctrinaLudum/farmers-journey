@@ -31,9 +31,7 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "type": "RECOVERY_TIME",
                 "operation": "percentage",
                 "value": -0.20,
-                "conditions": {
-                    "category": "Crop"
-                }
+                "conditions": {"crop_tier": "basic"}
             }
         ]
     },
@@ -55,7 +53,7 @@ COLLECTIBLES_ITEM_BUFFS = {
             {
                 "type": "YIELD",
                 "operation": "add",
-                "value": 0.2,
+                "value": 0.20,
                 "conditions": {"crop_tier": "medium"}
             }
         ]
@@ -78,7 +76,7 @@ COLLECTIBLES_ITEM_BUFFS = {
             {
                 "type": "YIELD",
                 "operation": "add",
-                "value": 0.2,
+                "value": 0.20,
                 "conditions": {"crop_tier": "advanced"}
             }
         ]
@@ -1058,7 +1056,7 @@ COLLECTIBLES_ITEM_BUFFS = {
             {
                 "type": "YIELD",
                 "operation": "multiply",
-                "value": 1.2,
+                "value": 1.20,
                 "conditions": {
                     "resource": "Wood"
                 }
@@ -1074,7 +1072,7 @@ COLLECTIBLES_ITEM_BUFFS = {
             {
                 "type": "YIELD",
                 "operation": "multiply",
-                "value": 1.2,
+                "value": 1.20,
                 "conditions": {
                     "resource": "Wood"
                 }
@@ -1098,7 +1096,7 @@ COLLECTIBLES_ITEM_BUFFS = {
             {
                 "type": "YIELD",
                 "operation": "multiply",
-                "value": 1.2,
+                "value": 1.20,
                 "conditions": {
                     "resource": "Wood"
                 }
@@ -1400,11 +1398,11 @@ COLLECTIBLES_ITEM_BUFFS = {
         "enabled": True,
         "boosts": [
             {
-                "type": "YIELD",
+                "type": "PRODUCTION_SPEED",
                 "operation": "add",
                 "value": 1,
                 "conditions": {
-                    "resource": "Honey"
+                    "resource": "Beehive"
                 }
             }
         ]
@@ -1545,17 +1543,16 @@ COLLECTIBLES_ITEM_BUFFS = {
     },
     "Knowledge Crab": {
         "id": 480,
-        "description": "The Knowledge Crab doubles your Sprout Mix effect, making your soil treasures as rich as sea plunder!",
+        "description": "The Knowledge Crab adds +0.2 yield to the Sprout Mix effect.",
         "boost_category": "Crop",
         "enabled": True,
-        "boosts": [
+        "effects": [
             {
-                "type": "FERTILISER_EFFECT",
-                "operation": "multiply",
-                "value": 2,
-                "conditions": {
-                    "fertiliser": "Sprout Mix"
-                }
+                "type": "ITEM_MODIFICATION",
+                "target_item": "Sprout Mix",
+                "target_property": "YIELD",
+                "operation": "add",
+                "value": 0.20
             }
         ]
     },
@@ -2913,7 +2910,7 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "operation": "add",
                 "value": 0.1,
                 "conditions": {
-                    "category": "Crop"
+                    "resource": "Help"
                 }
             }
         ]

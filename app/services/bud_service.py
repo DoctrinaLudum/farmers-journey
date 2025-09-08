@@ -64,6 +64,7 @@ def analyze_bud_buffs(farm_data: dict) -> dict:
     # --- ETAPA 2: Aplicar a regra "O Maior Bônus Prevalece" ---
     # Compara o poder final de todos os buds para cada tipo de bônus
     final_farm_buffs = defaultdict(Decimal)
+    winning_bud_info = defaultdict(dict) # Initialize winning_bud_info
 
     for _bud_id, bud_data in processed_buds.items():
         for buff_key, buff_value_float in bud_data["final_buffs"].items():
@@ -73,22 +74,39 @@ def analyze_bud_buffs(farm_data: dict) -> dict:
             # A convenção é que bônus de tempo são negativos.
             is_reduction_buff = buff_value < 0
 
-            # Se a chave ainda não existe no resultado final, inicializa com o valor atual.
+            # Se a chave ainda não existe no resultado final, inicializa com o valor atual
+            # e armazena as informações do bud vencedor.
             if buff_key not in final_farm_buffs:
                 final_farm_buffs[buff_key] = buff_value
+                winning_bud_info[buff_key] = {
+                    "bud_id": _bud_id,
+                    "type": bud_data["type"],
+                    "aura": bud_data["aura"]
+                }
                 continue
 
             current_best = final_farm_buffs[buff_key]
 
             # A lógica de "maior bônus" muda dependendo do tipo.
+            # Se o novo bônus for melhor, atualiza e armazena as informações do bud vencedor.
             if is_reduction_buff:
                 # Para tempo, o "maior" bônus é o número menor (mais negativo). Ex: -0.2 é melhor que -0.1.
                 if buff_value < current_best:
                     final_farm_buffs[buff_key] = buff_value
+                    winning_bud_info[buff_key] = {
+                        "bud_id": _bud_id,
+                        "type": bud_data["type"],
+                        "aura": bud_data["aura"]
+                    }
             else:
                 # Para rendimento, o "maior" bônus é o número maior. Ex: 0.5 é melhor que 0.2.
                 if buff_value > current_best:
                     final_farm_buffs[buff_key] = buff_value
+                    winning_bud_info[buff_key] = {
+                        "bud_id": _bud_id,
+                        "type": bud_data["type"],
+                        "aura": bud_data["aura"]
+                    }
 
     # --- ETAPA 3: Formatar o resultado final para o dashboard ---
     buff_summary_for_template = []
@@ -105,10 +123,62 @@ def analyze_bud_buffs(farm_data: dict) -> dict:
     # 'view': Contém dados formatados e detalhados para serem usados diretamente nos templates.
     return {
         "internal": {
-            "active_buffs": {k: float(v) for k, v in final_farm_buffs.items()}
+            "active_buffs": {k: float(v) for k, v in final_farm_buffs.items()},
+            "winning_bud_info": winning_bud_info # NEW: Add winning bud info
         },
         "view": {
             "individual_buds": processed_buds,
             "summary_list": sorted(buff_summary_for_template)
         }
     }
+
+# NEW: Function to get detailed bud boosts
+def get_detailed_bud_boosts(farm_data: dict) -> list:
+    """
+    Retorna uma lista de objetos de bônus detalhados para os Buds ativos do jogador,
+    incluindo informações de origem descritivas.
+    """
+    detailed_bud_boosts = []
+    
+    # Get the processed buds data from analyze_bud_buffs
+    analysis_result = analyze_bud_buffs(farm_data)
+    if not analysis_result:
+        return []
+
+    final_farm_buffs = analysis_result["internal"]["active_buffs"]
+    winning_bud_info = analysis_result["internal"]["winning_bud_info"]
+
+    # Iterate through the final summarized buffs
+    for buff_key, buff_value_float in final_farm_buffs.items():
+        # Find the original buff details from bud_domain.BUD_BUFFS
+        original_buff_found = False
+        original_details = {}
+        for bud_type_name, bud_type_data in bud_domain.BUD_BUFFS.items():
+            for buff in bud_type_data.get("boosts", []):
+                if _get_buff_key(buff) == buff_key:
+                    original_details = buff
+                    original_buff_found = True
+                    break
+            if original_buff_found:
+                break
+
+        if original_buff_found:
+            source_bud = winning_bud_info.get(buff_key)
+            source_item_name = "Buds" # Default generic name
+
+            if source_bud:
+                bud_id = source_bud["bud_id"]
+                bud_type = source_bud["type"]
+                bud_aura = source_bud["aura"]
+                source_item_name = f"Bud #{bud_id} ({bud_type}, {bud_aura})"
+
+            detailed_bud_boosts.append({
+                "source_item": source_item_name,
+                "source_type": "bud",
+                "type": original_details.get("type"),
+                "operation": original_details.get("operation"),
+                "value": Decimal(str(buff_value_float)),
+                "conditions": original_details.get("conditions", {})
+            })
+            
+    return detailed_bud_boosts

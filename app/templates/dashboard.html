@@ -61,6 +61,11 @@
             </button>
         </li>
         <li class="nav-item" role="presentation">
+            <a class="nav-link" href="{{ url_for('main.wip_dashboard', farm_id=farm_id) }}" role="tab">
+                <i class="bi bi-cone-striped me-1"></i> WIP
+            </a>
+        </li>
+        <li class="nav-item" role="presentation">
             <button class="nav-link" id="buds-tab" data-bs-toggle="tab" data-bs-target="#buds-pane" type="button" role="tab" aria-controls="buds-pane" aria-selected="false">
                 <i class="bi bi-bug-fill me-1"></i> Buds
             </button>

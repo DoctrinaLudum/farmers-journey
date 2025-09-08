@@ -30,6 +30,16 @@ O coração da ferramenta é um dashboard completo que centraliza todas as infor
 *   **Visualização de Área de Efeito (AOE)**: Clique em itens como o "Espantalho" ou a "Queen Cornelia" na legenda do mapa para ver instantaneamente a área de cobertura e os recursos afetados.
 *   **Dicas de Escavação de Tesouros**: Um painel auxiliar que ajuda a decifrar as dicas para encontrar tesouros no deserto, mostrando a grade de escavação e os padrões.
 
+### ⚙️ Arquitetura Orientada a Dados e Precisão de Bônus
+
+Recentemente, os serviços de análise de recursos (`fruit_service`, `chop_service`, `flower_service`, etc.) foram extensivamente refatorados para adotar uma **arquitetura totalmente orientada a dados**. Isso significa que a lógica de cálculo de rendimentos, tempos de recuperação e aplicação de bônus agora é lida diretamente de arquivos de domínio padronizados (`collectiblesItemBuffs.py`, `wearablesItemBuffs.py`, `skills.py`, `resources.py`), em vez de ser hardcoded em cada serviço.
+
+**Benefícios:**
+
+*   **Manutenibilidade Aprimorada**: Facilita a atualização e adição de novos itens, habilidades e mecânicas de jogo sem a necessidade de modificar a lógica central dos serviços.
+*   **Precisão nos Cálculos**: Garante que todos os bônus, incluindo acertos críticos e modificadores complexos, sejam aplicados de forma consistente e precisa, espelhando fielmente a lógica do jogo.
+*   **Extensibilidade**: Permite que novos tipos de bônus e condições sejam facilmente integrados no futuro.
+
 ### Ferramentas de Planejamento e Gestão
 
 *   **Planejador de Expansão**:

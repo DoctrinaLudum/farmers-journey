@@ -3,9 +3,10 @@ import logging
 from collections import defaultdict
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
-from markupsafe import Markup
+
 from flask import (Blueprint, current_app, json, jsonify, redirect,
                    render_template, request, url_for)
+from markupsafe import Markup
 
 import config
 
@@ -20,10 +21,11 @@ from .domain import fruits as fruit_domain
 from .domain import npcs as npc_domain
 from .game_state import GAME_STATE
 from .services import (bud_service, chop_service, chores_service,
-                       crop_machine_service, crop_service, delivery_service, exchange_service,
-                       farm_layout_service, flower_service, mushrooms_service,
-                       fruit_service, treasure_dig_service,
-                       greenhouse_service, mining_service, pricing_service)
+                       crop_machine_service, crop_service, delivery_service,
+                       exchange_service, expansion_service,
+                       farm_layout_service, flower_service, fruit_service,
+                       greenhouse_service, mining_service, mushrooms_service,
+                       pricing_service, summary_service, treasure_dig_service)
 
 log = logging.getLogger(__name__)
 bp = Blueprint('main', __name__)
@@ -170,6 +172,8 @@ def farm_dashboard(farm_id):
         "enumerate": enumerate
     }
 
+    unified_analyses = [] # Inicialização movida para o início da função
+
     # 2. Busca dos dados das APIs.
     try:
         main_farm_data, secondary_farm_data, api_error = sunflower_api.get_farm_data(farm_id)
@@ -189,7 +193,7 @@ def farm_dashboard(farm_id):
 
     # 3. Processamento de Dados Gerais e de Construção.
     try:
-        current_land_level = secondary_farm_data.get('land', {}).get('level', 0)
+        current_land_level = int(secondary_farm_data.get('land', {}).get('level', 0))
         current_land_type = secondary_farm_data.get('land', {}).get('type', 'basic')
         
         # CORREÇÃO: Determina se o usuário é VIP verificando a data de expiração
@@ -259,7 +263,7 @@ def farm_dashboard(farm_id):
 
     # 5. Processamento do ASSESSOR DE EXPANSÃO.
     try:
-        expansion_progress_data = analysis.analyze_expansion_progress(secondary_farm_data, main_farm_data)
+        expansion_progress_data = expansion_service.analyze_expansion_progress(secondary_farm_data, main_farm_data)
         
         # Este loop adiciona as chaves 'shortfall' e 'surplus' que o template precisa.
         if expansion_progress_data and 'resources' in expansion_progress_data:
@@ -459,6 +463,7 @@ def farm_dashboard(farm_id):
 
     # Lista para agregar todas as análises de recursos para o painel de depuração
     resource_analyses = []
+    # 19. Agregação e Padronização de Dados para o Painel Unificado
 
     # 13. Processamento de Recursos de Madeira (Wood) - CORRIGIDO
     context['wood_analysis'] = None
@@ -466,7 +471,7 @@ def farm_dashboard(farm_id):
     try:
         # Passa a variável 'active_bud_buffs' que acabamos de criar.
         # Agora o serviço de madeira sempre receberá um dicionário, mesmo que vazio.
-        wood_data = chop_service.analyze_wood_resources(main_farm_data, active_bud_buffs)
+        wood_data = chop_service.analyze_wood_resources(main_farm_data)
     
         # Acessa a chave 'view' que contém os dados formatados para o template.
         wood_view_data = wood_data.get("view") if wood_data else None
@@ -485,7 +490,7 @@ def farm_dashboard(farm_id):
     context['mining_analysis'] = None
     mining_data = None
     try:
-        mining_data = mining_service.analyze_mining_resources(main_farm_data, active_bud_buffs)
+        mining_data = mining_service.analyze_mining_resources(main_farm_data)
         mining_view_data = mining_data.get("view") if mining_data else None
 
         if mining_view_data:
@@ -502,7 +507,7 @@ def farm_dashboard(farm_id):
     crop_data = None
     try:
         # Passa os buffs de bud para o serviço de culturas
-        crop_data = crop_service.analyze_crop_resources(main_farm_data, active_bud_buffs)
+        crop_data = crop_service.analyze_crop_resources(main_farm_data)
         crop_view_data = crop_data.get("view") if crop_data else None
 
         if crop_view_data:
@@ -517,7 +522,7 @@ def farm_dashboard(farm_id):
     # 16. Processamento da Crop Machine
     context['crop_machine_analysis'] = None
     try:
-        machine_data = crop_machine_service.analyze_crop_machine(main_farm_data, active_bud_buffs)
+        machine_data = crop_machine_service.analyze_crop_machine(main_farm_data)
         # A lógica de processamento foi movida para o crop_machine_service.
         # O serviço agora retorna os dados prontos para o template.
         if machine_data:
@@ -529,7 +534,7 @@ def farm_dashboard(farm_id):
     # 17. Processamento da Greenhouse (continua abaixo)
     context['greenhouse_analysis'] = None
     try:
-        greenhouse_data = greenhouse_service.analyze_greenhouse_resources(main_farm_data, active_bud_buffs)
+        greenhouse_data = greenhouse_service.analyze_greenhouse_resources(main_farm_data)
         if greenhouse_data:
             context['greenhouse_analysis'] = greenhouse_data.get("view")
             # Adiciona o domínio de culturas ao contexto para que o template da estufa possa usá-lo
@@ -541,22 +546,39 @@ def farm_dashboard(farm_id):
     # 18. Processamento de Frutas e Flores (para o painel unificado)
     fruit_data, flower_data, beehive_data = None, None, None
     try:
-        fruit_data = fruit_service.analyze_fruit_patches(main_farm_data, active_bud_buffs)
+        fruit_data = fruit_service.analyze_fruit_patches(main_farm_data)
     except Exception as e:
         log.error(f"Falha ao analisar dados de frutas: {e}", exc_info=True)
     
     try:
-        flower_data = flower_service.analyze_flower_beds(main_farm_data, active_bud_buffs)
+        flower_data = flower_service.analyze_flower_beds(main_farm_data)
     except Exception as e:
         log.error(f"Falha ao analisar dados de flores: {e}", exc_info=True)
 
     try:
-        beehive_data = flower_service.analyze_beehives(main_farm_data, active_bud_buffs)
+        beehive_data = flower_service.analyze_beehives(main_farm_data)
     except Exception as e:
         log.error(f"Falha ao analisar dados de colmeias: {e}", exc_info=True)
 
-    # 19. Agregação e Padronização de Dados para o Painel Unificado
-    unified_analyses = []
+    # NOVO: Processamento de Cogumelos (movido para o local correto)
+    mushroom_data = None
+    try:
+        mushroom_data = mushrooms_service.analyze_mushroom_spawns(main_farm_data)
+        if mushroom_data and mushroom_data.get("view"):
+            mushroom_view = mushroom_data["view"]
+            mushroom_resources = {
+                "Cogumelos": {
+                    "nodes": mushroom_view.get("mushroom_status", {}),
+                    "summary": mushroom_view.get("summary", {})
+                }
+            }
+            unified_analyses.append({
+                "title": "Cogumelos",
+                "resources": mushroom_resources
+            })
+    except Exception as e:
+        log.error(f"Falha ao analisar dados de cogumelos: {e}", exc_info=True)
+
     if wood_data and wood_data.get("view"):
         wood_view = wood_data["view"]
         wood_resources = {
@@ -626,25 +648,6 @@ def farm_dashboard(farm_id):
             "title": "Flores",
             "resources": dict(sorted(flower_resources.items()))
         })
-
-    # NOVO: Processamento de Cogumelos (movido para o local correto)
-    mushroom_data = None
-    try:
-        mushroom_data = mushrooms_service.analyze_mushroom_spawns(main_farm_data, active_bud_buffs)
-        if mushroom_data and mushroom_data.get("view"):
-            mushroom_view = mushroom_data["view"]
-            mushroom_resources = {
-                "Cogumelos": {
-                    "nodes": mushroom_view.get("mushroom_status", {}),
-                    "summary": mushroom_view.get("summary", {})
-                }
-            }
-            unified_analyses.append({
-                "title": "Cogumelos",
-                "resources": mushroom_resources
-            })
-    except Exception as e:
-        log.error(f"Falha ao analisar dados de cogumelos: {e}", exc_info=True)
 
     context['unified_resource_analyses'] = unified_analyses
 
@@ -743,7 +746,7 @@ def api_goal_requirements(farm_id, current_land_type, current_level):
         if main_farm_data.get("expansionConstruction"):
             effective_start_level += 1
 
-        goal_data = analysis.calculate_total_requirements(
+        goal_data = expansion_service.calculate_total_requirements(
             current_land_type=current_land_type,
             current_level=effective_start_level, # Usa o nível efetivo
             goal_land_type=goal_land_type,
@@ -753,7 +756,7 @@ def api_goal_requirements(farm_id, current_land_type, current_level):
         if not goal_data or "requirements" not in goal_data:
              return jsonify({"requirements": None, "goal_level_display": goal_level})
         
-        unlocks_data = analysis.calculate_total_gains(
+        unlocks_data = expansion_service.calculate_total_gains(
             start_land_type=current_land_type,
             start_level=effective_start_level,
             goal_land_type=goal_land_type,
@@ -852,3 +855,32 @@ def api_treasure_dig_update(farm_id):
     except Exception as e:
         log.error(f"Erro inesperado ao atualizar dados de escavação para a fazenda {farm_id}: {e}", exc_info=True)
         return jsonify({"error": "Um erro inesperado ocorreu no servidor."}), 500
+
+@bp.route('/farm/<int:farm_id>/wip')
+def wip_dashboard(farm_id):
+    """
+    Exibe uma página de trabalho em progresso (WIP) com a análise de sumário de recursos.
+    """
+    log.info(f"Iniciando a montagem do painel WIP para a fazenda #{farm_id}")
+
+    # Busca os dados da fazenda
+    main_farm_data, secondary_farm_data, api_error = sunflower_api.get_farm_data(farm_id)
+
+    if api_error:
+        return render_template('wip.html', error=api_error, farm_id=farm_id)
+
+    if not main_farm_data:
+        return render_template('wip.html', error="Não foi possível obter os dados principais da fazenda.", farm_id=farm_id)
+
+    # Adiciona dados secundários, se disponíveis
+    if secondary_farm_data:
+        if 'bumpkin' not in main_farm_data:
+            main_farm_data['bumpkin'] = {}
+        main_farm_data['bumpkin']['level'] = secondary_farm_data.get('bumpkin', {}).get('level', 0)
+        main_farm_data['land_level'] = secondary_farm_data.get('land', {}).get('level', 0)
+
+    # Executa a análise de sumário
+    summary_data = summary_service.analyze_resources_summary(main_farm_data)
+
+    # Renderiza a página WIP com os dados do sumário
+    return render_template('wip.html', farm_id=farm_id, summary_data=summary_data, username=main_farm_data.get('username', f"Fazenda #{farm_id}"))

@@ -1,7 +1,8 @@
 # app/services/mushrooms_service.py
 import logging
-from decimal import Decimal
 from datetime import datetime, timezone
+from decimal import Decimal
+
 from . import pricing_service
 
 log = logging.getLogger(__name__)
@@ -39,7 +40,7 @@ def _format_time_remaining(timestamp_ms):
     
     return " ".join(parts) if parts else f"{int(seconds)}s"
 
-def analyze_mushroom_spawns(farm_data, active_bud_buffs):
+def analyze_mushroom_spawns(farm_data: dict):
     """
     Analisa os dados de cogumelos da fazenda, calcula os rendimentos com bônus,
     e prepara os dados para a visualização e uso interno.
@@ -96,15 +97,7 @@ def analyze_mushroom_spawns(farm_data, active_bud_buffs):
                 "source_type": "wearable"
             })
 
-        bud_yield = Decimal(active_bud_buffs.get(mushroom_name, {}).get('yield', '0'))
-        if bud_yield > 0:
-            calculated_bonus_amount += bud_yield
-            applied_boosts.append({
-                "source_item": "Bud Boost",
-                "value": float(bud_yield),
-                "operation": "add",
-                "source_type": "bud"
-            })
+        
 
         sfl_price = Decimal(str(pricing_service.get_item_prices(mushroom_name).get('sfl', 0))) # Preço do item
         sfl_value = api_final_amount * sfl_price # Valor SFL baseado no total já calculado pela API

@@ -25,17 +25,6 @@ NON_CUMULATIVE_BOOST_GROUPS = {
     "midas_recovery": [],
 }
 
-BUD_BUFF_TO_MINING_BOOST_MAPPING = {
-    'STONE_YIELD': {'type': 'YIELD', 'operation': 'add', 'conditions': {'resource': 'Stone'}},
-    'IRON_YIELD': {'type': 'YIELD', 'operation': 'add', 'conditions': {'resource': 'Iron'}},
-    'GOLD_YIELD': {'type': 'YIELD', 'operation': 'add', 'conditions': {'resource': 'Gold'}},
-    'CRIMSTONE_YIELD': {'type': 'YIELD', 'operation': 'add', 'conditions': {'resource': 'Crimstone'}},
-    'SUNSTONE_YIELD': {'type': 'YIELD', 'operation': 'add', 'conditions': {'resource': 'Sunstone'}},
-    'OIL_YIELD': {'type': 'YIELD', 'operation': 'add', 'conditions': {'resource': 'Oil'}},
-    'MINERAL_RECOVERY_TIME': {'type': 'RECOVERY_TIME', 'operation': 'percentage', 'conditions': {'category': 'Mineral'}},
-    'MINERAL_YIELD': {'type': 'YIELD', 'operation': 'add', 'conditions': {'category': 'Mineral'}},
-}
-
 MINING_BOOST_CATALOGUE = resource_analysis_service.filter_boosts_from_domains(MINING_RESOURCE_CONDITIONS)
 
 RESOURCE_NODE_MAP = {
@@ -68,7 +57,7 @@ def _calculate_recovery_time(base_time: float, active_boosts: list, resource_nam
 # FUNÇÃO PRINCIPAL (ORQUESTRADOR)
 # ==============================================================================
 
-def analyze_mining_resources(farm_data: dict, active_bud_buffs: dict = None) -> dict:
+def analyze_mining_resources(farm_data: dict) -> dict:
     """
     Analisa todos os recursos de mineração, calcula bônus e retorna um relatório completo.
     """
@@ -81,18 +70,7 @@ def analyze_mining_resources(farm_data: dict, active_bud_buffs: dict = None) -> 
         farm_data
     )
 
-    active_item_names = {item for item in player_items if item in MINING_BOOST_CATALOGUE}
-    if active_bud_buffs:
-        active_item_names.add("Buds")
-
-    if active_bud_buffs:
-        for bud_buff_name, mapping in BUD_BUFF_TO_MINING_BOOST_MAPPING.items():
-            if bud_buff_name in active_bud_buffs and active_bud_buffs[bud_buff_name] != 0:
-                boost = mapping.copy()
-                boost["source_item"] = "Buds"
-                boost["value"] = active_bud_buffs[bud_buff_name]
-                boost["source_type"] = "bud"
-                active_boosts.append(boost)
+    active_item_names = {b['source_item'] for b in active_boosts}
 
     temporal_boosts, active_boosts, temporal_item_names = resource_analysis_service.extract_and_process_temporal_boosts(
         active_boosts, farm_data

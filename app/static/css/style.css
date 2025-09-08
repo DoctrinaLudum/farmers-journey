@@ -1182,7 +1182,8 @@ body.is-dragging-card {
 #floating-resource-card {
     position: fixed;
     z-index: 1056; /* Acima da maioria dos outros elementos */
-    width: 280px; /* Reduzido de 320px */
+    min-width: 280px; /* Define uma largura mínima para o card */
+    max-width: 450px; /* Impede que o card fique excessivamente largo */
     border: 1px solid var(--cor-borda);
     background-color: rgba(var(--bs-body-bg-rgb), 0.9);
     backdrop-filter: blur(8px);
@@ -1216,6 +1217,7 @@ body.is-dragging-card {
 
 #floating-resource-card .buff-source {
     font-size: 0.75rem; /* Torna a fonte do bônus ainda menor */
+    white-space: nowrap; /* Impede a quebra de linha do texto */
 }
 
 /* NOVO: Estilos para o Card Flutuante de Resumo */
@@ -1303,11 +1305,17 @@ body.is-dragging-card {
 /* Cores para os Badges de Prefixo de Bônus */
 
 /* Skill (Azul) */
-.buff-source-tag.is-type-skill,
-.buff-source-tag.is-type-skill_legacy {
+.buff-source-tag.is-type-skill {
     background-color: var(--bs-primary-bg-subtle);
     color: var(--bs-primary-text-emphasis);
     border-color: var(--bs-primary-border-subtle);
+}
+
+/* Skill Legacy (Cinza) */
+.buff-source-tag.is-type-skill_legacy {
+    background-color: #d4ab2393;
+    color: var(--bs-secondary-text-emphasis);
+    border-color:#d4ab23;
 }
 
 /* SFT/Collectible (Amarelo) */
@@ -1391,7 +1399,8 @@ body.is-dragging-card {
 #floating-resource-card {
     position: fixed;
     z-index: 1056; /* Acima da maioria dos outros elementos */
-    width: 280px; /* Reduzido de 320px */
+    min-width: 280px; /* Define uma largura mínima para o card */
+    max-width: 450px; /* Impede que o card fique excessivamente largo */
     border: 1px solid var(--cor-borda);
     background-color: rgba(var(--bs-body-bg-rgb), 0.9);
     backdrop-filter: blur(8px);

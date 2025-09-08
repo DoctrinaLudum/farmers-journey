@@ -1,0 +1,124 @@
+{
+    "Resource": {
+        "wood": {
+            "min": "1.00",
+            "avg": "1.20",
+            "max": "2.00",
+            "tool_cost": "20.00",
+            "cycle": "02:00:00",
+            "buffs_aplicados": {
+                "yield_buffs": [
+                    {
+                        "source_item": "Native",
+                        "source_type": "game_mechanic",
+                        "value": "-0.20"
+                    }
+                ],
+                "recovery_buffs": [],
+                "tools_buff": []
+            }
+        },
+        "stone": {
+            "min": "1.00",
+            "avg": "1.20",
+            "max": "2.00",
+            "tool_cost": "20.00",
+            "cycle": "04:00:00",
+            "buffs_aplicados": {
+                "yield_buffs": [
+                    {
+                        "source_item": "Native",
+                        "source_type": "game_mechanic",
+                        "value": "-0.20"
+                    }
+                ],
+                "recovery_buffs": [],
+                "tools_buff": []
+            }
+        },
+        "iron": {
+            "min": "1.00",
+            "avg": "1.20",
+            "max": "2.00",
+            "tool_cost": "20.00",
+            "cycle": "08:00:00",
+            "buffs_aplicados": {
+                "yield_buffs": [
+                    {
+                        "source_item": "Native",
+                        "source_type": "game_mechanic",
+                        "value": "-0.20"
+                    }
+                ],
+                "recovery_buffs": [],
+                "tools_buff": []
+            }
+        },
+        "gold": {
+            "min": "1.00",
+            "avg": "1.20",
+            "max": "2.00",
+            "tool_cost": "80.00",
+            "cycle": "24:00:00",
+            "buffs_aplicados": {
+                "yield_buffs": [
+                    {
+                        "source_item": "Native",
+                        "source_type": "game_mechanic",
+                        "value": "-0.20"
+                    }
+                ],
+                "recovery_buffs": [],
+                "tools_buff": []
+            }
+        },
+        "crimstone": {
+            "min": "1.00",
+            "avg": "1.00",
+            "max": "1.00",
+            "tool_cost": "100.00",
+            "cycle": "24:00:00",
+            "buffs_aplicados": {
+                "yield_buffs": [],
+                "recovery_buffs": [],
+                "tools_buff": []
+            }
+        },
+        "sunstone": {
+            "min": "1.00",
+            "avg": "1.00",
+            "max": "1.00",
+            "tool_cost": "100.00",
+            "cycle": "72:00:00",
+            "buffs_aplicados": {
+                "yield_buffs": [],
+                "recovery_buffs": [],
+                "tools_buff": []
+            }
+        },
+        "oil": {
+            "min": "10.00",
+            "avg": "10.00",
+            "max": "10.00",
+            "tool_cost": "100.00",
+            "cycle": "20:00:00",
+            "buffs_aplicados": {
+                "yield_buffs": [],
+                "recovery_buffs": [],
+                "tools_buff": []
+            }
+        },
+        "obsidian": {
+            "min": "1.00",
+            "avg": "1.00",
+            "max": "1.00",
+            "tool_cost": "0.00",
+            "cycle": "00:00:00",
+            "buffs_aplicados": {
+                "yield_buffs": [],
+                "recovery_buffs": [],
+                "tools_buff": []
+            }
+        }
+    }
+}

@@ -146,7 +146,7 @@ export class ResourceInfoCard {
         const statsList = document.createElement('ul');
         statsList.className = 'list-group list-group-flush';
 
-        const renderBuffsToList = (buffs: any[], targetList: HTMLElement) => {
+        const renderBuffsToList = (buffs: any[], targetList: HTMLElement, isTimeBonus: boolean = false) => {
             if (!buffs || buffs.length === 0) return;
 
             const sourceTypeToLabel: { [key: string]: string } = {
@@ -156,7 +156,7 @@ export class ResourceInfoCard {
                 wearable: '(Wearable)',
                 bud: '(Bud)',
                 game_mechanic: '(Nativo)',
-                fertiliser: '(Fertilizante)',
+                fertiliser: '(Fertiliser)',
                 tool: '(Ferramenta)'
             };
 
@@ -164,30 +164,84 @@ export class ResourceInfoCard {
                 const clone = buffTemplate.content.cloneNode(true) as DocumentFragment;
                 
                 const prefix = sourceTypeToLabel[buff.source_type] || '';
+                let sourceItem = buff.source_item;
+                if (buff.source_type === 'bud' && sourceItem.startsWith('Bud ')) {
+                    sourceItem = sourceItem.substring(4);
+                }
                 const typeClass = buff.source_type ? `is-type-${buff.source_type}` : '';
                 const prefixTag = prefix ? `<span class="buff-source-tag ${typeClass}">${prefix}</span>` : '';
                 const buffCount = buff.count > 1 ? ` (x${buff.count})` : '';
 
-                clone.querySelector('.buff-source')!.innerHTML = `${prefixTag} ${buff.source_item}${buffCount}`.trim();
+                clone.querySelector('.buff-source')!.innerHTML = `${prefixTag} ${sourceItem}${buffCount}`.trim();
                 let valueText = '';
                 const buffValue = buff.value;
+                const numericBuffValue = Number(buffValue);
 
-                if (typeof buffValue === 'number') {
-                    if (buff.operation === 'add') valueText = `+${buffValue.toFixed(2)}`;
-                    else if (buff.operation === 'multiply') valueText = `x${buffValue.toFixed(2)}`;
-                    else if (buff.operation === 'percentage') valueText = `${(buffValue * 100).toFixed(0)}%`;
-                    else valueText = String(buffValue);
+                if (!isNaN(numericBuffValue)) {
+                    let formattedValue: string;
+                    let operator = '';
+
+                    if (buff.operation === 'percentage') {
+                        formattedValue = (numericBuffValue * 100).toFixed(0);
+                        operator = numericBuffValue > 0 ? '+' : '';
+                        valueText = `${operator}${formattedValue}%`;
+                    } else if (buff.operation === 'multiply') {
+                        formattedValue = numericBuffValue.toFixed(2);
+                        operator = 'x';
+                        valueText = `${operator}${formattedValue}`;
+                    } else {
+                        formattedValue = numericBuffValue.toFixed(2);
+                        operator = numericBuffValue >= 0 ? '+' : '';
+                        valueText = `${operator}${formattedValue}`;
+                    }
+
+                    if (buff.source_type === 'bud') {
+                        formattedValue = numericBuffValue.toFixed(2);
+                        operator = numericBuffValue > 0 ? '+' : '';
+                        valueText = `${operator}${formattedValue}`;
+                    }
                 } else {
                     valueText = String(buffValue);
                 }
 
                 const valueEl = clone.querySelector('.buff-value')!;
                 valueEl.textContent = valueText;
-                if (typeof buffValue === 'number') {
-                    valueEl.classList.add(buffValue > 0 ? 'text-success' : 'text-danger');
+                if (!isNaN(numericBuffValue)) {
+                    if (isTimeBonus) {
+                        valueEl.classList.add(numericBuffValue < 0 ? 'text-success' : 'text-danger');
+                    } else {
+                        valueEl.classList.add(numericBuffValue > 0 ? 'text-success' : 'text-danger');
+                    }
                 }
 
                 targetList.appendChild(clone);
+
+                // NOVO: Renderiza modificadores se eles existirem no objeto de bônus
+                if (buff.modifiers && Array.isArray(buff.modifiers)) {
+                    buff.modifiers.forEach((modBuff: any) => {
+                        const modifierEl = document.createElement('div');
+                        modifierEl.className = 'modifier-buff d-flex align-items-center small text-muted ms-3';
+                        
+                        const modPrefix = sourceTypeToLabel[modBuff.source_type] || '';
+                        const modTypeClass = modBuff.source_type ? `is-type-${modBuff.source_type}` : '';
+                        const modPrefixTag = modPrefix ? `<span class="buff-source-tag ${modTypeClass}">${modPrefix}</span>` : '';
+                        const iconHtml = '<i class="bi bi-stars me-1"></i>'; // Ícone de estrela para TODOS os modificadores
+
+                        let modifierText = '';
+                        const modValueStr = String(modBuff.value);
+
+                        // Padroniza a exibição do modificador
+                        if (modBuff.operation === 'multiply') {
+                            modifierText = `${modPrefixTag} ${modBuff.source_item}: ${modValueStr}`;
+                        } else {
+                            // Para bônus de soma, exibe texto descritivo para evitar confusão
+                            modifierText = `<span class="buff-source-tag is-type-special">Modificado por</span> ${modPrefixTag} ${modBuff.source_item}`;
+                        }
+
+                        modifierEl.innerHTML = `${iconHtml} ${modifierText}`.trim();
+                        targetList.appendChild(modifierEl);
+                    });
+                }
             });
         };
 
@@ -223,7 +277,7 @@ export class ResourceInfoCard {
             }
         };
 
-        const addBuffs = (title: string, buffs: any[]) => {
+        const addBuffs = (title: string, buffs: any[], isTimeBonus: boolean = false) => {
             if (!buffs || buffs.length === 0) return;
             
             const titleEl = document.createElement('h6');
@@ -231,7 +285,7 @@ export class ResourceInfoCard {
             titleEl.textContent = title;
             statsList.appendChild(titleEl);
             
-            renderBuffsToList(buffs, statsList);
+            renderBuffsToList(buffs, statsList, isTimeBonus);
         };
 
         addStat('Estado', analysisData.state_name);
@@ -289,7 +343,7 @@ export class ResourceInfoCard {
         }
         const recoveryBuffs = analysisData.calculations?.recovery?.applied_buffs || analysisData.calculations?.growth?.applied_buffs;
         if (recoveryBuffs) {
-            addBuffs('Bônus de Tempo', recoveryBuffs);
+            addBuffs('Bônus de Tempo', recoveryBuffs, true);
         }
 
         // NOVO: Adiciona a lista de bônus aplicados para cogumelos (padronizado)
@@ -415,7 +469,7 @@ export class ResourceInfoCard {
                         
                         const accordionBody = accordionItem.querySelector('.accordion-body') as HTMLElement;
 
-                        const renderBuffSection = (title: string, buffs: any[], targetElement: HTMLElement) => {
+                        const renderBuffSection = (title: string, buffs: any[], targetElement: HTMLElement, isTimeBonus: boolean = false) => {
                             if (buffs.length === 0) return;
                             const titleEl = document.createElement('h6');
                             titleEl.className = 'mt-2 mb-1 small text-muted';
@@ -424,12 +478,12 @@ export class ResourceInfoCard {
 
                             const buffList = document.createElement('ul');
                             buffList.className = 'list-group list-group-flush';
-                            renderBuffsToList(buffs, buffList);
+                            renderBuffsToList(buffs, buffList, isTimeBonus);
                             targetElement.appendChild(buffList);
                         };
 
-                        renderBuffSection('Bônus de Rendimento', yieldBuffs, accordionBody);
-                        renderBuffSection('Bônus de Tempo', timeBuffs, accordionBody);
+                        renderBuffSection('Bônus de Rendimento', yieldBuffs, accordionBody, false);
+                        renderBuffSection('Bônus de Tempo', timeBuffs, accordionBody, true);
 
                         potStatsList.appendChild(accordionItem);
                     }
@@ -521,7 +575,7 @@ export class ResourceInfoCard {
                             
                             const accordionBody = accordionItem.querySelector('.accordion-body') as HTMLElement;
 
-                            const renderBuffSection = (title: string, buffs: any[], targetElement: HTMLElement) => {
+                            const renderBuffSection = (title: string, buffs: any[], targetElement: HTMLElement, isTimeBonus: boolean = false) => {
                                 if (buffs.length === 0) return;
                                 const titleEl = document.createElement('h6');
                                 titleEl.className = 'mt-2 mb-1 small text-muted';
@@ -530,12 +584,12 @@ export class ResourceInfoCard {
 
                                 const buffList = document.createElement('ul');
                                 buffList.className = 'list-group list-group-flush';
-                                renderBuffsToList(buffs, buffList);
+                                renderBuffsToList(buffs, buffList, isTimeBonus);
                                 targetElement.appendChild(buffList);
                             };
 
-                            renderBuffSection('Bônus de Rendimento', yieldBuffs, accordionBody);
-                            renderBuffSection('Bônus de Tempo', timeBuffs, accordionBody);
+                            renderBuffSection('Bônus de Rendimento', yieldBuffs, accordionBody, false);
+                            renderBuffSection('Bônus de Tempo', timeBuffs, accordionBody, true);
 
                             packStatsList.appendChild(accordionItem);
                         };

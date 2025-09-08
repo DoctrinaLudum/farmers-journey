@@ -1,8 +1,8 @@
 # app/services/farm_layout_service.py
 
 import hashlib
-import logging
 import json
+import logging
 import re
 from collections import defaultdict
 from decimal import Decimal
@@ -45,26 +45,37 @@ def _get_item_dimensions(item_name: str) -> dict:
 
 def _create_dynamic_legend(grid_data: dict) -> dict:
     dynamic_map_legend_icons = {}
-    icons_to_find = {'bonus_reward', 'has_yield_fertiliser', 'beeSwarm'}
+    # Adiciona 'has_time_fertiliser' para busca
+    icons_to_find = {'bonus_reward', 'has_yield_fertiliser', 'has_time_fertiliser', 'beeSwarm'}
     for cell in grid_data.values():
         if not icons_to_find: break
         if not cell.get("resource"): continue
         details = cell["resource"].get('details', {})
+
         if 'bonus_reward' in icons_to_find and details.get('bonus_reward'):
             dynamic_map_legend_icons['bonus_reward'] = {
                 'icon_type': 'bi', 'icon_class': 'bi-gift-fill text-primary', 'text': 'Recompensa Extra'
             }
             icons_to_find.remove('bonus_reward')
+
         if 'has_yield_fertiliser' in icons_to_find and details.get('has_yield_fertiliser'):
             dynamic_map_legend_icons['has_yield_fertiliser'] = {
-                'icon_type': 'img', 'src': get_item_image_path('Yield Fertiliser'), 'text': 'Fertilizante'
+                'icon_type': 'img', 'src': get_item_image_path('Yield Fertiliser'), 'text': 'Fertilizante (Rendimento)'
             }
             icons_to_find.remove('has_yield_fertiliser')
+
+        if 'has_time_fertiliser' in icons_to_find and details.get('has_time_fertiliser'):
+            dynamic_map_legend_icons['has_time_fertiliser'] = {
+                'icon_type': 'img', 'src': get_item_image_path('Time Fertiliser'), 'text': 'Fertilizante (Tempo)'
+            }
+            icons_to_find.remove('has_time_fertiliser')
+
         if 'beeSwarm' in icons_to_find and details.get('beeSwarm'):
             dynamic_map_legend_icons['beeSwarm'] = {
                 'icon_type': 'img', 'src': get_item_image_path('Bee Swarm'), 'text': 'Enxame de Abelhas'
             }
             icons_to_find.remove('beeSwarm')
+            
     return dynamic_map_legend_icons
 
 def generate_layout_map(farm_data: dict, analyzed_nodes: dict = None):
@@ -187,6 +198,8 @@ def generate_layout_map(farm_data: dict, analyzed_nodes: dict = None):
             details.update({k: v for k, v in analyzed_data.items() if k in ['mines_left', 'harvests_left', 'bonus_reward'] and v is not None})
             if analyzed_data.get('has_yield_fertiliser'):
                 details.update({'has_yield_fertiliser': True, 'yield_fertiliser_icon': get_item_image_path('Yield Fertiliser')})
+            if analyzed_data.get('has_time_fertiliser'):
+                details.update({'has_time_fertiliser': True, 'time_fertiliser_icon': get_item_image_path('Time Fertiliser')})
             if analyzed_data.get('beeSwarm'):
                 details.update({'beeSwarm': True, 'bee_swarm_icon': get_item_image_path('Bee Swarm')})
 

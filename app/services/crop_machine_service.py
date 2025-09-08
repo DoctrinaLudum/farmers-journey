@@ -24,17 +24,11 @@ CROP_MACHINE_RESOURCE_CONDITIONS = {
 
 CROP_MACHINE_BOOST_CATALOGUE = resource_analysis_service.filter_boosts_from_domains(CROP_MACHINE_RESOURCE_CONDITIONS)
 
-# Mapeamento para bônus de Buds.
-BUD_BUFF_TO_CROP_MACHINE_BOOST_MAPPING = {
-    'CROP_YIELD': {'type': 'YIELD', 'operation': 'add', 'conditions': {'category': 'Crop'}},
-    'CROP_GROWTH_TIME': {'type': 'GROWTH_TIME', 'operation': 'percentage', 'conditions': {'category': 'Crop'}},
-}
-
 # ==============================================================================
 # FUNÇÃO PRINCIPAL (ORQUESTRADOR)
 # ==============================================================================
 
-def analyze_crop_machine(farm_data: dict, active_bud_buffs: dict = None) -> dict:
+def analyze_crop_machine(farm_data: dict) -> dict:
     """
     Analisa o estado da Crop Machine, calculando o rendimento de cada pacote na fila.
     """
@@ -50,17 +44,6 @@ def analyze_crop_machine(farm_data: dict, active_bud_buffs: dict = None) -> dict
         {},
         farm_data
     )
-
-    if active_bud_buffs:
-        for bud_buff_name, mapping in BUD_BUFF_TO_CROP_MACHINE_BOOST_MAPPING.items():
-            if bud_buff_name in active_bud_buffs and active_bud_buffs[bud_buff_name] != 0:
-                boost = {
-                    **mapping,
-                    "source_item": "Buds",
-                    "value": active_bud_buffs[bud_buff_name],
-                    "source_type": "bud"
-                }
-                base_active_boosts.append(boost)
 
     machine_data = crop_machine_building[0]
     queue = machine_data.get("queue", [])

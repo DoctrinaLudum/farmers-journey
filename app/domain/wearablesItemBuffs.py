@@ -61,9 +61,9 @@ WEARABLES_ITEM_BUFFS = {
         "boost_category": "Crop",
         "boosts": [
             {
-                "type": "CRITICAL_YIELD",
-                "operation": "percentage",
-                "value": 9.00,
+                "type": "YIELD",
+                "operation": "multiply",
+                "value": 10.00,
                 "conditions": {"category": "Crop"}
             },
             {
@@ -153,8 +153,8 @@ WEARABLES_ITEM_BUFFS = {
             {
                 "type": "YIELD",
                 "operation": "add",
-                "value": 0.1,
-                "conditions": {"category": "Fruit"}
+                "value": 0.10,
+                "conditions": {"resource": ["Apple", "Blueberry", "Banana", "Orange"]}
             }
         ],
         "enabled": True
@@ -426,13 +426,13 @@ WEARABLES_ITEM_BUFFS = {
     "Beekeeper Hat": {
         "id": 278,
         "part": "Hat",
-        "boost_category": "Crop",
+        "boost_category": "Animal",
         "boosts": [
             {
-                "type": "HONEY_PRODUCTION_SPEED",
-                "operation": "percentage",
+                "type": "PRODUCTION_SPEED",
+                "operation": "add",
                 "value": 0.2,
-                "conditions": {}
+                "conditions": {"resource": "Beehive"}
             }
         ],
         "enabled": True
@@ -916,8 +916,8 @@ WEARABLES_ITEM_BUFFS = {
             {
                 "type": "YIELD",
                 "operation": "add",
-                "value": 0.1,
-                "conditions": {"category": "Fruit Patch"}
+                "value": 0.10,
+                "conditions": {"resource": "Fruit"}
             }
         ],
         "enabled": True
@@ -1207,19 +1207,13 @@ WEARABLES_ITEM_BUFFS = {
     "Bumpkin Quiver": {
         "id": 384,
         "part": "Wings",
-        "boost_category": "Crop",
+        "boost_category": ["Crop", "Fruit"],
         "boosts": [
             {
-                "type": "FRUIT_YIELD",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 0.25,
-                "conditions": {"faction": "Bumpkins"}
-            },
-            {
-                "type": "CROP_YIELD",
-                "operation": "add",
-                "value": 0.25,
-                "conditions": {"faction": "Bumpkins"}
+                "conditions": {"resource": ["Crop", "Fruit"], "faction": "Bumpkins"}
             }
         ],
         "enabled": True
@@ -1227,19 +1221,13 @@ WEARABLES_ITEM_BUFFS = {
     "Goblin Quiver": {
         "id": 385,
         "part": "Wings",
-        "boost_category": "Crop",
+        "boost_category": ["Crop", "Fruit"],
         "boosts": [
             {
-                "type": "FRUIT_YIELD",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 0.25,
-                "conditions": {"faction": "Goblins"}
-            },
-            {
-                "type": "CROP_YIELD",
-                "operation": "add",
-                "value": 0.25,
-                "conditions": {"faction": "Goblins"}
+                "conditions": {"resource": ["Crop", "Fruit"], "faction": "Goblins"}
             }
         ],
         "enabled": True
@@ -1247,19 +1235,13 @@ WEARABLES_ITEM_BUFFS = {
     "Nightshade Quiver": {
         "id": 386,
         "part": "Wings",
-        "boost_category": "Crop",
+        "boost_category": ["Crop", "Fruit"],
         "boosts": [
             {
-                "type": "FRUIT_YIELD",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 0.25,
-                "conditions": {"faction": "Nightshades"}
-            },
-            {
-                "type": "CROP_YIELD",
-                "operation": "add",
-                "value": 0.25,
-                "conditions": {"faction": "Nightshades"}
+                "conditions": {"resource": ["Crop", "Fruit"], "faction": "Nightshades"}
             }
         ],
         "enabled": True
@@ -1267,19 +1249,13 @@ WEARABLES_ITEM_BUFFS = {
     "Sunflorian Quiver": {
         "id": 387,
         "part": "Wings",
-        "boost_category": "Fruit",
+        "boost_category": ["Crop", "Fruit"],
         "boosts": [
             {
-                "type": "FRUIT_YIELD",
+                "type": "YIELD",
                 "operation": "add",
                 "value": 0.25,
-                "conditions": {"faction": "Sunflorians"}
-            },
-            {
-                "type": "CROP_YIELD",
-                "operation": "add",
-                "value": 0.25,
-                "conditions": {"faction": "Sunflorians"}
+                "conditions": {"resource": ["Crop", "Fruit"], "faction": "Sunflorians"}
             }
         ],
         "enabled": True
@@ -1503,7 +1479,7 @@ WEARABLES_ITEM_BUFFS = {
                 "type": "GROWTH_TIME",
                 "operation": "percentage",
                 "value": -0.50,
-                "conditions": {"season": "Summer"}
+                "conditions": {"resource": "Crop", "season": "Summer"}
             }
         ],
         "enabled": True

@@ -1,15 +1,27 @@
-# app/services/fruit_service.py
+"""
+Este módulo é responsável por analisar o estado dos "fruit patches" (canteiros de frutas)
+na fazenda do jogador, calcular o rendimento e o tempo de recuperação das frutas,
+e aplicar bônus de itens, habilidades e acertos críticos.
+
+Ele atua como um orquestrador, utilizando funções do `resource_analysis_service`
+para a lógica centralizada de cálculo de bônus.
+"""
 
 import logging
 import time
 from collections import defaultdict
 from decimal import Decimal
 
-from ..domain import collectiblesItemBuffs as collectibles_domain
+# Imports dos domínios que contêm os dados brutos das frutas e outros recursos
 from ..domain import fruits as fruit_domain
-from ..domain import skills as skills_domain
-from ..domain import wearablesItemBuffs as wearables_domain
-from . import resource_analysis_service
+from ..domain import resources as resources_domain
+# Importa as funções necessárias do serviço de análise centralizado.
+# Este serviço é a "fonte da verdade" para como os bônus são processados.
+from .resource_analysis_service import (_get_player_items,
+                                        calculate_final_recovery_time,
+                                        calculate_final_yield,
+                                        filter_boosts_from_domains,
+                                        get_active_player_boosts)
 
 log = logging.getLogger(__name__)
 
@@ -17,178 +29,208 @@ log = logging.getLogger(__name__)
 # CONSTANTES DE REGRAS DE NEGÓCIO PARA FRUTAS
 # ==============================================================================
 
+# Define as condições específicas para filtrar bônus relevantes para frutas.
+# Estas condições são passadas para o `filter_boosts_from_domains`
+# para construir o catálogo de bônus `FRUIT_BOOST_CATALOGUE`.
 FRUIT_RESOURCE_CONDITIONS = {
+    # Nomes dos recursos de rendimento (frutas) que este serviço se importa.
     'yield_resource_names': list(fruit_domain.FRUIT_SEEDS.keys()),
+    # Nomes dos recursos de recuperação (frutas) que este serviço se importa.
     'recovery_resource_names': list(fruit_domain.FRUIT_SEEDS.keys()),
+    # Nome da árvore de habilidades à qual as habilidades de fruta pertencem.
     'skill_tree_name': 'Fruit Patch',
+    # Categorias de bônus que são relevantes para frutas (ex: "Fruit" para itens).
     'boost_category_names': ['Fruit']
 }
 
-FRUIT_BOOST_CATALOGUE = resource_analysis_service.filter_boosts_from_domains(FRUIT_RESOURCE_CONDITIONS)
+# O catálogo de bônus é pré-calculado uma única vez na inicialização do módulo.
+# Ele contém todos os bônus (de habilidades, vestíveis, coletáveis, etc.)
+# que são relevantes para as condições de frutas definidas acima.
+FRUIT_BOOST_CATALOGUE = filter_boosts_from_domains(FRUIT_RESOURCE_CONDITIONS)
 
 # ==============================================================================
 # FUNÇÕES DE CÁLCULO (LÓGICA INTERNA)
 # ==============================================================================
 
-def _get_fruit_yield_amount(game_state: dict, fruit_name: str, fertiliser: str, critical_drop) -> dict:
+def _get_fruit_yield_amount(game_state: dict, fruit_name: str, fertiliser: str, active_boosts: list) -> dict:
     """
-    Calcula o rendimento de uma fruta, espelhando a lógica de `getFruitYield` de fruitHarvested.ts.
+    Calcula o rendimento final de uma fruta, aplicando todos os bônus ativos.
+    Esta função é um orquestrador que delega o cálculo principal ao
+    `resource_analysis_service.calculate_final_yield`.
+
+    Args:
+        game_state (dict): O estado atual do jogo da fazenda.
+        fruit_name (str): O nome da fruta para a qual o rendimento será calculado.
+        fertiliser (str): O nome do fertilizante aplicado (se houver).
+        active_boosts (list): Uma lista pré-processada de todos os bônus ativos
+                               que se aplicam a esta fruta, incluindo bônus de
+                               acertos críticos já ocorridos.
+
+    Returns:
+        dict: Um dicionário contendo o rendimento base, o rendimento final
+              determinístico e detalhes dos bônus aplicados.
     """
-    base_amount = Decimal('1')
-    additive_bonus = Decimal('0')
-    applied_buffs_details = []
+    # O rendimento base de uma fruta é 1.0 antes de qualquer bônus.
+    base_yield = 1.0
 
-    inventory = game_state.get("inventory", {})
-    collectibles = {**game_state.get("collectibles", {}), **game_state.get("home", {}).get("collectibles", {})}
-    skills = set(game_state.get("bumpkin", {}).get("skills", {}).keys())
-    wearables = game_state.get("bumpkin", {}).get("equipped", {})
+    # Delega o cálculo do rendimento final ao serviço de análise de recursos.
+    # Este serviço lida com a aplicação de todos os tipos de bônus (aditivos,
+    # multiplicativos, etc.) e a verificação de condições.
+    yield_calculation = calculate_final_yield(
+        base_yield=base_yield,
+        active_boosts=active_boosts, # Usa a lista de bônus já processada
+        resource_name=fruit_name
+    )
 
-    def apply_boost(source, value, operation='add', source_type='collectible'):
-        nonlocal additive_bonus
-        if operation == 'add':
-            additive_bonus += Decimal(str(value))
-        applied_buffs_details.append({"source_item": source, "value": value, "operation": operation, "source_type": source_type})
-
-    # Bônus de Coletáveis
-    if fruit_name == "Apple" and "Lady Bug" in collectibles: apply_boost("Lady Bug", 0.25, 'add', 'collectible')
-    if fruit_name == "Blueberry" and "Black Bearry" in collectibles: apply_boost("Black Bearry", 1, 'add', 'collectible')
-    if fruit_name == "Banana" and "Banana Chicken" in collectibles: apply_boost("Banana Chicken", 0.1, 'add', 'collectible')
-    if fruit_name == "Lemon" and "Lemon Shark" in collectibles: apply_boost("Lemon Shark", 0.2, 'add', 'collectible')
-    if fruit_name == "Tomato" and "Tomato Bombard" in collectibles: apply_boost("Tomato Bombard", 1, 'add', 'collectible')
-    if fruit_name == "Grape":
-        if "Grape Granny" in collectibles: apply_boost("Grape Granny", 1, 'add', 'collectible')
-        if "Vinny" in collectibles: apply_boost("Vinny", 0.25, 'add', 'collectible')
-    if "Macaw" in collectibles:
-        macaw_bonus = 0.2 if "Loyal Macaw" in skills else 0.1
-        apply_boost("Macaw" + (" (Loyal)" if "Loyal Macaw" in skills else ""), macaw_bonus)
-
-    # Bônus de Wearables
-    if "Camel Onesie" in wearables.values(): apply_boost("Camel Onesie", 0.1, 'add', 'wearable')
-    if "Fruit Picker Apron" in wearables.values() and fruit_name in ["Apple", "Orange", "Blueberry", "Banana"]:
-        apply_boost("Fruit Picker Apron", 0.1, 'add', 'wearable')
-    if fruit_name == "Banana" and "Banana Amulet" in wearables.values(): apply_boost("Banana Amulet", 0.5, 'add', 'wearable')
-    if fruit_name == "Lemon" and "Lemon Shield" in wearables.values(): apply_boost("Lemon Shield", 1, 'add', 'wearable')
-    if fruit_name == "Grape" and "Grape Pants" in wearables.values(): apply_boost("Grape Pants", 0.2, 'add', 'wearable')
-
-    # Bônus de Skills
-    if "Fruitful Fumble" in skills: apply_boost("Fruitful Fumble", 0.1, 'add', 'skill')
-    if "Zesty Vibes" in skills:
-        zesty_bonus = 1 if fruit_name in ["Tomato", "Lemon"] else -0.25
-        apply_boost("Zesty Vibes", zesty_bonus, 'add', 'skill')
-
-    # Bônus de Fertilizante
-    if fertiliser == "Fruitful Blend":
-        fruitful_blend_bonus = Decimal('0.1')
-        if "Fruitful Bounty" in skills:
-            fruitful_blend_bonus *= 2
-            # Adiciona uma nota sobre o bônus da skill para clareza no popover
-            applied_buffs_details.append({"source_item": "Fruitful Bounty", "value": "x2 on Fruitful Blend", "operation": "special", "source_type": "skill"})
-        
-        apply_boost("Fruitful Blend", float(fruitful_blend_bonus), 'add', 'fertiliser')
-
-
-    # Bônus de Críticos
-    if "Generous Orchard" in skills and critical_drop("Generous Orchard"):
-        apply_boost("Generous Orchard (Critical)", 1, 'add', 'skill')
-
-    # Bônus de Eventos (Exemplo)
-    # if getActiveCalendarEvent({ game }) === "bountifulHarvest":
-    #     apply_boost("Bountiful Harvest", 1)
-
-    final_yield = base_amount + additive_bonus
-    return {"final_deterministic": float(final_yield), "applied_buffs": applied_buffs_details}
+    return yield_calculation
 
 def _get_fruit_patch_recovery_time(game_state: dict, fruit_name: str) -> dict:
     """
-    Calcula o tempo de recuperação de um fruit patch.
-    """
-    seed_name = fruit_domain.FRUIT_DATA.get(fruit_name, {}).get("seed_name")
-    if not seed_name: return {"final": 0, "applied_buffs": []}
-    
-    base_time = fruit_domain.FRUIT_SEEDS.get(seed_name, {}).get("plantSeconds", 0)
-    if base_time == 0: return {"final": 0, "applied_buffs": []}
+    Calcula o tempo de recuperação de um canteiro de frutas após a colheita.
 
-    active_boosts = resource_analysis_service.get_active_player_boosts(
-        resource_analysis_service._get_player_items(game_state),
-        FRUIT_BOOST_CATALOGUE,
-        {},
-        game_state
+    Args:
+        game_state (dict): O estado atual do jogo da fazenda.
+        fruit_name (str): O nome da fruta plantada no canteiro.
+
+    Returns:
+        dict: Um dicionário contendo o tempo de recuperação final e os bônus aplicados.
+    """
+    # Obtém o nome da semente associada à fruta.
+    seed_name = fruit_domain.FRUIT_DATA.get(fruit_name, {}).get("seed_name")
+    if not seed_name:
+        log.warning(f"Semente não encontrada para a fruta: {fruit_name}")
+        return {"final": 0, "applied_buffs": []}
+    
+    # Obtém o tempo base de plantio/recuperação da semente.
+    base_time = fruit_domain.FRUIT_SEEDS.get(seed_name, {}).get("plantSeconds", 0)
+    if base_time == 0:
+        log.warning(f"Tempo base de plantio/recuperação zero para a semente: {seed_name}")
+        return {"final": 0, "applied_buffs": []}
+
+    # Obtém todos os itens que o jogador possui para calcular os bônus ativos.
+    player_items = _get_player_items(game_state)
+    active_boosts = get_active_player_boosts(
+        player_items=player_items,
+        boost_catalogue=FRUIT_BOOST_CATALOGUE,
+        farm_data=game_state
     )
     
-    return resource_analysis_service.calculate_final_recovery_time(base_time, active_boosts, fruit_name)
+    # Delega o cálculo do tempo de recuperação final ao serviço de análise de recursos.
+    return calculate_final_recovery_time(base_time, active_boosts, fruit_name)
 
 # ==============================================================================
 # FUNÇÃO PRINCIPAL (ORQUESTRADOR)
 # ==============================================================================
 
-def analyze_fruit_patches(farm_data: dict, active_bud_buffs: dict = None) -> dict:
+def analyze_fruit_patches(farm_data: dict) -> dict:
     """
-    Analisa todos os fruit patches, calcula bônus e retorna um relatório completo.
+    Analisa todos os canteiros de frutas na fazenda do jogador,
+    calcula o rendimento e o tempo de recuperação para cada um,
+    e agrega um resumo geral.
+
+    Esta é a função principal do serviço de frutas, orquestrando
+    a coleta de dados e a aplicação de bônus.
+
+    Args:
+        farm_data (dict): Os dados completos da fazenda do jogador.
+
+    Returns:
+        dict: Um relatório detalhado do estado dos canteiros de frutas,
+              incluindo resumos e cálculos individuais.
     """
     fruit_patches_api_data = farm_data.get("fruitPatches", {})
     analyzed_patches = {}
+    # defaultdict para facilitar a agregação de dados de resumo por fruta.
     summary = defaultdict(lambda: {"total": 0, "ready": 0, "growing": 0, "total_yield": Decimal('0')})
     current_timestamp_ms = int(time.time() * 1000)
 
     for patch_id, patch_data in fruit_patches_api_data.items():
         fruit_details = patch_data.get("fruit")
         if not fruit_details:
-            continue
+            continue # Pula se não houver detalhes da fruta no canteiro
 
         fruit_name = fruit_details.get("name")
         if not fruit_name:
-            continue
+            continue # Pula se o nome da fruta não for encontrado
 
-        summary[fruit_name]["total"] += 1
+        summary[fruit_name]["total"] += 1 # Incrementa o contador total para esta fruta
         
+        # Calcula o tempo de recuperação do canteiro
         recovery_info = _get_fruit_patch_recovery_time(farm_data, fruit_name)
-        final_recovery_ms = recovery_info["final"] * 1000
+        final_recovery_ms = recovery_info["final"] * 1000 # Converte segundos para milissegundos
         
-        # Adiciona o tempo de recuperação final (com bônus) ao sumário, se ainda não estiver lá.
+        # Armazena o tempo de recuperação final no resumo, se ainda não estiver lá
         if 'final_recovery_time' not in summary[fruit_name]:
             summary[fruit_name]['final_recovery_time'] = recovery_info.get('final', 0)
 
+        # Determina se a fruta está pronta para colheita
         last_harvested_at = fruit_details.get("harvestedAt", fruit_details.get("plantedAt", 0))
         ready_at_ms = last_harvested_at + final_recovery_ms
         is_ready = current_timestamp_ms >= ready_at_ms
 
         state_name = "Pronto" if is_ready else "Crescendo"
-        summary[fruit_name]["ready" if is_ready else "growing"] += 1
+        summary[fruit_name]["ready" if is_ready else "growing"] += 1 # Atualiza o resumo de estado
 
         fertiliser_name = patch_data.get("fertiliser", {}).get("name")
-        has_yield_fertiliser = False
-        if fertiliser_name == "Fruitful Blend":
-            has_yield_fertiliser = True
+        
+        # 1. Obtém todos os itens que o jogador possui (habilidades, vestíveis, etc.).
+        player_items = _get_player_items(farm_data)
+        # Adiciona o fertilizante aplicado ao conjunto de itens do jogador, se houver.
+        if fertiliser_name:
+            player_items.add(fertiliser_name)
 
-        critical_hits = fruit_details.get("criticalHit", {})
-        critical_hits_tracker = (fruit_details.get("criticalHit") or {}).copy()
-        def critical_drop_simulator(name: str) -> bool:
-            if critical_hits_tracker.get(name, 0) > 0:
-                critical_hits_tracker[name] -= 1
-                return True
-            return False
+        # 2. Obtém a lista inicial de bônus ativos do jogador, filtrados pelo catálogo de frutas.
+        active_boosts = get_active_player_boosts(
+            player_items=player_items,
+            boost_catalogue=FRUIT_BOOST_CATALOGUE,
+            farm_data=farm_data
+        )
 
+        # 3. Processa acertos críticos (critical hits) que já ocorreram.
+        # A API informa se um acerto crítico ocorreu para uma habilidade específica.
+        fruit_specific_boosts = list(active_boosts) # Cria uma cópia para adicionar bônus de crítico
+        critical_hits = fruit_details.get("criticalHit", {}) # Obtém dados de acertos críticos da API
+
+        for hit_name, hit_count in critical_hits.items():
+            # Se o acerto crítico ocorreu (hit_count > 0) e a habilidade/item está no catálogo de bônus
+            if hit_count > 0 and hit_name in FRUIT_BOOST_CATALOGUE:
+                source_type = FRUIT_BOOST_CATALOGUE[hit_name].get("source_type")
+                # Itera sobre os bônus definidos para a habilidade/item que causou o crítico.
+                for boost in FRUIT_BOOST_CATALOGUE[hit_name].get("boosts", []):
+                    # Se for um bônus de rendimento (YIELD), adiciona-o à lista de bônus específicos da fruta.
+                    if boost.get("type") == "YIELD":
+                        fruit_specific_boosts.append({
+                            "type": "YIELD",
+                            "operation": boost["operation"],
+                            "value": boost["value"],
+                            "source_item": f"{hit_name} (Critical Hit)", # Marca como acerto crítico para exibição
+                            "source_type": source_type
+                        })
+
+        # 4. Calcula o rendimento final da fruta, passando a lista de bônus
+        #    que agora inclui os acertos críticos já ocorridos.
         yield_info = _get_fruit_yield_amount(
             game_state=farm_data,
             fruit_name=fruit_name,
             fertiliser=fertiliser_name,
-            critical_drop=critical_drop_simulator
+            active_boosts=fruit_specific_boosts # Passa a lista de bônus atualizada
         )
+        # Adiciona o rendimento determinístico total ao resumo.
         summary[fruit_name]['total_yield'] += Decimal(str(yield_info['final_deterministic']))
 
+        # Armazena os dados analisados para este canteiro específico.
         analyzed_patches[patch_id] = {
             "id": patch_id,
             "fruit_name": fruit_name,
             "state_name": state_name,
             "harvests_left": fruit_details.get("harvestsLeft", 0),
             "ready_at_timestamp_ms": int(ready_at_ms),
-            "harvests_left": fruit_details.get("harvestsLeft", 0),
             "calculations": {"yield": yield_info, "recovery": recovery_info},
             "fertiliser": patch_data.get("fertiliser"),
-            "critical_hits": critical_hits,
-            "has_yield_fertiliser": has_yield_fertiliser,
+            "has_yield_fertiliser": True if fertiliser_name else False
         }
 
+    # Prepara os dados para a visualização (frontend).
     view_data = {
         "summary_by_fruit": dict(sorted(summary.items())),
         "patch_status": dict(sorted(analyzed_patches.items())),

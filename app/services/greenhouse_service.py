@@ -4,7 +4,7 @@ import logging
 import time
 from collections import defaultdict
 from decimal import Decimal
-from ..import analysis
+
 from .. import analysis
 from ..domain import crops as crops_domain
 from ..domain import fruits as fruit_domain
@@ -27,14 +27,6 @@ GREENHOUSE_RESOURCE_CONDITIONS = {
 }
 
 GREENHOUSE_BOOST_CATALOGUE = resource_analysis_service.filter_boosts_from_domains(GREENHOUSE_RESOURCE_CONDITIONS)
-
-# Mapeamento para bônus de Buds.
-BUD_BUFF_TO_GREENHOUSE_BOOST_MAPPING = {
-    'CROP_YIELD': {'type': 'YIELD', 'operation': 'add', 'conditions': {'category': 'Crop'}},
-    'CROP_GROWTH_TIME': {'type': 'GROWTH_TIME', 'operation': 'percentage', 'conditions': {'category': 'Crop'}},
-    'FRUIT_YIELD': {'type': 'YIELD', 'operation': 'add', 'conditions': {'category': 'Fruit'}},
-    'FRUIT_GROWTH_TIME': {'type': 'GROWTH_TIME', 'operation': 'percentage', 'conditions': {'category': 'Fruit'}},
-}
 
 # ==============================================================================
 # FUNÇÕES DE CÁLCULO (LÓGICA INTERNA)
@@ -75,7 +67,7 @@ def _calculate_greenhouse_growth_time(active_boosts: list, plant_name: str) -> d
         base_time = crops_domain.GREENHOUSE_CROPS[plant_name]["harvestSeconds"]
     elif plant_name in fruit_domain.GREENHOUSE_FRUIT:
         # A estrutura de dados para frutas é diferente, precisamos buscar o tempo da semente.
-        seed_name = fruit_domain.FRUIT_DATA[plant_name].get("seed")
+        seed_name = fruit_domain.FRUIT_DATA[plant_name].get("seed_name")
         if seed_name:
             base_time = fruit_domain.FRUIT_SEEDS[seed_name].get("plantSeconds", 0)
     
@@ -93,7 +85,7 @@ def _calculate_greenhouse_growth_time(active_boosts: list, plant_name: str) -> d
 # FUNÇÃO PRINCIPAL (ORQUESTRADOR)
 # ==============================================================================
 
-def analyze_greenhouse_resources(farm_data: dict, active_bud_buffs: dict = None) -> dict:
+def analyze_greenhouse_resources(farm_data: dict) -> dict:
     """
     Analisa todos os vasos da estufa, calcula bônus e retorna um relatório completo.
     Esta função foi refatorada para usar o `resource_analysis_service` padronizado,
@@ -112,16 +104,6 @@ def analyze_greenhouse_resources(farm_data: dict, active_bud_buffs: dict = None)
         {}, # A estufa não possui grupos de bônus não cumulativos definidos.
         farm_data
     )
-
-    # 2. Adicionar bônus de Buds, se houver.
-    if active_bud_buffs:
-        for bud_buff_name, mapping in BUD_BUFF_TO_GREENHOUSE_BOOST_MAPPING.items():
-            if bud_buff_name in active_bud_buffs and active_bud_buffs[bud_buff_name] != 0:
-                boost = mapping.copy()
-                boost["source_item"] = "Buds"
-                boost["value"] = active_bud_buffs[bud_buff_name]
-                boost["source_type"] = "bud"
-                active_boosts.append(boost)
 
     # 3. Analisar cada vaso individualmente.
     pots = greenhouse_data.get("pots", {})
