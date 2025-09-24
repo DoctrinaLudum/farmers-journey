@@ -1101,7 +1101,22 @@ body.is-dragging-card {
     top: 20px; /* Distância do topo da tela */
     align-self: flex-start; /* Essencial para o 'sticky' funcionar dentro de um contêiner flex (row) */
 }
+/* NOVO: Estilos para a barra de filtro fixa no card de detalhes */
+#floating-resource-card .sticky-filter-bar {
+    position: sticky;
+    top: -0.5rem; /* Compensa o padding do card-body para colar no topo */
+    z-index: 2;
+    background-color: rgba(var(--bs-body-bg-rgb), 0.95);
+    backdrop-filter: blur(8px);
+    /* Compensa o padding do card-body para ocupar a largura total */
+    margin-left: -0.8rem;
+    margin-right: -0.8rem;
+    /* Adiciona o padding de volta para o conteúdo da barra */
+    padding-left: 0.8rem;
+    padding-right: 0.8rem;
+ }
 
+/*
 /* NOVO: Wrapper para o conteúdo da legenda, permite rolagem interna se for muito alto */
 .farm-layout-map .legend-content-wrapper {
     max-height: calc(100vh - 40px); /* Altura máxima baseada na tela, menos o espaçamento do topo */
@@ -1556,23 +1571,31 @@ body.show-brl .currency-flag-display.currency-brl {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    display: flex;
-    flex-wrap: wrap; /* Permite que os ícones quebrem para a próxima linha */
-    gap: 3px; /* Espaço entre os ícones */
+    display: grid; /* Alterado para grid para controle de colunas */
+    grid-template-columns: repeat(3, 1fr); /* 3 colunas */
+    gap: 2px; /* Espaço entre os ícones */
     justify-content: center; /* Centraliza os ícones horizontalmente */
     align-items: center; /* Centraliza os ícones verticalmente */
     z-index: 2;
+    width: 100%; /* Garante que o container ocupe a largura total para o grid */
+    max-width: 50px; /* Limita a largura para que os ícones se organizem em 3 colunas */
 }
 
 /* Estilo individual para cada ícone na sobreposição múltipla */
 .multi-overlay-icon {
-    width: 14px; /* Tamanho menor para caber múltiplos ícones */
-    height: 14px;
+    width: 15px; /* Tamanho ajustado para caber múltiplos ícones em 3 colunas */
+    height: 15px;
     border: 1px solid #e0a85c;
     background-color: #fce4b3;
     border-radius: 3px;
     padding: 1px;
     box-sizing: border-box; /* Garante que padding e borda estejam inclusos no tamanho */
+}
+
+/* NOVO: Aumenta visualmente a imagem da Crop Machine */
+.processing-building-container.large-building .map-item-icon.base-building[alt="Crop Machine"] {
+    transform: scale(1.2); /* Aumenta a imagem em 20% */
+    z-index: 1; /* Garante que ela fique acima de outros elementos menores se houver sobreposição */
 }
 
 
@@ -1626,4 +1649,38 @@ body.show-brl .currency-flag-display.currency-brl {
 /* Estilos específicos para células com dica de caranguejo (crab_hints) */
 .treasure-grid-cell[data-crab-hint="True"] .rules-mask-overlay {
     background-color: rgba(49, 196, 62, 0.3); /* Verde para caranguejo, mais discreto */
+}
+
+/* --- Crop Machine Global Buffs Button & Panel --- */
+#floating-resource-card .card-header .global-buffs-btn {
+    position: absolute;
+    top: -2rem; /* Posição ajustada para ficar abaixo do cabeçalho */
+    right: 0rem; /* Position it to the left of the close button */
+    background: #fff;
+    border: 1px solid var(--cor-borda);
+    border-radius: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.global-buffs-panel {
+    position: fixed; /* Use fixed to position relative to the viewport */
+    z-index: 1055; /* Just below the main resource card */
+    width: 260px;
+    display: none; /* Hidden by default */
+    border: 1px solid var(--cor-borda);
+    background-color: rgba(var(--bs-body-bg-rgb), 0.9);
+    backdrop-filter: blur(8px);
+    border-radius: 0.5rem;
+    font-size: 0.8rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.global-buffs-panel .card-body {
+    padding: 0.8rem;
+    max-height: 350px;
+    overflow-y: auto;
 }

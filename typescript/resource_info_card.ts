@@ -70,10 +70,10 @@ export class ResourceInfoCard {
             const onMouseMove = (moveEvent: MouseEvent) => {
                 let newLeft = moveEvent.clientX - offsetX;
                 let newTop = moveEvent.clientY - offsetY;
-
+            
                 newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - this.card!.offsetWidth));
                 newTop = Math.max(0, Math.min(newTop, window.innerHeight - this.card!.offsetHeight));
-
+            
                 this.card!.style.left = `${newLeft}px`;
                 this.card!.style.top = `${newTop}px`;
             };
@@ -127,6 +127,10 @@ export class ResourceInfoCard {
 
     // --- Função principal para popular o card com dados ---
     private populateCard(data: any) {
+        // Limpeza de elementos dinâmicos de execuções anteriores
+        this.cardHeader!.querySelector('.global-buffs-btn')?.remove();
+        document.getElementById('global-buffs-panel')?.remove();
+
         const analysisData = data.analysis;
         const resourceName = analysisData.crop_name || analysisData.fruit_name || analysisData.tree_name || analysisData.resource_name || analysisData.name || 'Recurso';
         this.cardTitle!.textContent = resourceName;
@@ -139,7 +143,7 @@ export class ResourceInfoCard {
             this.cardIcon!.src = ''; // Fallback para evitar erros
         }
         
-        this.cardBody!.innerHTML = ''; // Limpa o corpo do card
+        this.cardBody!.innerHTML = ''; 
 
         const statTemplate = document.getElementById('resource-card-stat-template') as HTMLTemplateElement;
         const buffTemplate = document.getElementById('resource-card-buff-template') as HTMLTemplateElement;
@@ -186,16 +190,42 @@ export class ResourceInfoCard {
                         operator = numericBuffValue > 0 ? '+' : '';
                         valueText = `${operator}${formattedValue}%`;
                     } else if (buff.operation === 'multiply') {
-                        formattedValue = numericBuffValue.toFixed(2);
-                        operator = 'x';
-                        valueText = `${operator}${formattedValue}`;
-                    } else {
+                        // NOVO: Se for um bônus de tempo e o valor for menor que 1,
+                        // exibe como uma redução percentual para maior clareza.
+                        if (isTimeBonus && numericBuffValue < 1) {
+                            formattedValue = ((1 - numericBuffValue) * 100).toFixed(0);
+                            valueText = `-${formattedValue}%`;
+                        } else {
+                            // Mantém o comportamento original para outros casos (ex: bônus de rendimento x2)
+                            formattedValue = numericBuffValue.toFixed(2);
+                            operator = 'x';
+                            valueText = `${operator}${formattedValue}`;
+                        }
+                    } else if (buff.type === 'OIL_COST') { // Handle OIL_COST as percentage
+                        formattedValue = (numericBuffValue * 100).toFixed(0);
+                        operator = numericBuffValue >= 0 ? '+' : '';
+                        valueText = `${operator}${formattedValue}%`;
+                    } else if (buff.type === 'CROP_MACHINE_GROWTH_TIME') { // Handle CROP_MACHINE_GROWTH_TIME
+                        if (buff.operation === 'multiply') {
+                            formattedValue = ((1 - numericBuffValue) * 100).toFixed(0);
+                            valueText = `-${formattedValue}%`; // e.g., 0.95 -> -5%
+                        } else if (buff.operation === 'percentage') {
+                            formattedValue = (numericBuffValue * 100).toFixed(0);
+                            operator = numericBuffValue > 0 ? '+' : '';
+                            valueText = `${operator}${formattedValue}%`;
+                        } else {
+                            formattedValue = numericBuffValue.toFixed(2);
+                            operator = numericBuffValue >= 0 ? '+' : '';
+                            valueText = `${operator}${formattedValue}`;
+                        }
+                    }
+                    else { // Default handling for other numeric operations
                         formattedValue = numericBuffValue.toFixed(2);
                         operator = numericBuffValue >= 0 ? '+' : '';
                         valueText = `${operator}${formattedValue}`;
                     }
 
-                    if (buff.source_type === 'bud') {
+                    if (buff.source_type === 'bud') { // This block seems to override previous formatting for buds, keep it for now.
                         formattedValue = numericBuffValue.toFixed(2);
                         operator = numericBuffValue > 0 ? '+' : '';
                         valueText = `${operator}${formattedValue}`;
@@ -208,8 +238,12 @@ export class ResourceInfoCard {
                 valueEl.textContent = valueText;
                 if (!isNaN(numericBuffValue)) {
                     if (isTimeBonus) {
-                        valueEl.classList.add(numericBuffValue < 0 ? 'text-success' : 'text-danger');
+                        // Um bônus de tempo é bom (verde) se for um valor negativo (redução)
+                        // OU se for uma multiplicação por um valor menor que 1.
+                        const isGoodTimeBonus = numericBuffValue < 0 || (buff.operation === 'multiply' && numericBuffValue < 1);
+                        valueEl.classList.add(isGoodTimeBonus ? 'text-success' : 'text-danger');
                     } else {
+                        // Para outros bônus (ex: rendimento), um valor positivo é bom.
                         valueEl.classList.add(numericBuffValue > 0 ? 'text-success' : 'text-danger');
                     }
                 }
@@ -491,112 +525,292 @@ export class ResourceInfoCard {
             }
         }
 
-        if (data.type === 'Crop Machine' && analysisData.queue) {
-            const queueCrops = analysisData.queue.map((pack: any) => pack.crop);
-            const uniqueCrops = [...new Set(queueCrops)];
+        if (data.type === 'Crop Machine' && analysisData) {
+            try {
+                // Lógica para criar o painel de bônus como um filho do card principal
+                const oilBuffsExist = analysisData.global_oil_buffs && (analysisData.global_oil_buffs.increases.length > 0 || analysisData.global_oil_buffs.decreases.length > 0);
+                const timeBuffsExist = analysisData.global_time_buffs && analysisData.global_time_buffs.buffs.length > 0;
+                
+                if (oilBuffsExist || timeBuffsExist) {
+                    const globalBuffsBtn = document.createElement('button');
+                    globalBuffsBtn.className = 'btn btn-outline-info btn-sm global-buffs-btn';
+                    globalBuffsBtn.innerHTML = '<i class="bi bi-stars"></i> Bônus Globais';
+                    this.cardHeader!.appendChild(globalBuffsBtn);
 
-            if (uniqueCrops.length === 0) {
-                this.cardTitle!.textContent = 'Crop Machine (Vazia)';
-            } else if (uniqueCrops.length === 1) {
-                this.cardTitle!.textContent = `Crop Machine (${uniqueCrops[0]})`;
-            } else {
-                this.cardTitle!.textContent = `Crop Machine (${uniqueCrops.length} plantas diferentes)`;
+                    const globalBuffsPanel = document.createElement('div');
+                    globalBuffsPanel.id = 'global-buffs-panel';
+                    globalBuffsPanel.className = 'global-buffs-panel card';
+                    
+                    globalBuffsPanel.style.position = 'absolute';
+                    globalBuffsPanel.style.top = '0';
+                    globalBuffsPanel.style.left = 'calc(100% + 10px)';
+                    globalBuffsPanel.style.width = '350px';
+                    globalBuffsPanel.style.display = 'none';
+                    globalBuffsPanel.style.zIndex = '10';
+
+                    const panelBody = document.createElement('div');
+                    panelBody.className = 'card-body';
+                    const panelList = document.createElement('ul');
+                    panelList.className = 'list-group list-group-flush';
+
+                    // CORREÇÃO: Padroniza o contador da fila de pacotes
+                    if (analysisData.max_queue_size) {
+                        const usedQueue = analysisData.used_queue_size ?? 0;
+                        const maxQueue = analysisData.max_queue_size;
+                        const queueStatEl = document.createElement('li');
+                        queueStatEl.className = 'list-group-item d-flex justify-content-between align-items-center';
+                        queueStatEl.innerHTML = `<span class="stat-label">Fila de Pacotes:</span> <span class="stat-value"><strong>${usedQueue} / ${maxQueue}</strong></span>`;
+                        panelList.appendChild(queueStatEl);
+                        
+                        const hr = document.createElement('hr');
+                        hr.className = 'my-1';
+                        panelList.appendChild(hr);
+                    }
+
+                    const sourceTypeToLabel: { [key: string]: string } = {
+                        skill: '(Skill)', collectible: '(Collectible)',
+                    };
+
+                    const renderGroupedBuffs = (title: string, buffsData: any, targetList: HTMLElement) => {
+                        if (!buffsData) return;
+                        const buffs = buffsData.increases ? [...buffsData.increases, ...buffsData.decreases] : buffsData.buffs;
+                        if (!buffs || buffs.length === 0) return;
+
+                        const titleEl = document.createElement('h6');
+                        titleEl.className = 'mt-2 mb-1 small text-muted';
+                        titleEl.textContent = title;
+                        targetList.appendChild(titleEl);
+
+                        const buffTemplate = (document.getElementById('resource-card-buff-template') as HTMLTemplateElement).content;
+                        buffs.forEach((buff: any) => {
+                            const clone = buffTemplate.cloneNode(true) as DocumentFragment;
+                            const buffSourceEl = clone.querySelector('.buff-source')!;
+                            const buffValueEl = clone.querySelector('.buff-value')!;
+                            const prefix = sourceTypeToLabel[buff.source_type] || '';
+                            const typeClass = buff.source_type ? `is-type-${buff.source_type}` : '';
+                            const prefixTag = prefix ? `<span class="buff-source-tag ${typeClass}">${prefix}</span>` : '';
+                            buffSourceEl.innerHTML = `${prefixTag} ${buff.source_item}`.trim();
+                            buffValueEl.textContent = buff.effect_str.replace(/\n/g, '');
+                            if (buff.sentiment === 'positive') {
+                                buffValueEl.classList.add('text-success');
+                            } else if (buff.sentiment === 'negative') {
+                                buffValueEl.classList.add('text-danger');
+                            }
+                            targetList.appendChild(clone);
+                        });
+
+                        // CORREÇÃO: Padroniza o consumo final de óleo
+                        if (buffsData.rate) {
+                            const rate = Number(buffsData.rate);
+                            const rateEl = document.createElement('li');
+                            rateEl.className = 'list-group-item d-flex justify-content-between align-items-center';
+                            rateEl.innerHTML = `<span class="stat-label">Consumo Final:</span> <span class="stat-value"><strong>${rate.toFixed(2)} Oil/hora</strong></span>`;
+                            targetList.appendChild(rateEl);
+                        }
+
+                        if (buffsData.disclaimer) {
+                            const disclaimerEl = document.createElement('p');
+                            disclaimerEl.className = 'small mb-0 mt-2 p-2 bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle rounded';
+                            
+                            if (buffsData.rate) {
+                                disclaimerEl.innerHTML = `<i class="bi bi-info-circle me-1"></i> O consumo de óleo é constante. Adicionar óleo aumenta o tempo de operação da máquina.`;
+                            } else {
+                                disclaimerEl.innerHTML = `<i class="bi bi-info-circle me-1"></i> ${buffsData.disclaimer}`;
+                            }
+                            
+                            targetList.appendChild(disclaimerEl);
+                            const hr = document.createElement('hr');
+                            hr.className = 'my-2';
+                            targetList.appendChild(hr);
+                        }
+                    };
+
+                    renderGroupedBuffs('Bônus de Custo de Óleo (Máquina)', analysisData.global_oil_buffs, panelList);
+                    renderGroupedBuffs('Bônus de Tempo (Máquina)', analysisData.global_time_buffs, panelList);
+
+                    if (panelList.lastElementChild?.tagName === 'HR') {
+                        panelList.removeChild(panelList.lastElementChild);
+                    }
+
+                    panelBody.appendChild(panelList);
+                    globalBuffsPanel.appendChild(panelBody);
+                    this.card!.appendChild(globalBuffsPanel);
+
+                    globalBuffsBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const isVisible = globalBuffsPanel.style.display === 'block';
+                        globalBuffsPanel.style.display = isVisible ? 'none' : 'block';
+                    });
+                }
+            } catch (error) {
+                console.error("ResourceInfoCard: Erro ao renderizar o painel de bônus globais da Crop Machine.", error);
             }
 
-            const queue = analysisData.queue as any[];
-            if (queue.length === 0) {
-                const noItemsEl = document.createElement('p');
-                noItemsEl.className = 'text-muted small mt-2 mb-0';
-                noItemsEl.textContent = 'Nenhum pacote na fila.';
-                this.cardBody!.appendChild(noItemsEl);
-            } else {
-                queue.forEach((pack: any, index: number) => {
-                    if (index > 0) {
-                        this.cardBody!.appendChild(document.createElement('hr'));
+            try {
+                const groupedQueue = analysisData.grouped_queue;
+                const cropGroups = Object.keys(groupedQueue);
+
+                if (cropGroups.length === 0) {
+                    this.cardTitle!.textContent = 'Crop Machine (Vazia)';
+                    const noItemsEl = document.createElement('p');
+                    noItemsEl.className = 'text-muted small mt-2 mb-0';
+                    noItemsEl.textContent = 'Nenhum pacote na fila.';
+                    this.cardBody!.appendChild(noItemsEl);
+                } else {
+                    if (cropGroups.length > 3) {
+                        this.cardTitle!.textContent = `Crop Machine (${cropGroups.slice(0, 3).join(', ')}, ...)`;
+                    } else {
+                        this.cardTitle!.textContent = `Crop Machine (${cropGroups.join(', ')})`;
                     }
 
-                    const packHeader = document.createElement('h6');
-                    packHeader.className = 'd-flex align-items-center small mt-2';
-                    packHeader.innerHTML = `
-                        <img src="/static/${pack.icon_path}" class="icon icon-2x me-2">
-                        <span>${pack.crop}</span>
-                    `;
-                    this.cardBody!.appendChild(packHeader);
+                    // Lógica para botões de "ir para" (scroll) com ícones e barra fixa
+                    if (cropGroups.length > 1) {
+                        const filterBar = document.createElement('div');
+                        // Adiciona a classe para a barra de navegação fixa
+                        filterBar.className = 'd-flex flex-wrap gap-1 mb-3 pb-2 border-bottom sticky-filter-bar';
 
-                    const packStatsList = document.createElement('ul');
-                    packStatsList.className = 'list-group list-group-flush';
+                        cropGroups.forEach(cropName => {
+                            const packs = groupedQueue[cropName];
+                            const iconPath = packs[0]?.icon_path;
 
-                    const addPackStat = (label: string, value: string | number | undefined | null) => {
-                        if (value === undefined || value === null) return;
-                        const clone = statTemplate.content.cloneNode(true) as HTMLElement;
-                        clone.querySelector('.stat-label')!.textContent = label;
-                        clone.querySelector('.stat-value')!.textContent = String(value);
-                        packStatsList.appendChild(clone);
-                    };
-                    
-                    addPackStat('Estado', pack.is_ready ? 'Pronto' : 'Processando');
-                    addPackStat('Sementes', pack.seeds);
-                    addPackStat('Rendimento Previsto', (pack.yield_info?.final_deterministic ?? 0).toFixed(2));
-                    if (pack.oil_cost) {
-                        addPackStat('Custo de Óleo', pack.oil_cost.toLocaleString('pt-BR', { maximumFractionDigits: 0 }));
-                    }
-                    if (!pack.is_ready) {
-                        const readyDate = new Date(pack.readyAt).toLocaleString('pt-BR');
-                        addPackStat('Pronto em', readyDate);
-                    }
-
-                    if (pack.yield_info?.applied_buffs?.length > 0) {
-                        const allBuffs = pack.yield_info.applied_buffs;
-
-                        const yieldBuffs = allBuffs.filter((b: any) => b.type === 'YIELD' || b.type === 'BONUS_YIELD_CHANCE');
-                        const timeBuffs = allBuffs.filter((b: any) => b.type === 'RECOVERY_TIME' || b.type === 'GROWTH_TIME');
-
-                        if (yieldBuffs.length > 0 || timeBuffs.length > 0) {
-                            const accordionId = `pack-buffs-collapse-${index}`;
-                            const accordionParentId = `accordion-pack-${index}`;
-
-                            const accordionItem = document.createElement('li');
-                            accordionItem.className = 'list-group-item px-0 py-1';
-                            accordionItem.innerHTML = `
-                                <div class="accordion accordion-flush" id="${accordionParentId}">
-                                <div class="accordion-item bg-transparent">
-                                    <h2 class="accordion-header">
-                                        <button class="accordion-button accordion-button-sm collapsed py-1" type="button" data-bs-toggle="collapse" data-bs-target="#${accordionId}">
-                                            Bônus Aplicados (${allBuffs.length})
-                                        </button>
-                                    </h2>
-                                    <div id="${accordionId}" class="accordion-collapse collapse" data-bs-parent="#${accordionParentId}">
-                                        <div class="accordion-body pt-1 pb-0">
-                                            <!-- As seções de bônus serão renderizadas aqui -->
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
+                            const badge = document.createElement('a');
+                            // Adiciona classes para alinhar ícone e texto
+                            badge.className = 'badge text-decoration-none bg-info-subtle text-info-emphasis d-flex align-items-center gap-1';
                             
-                            const accordionBody = accordionItem.querySelector('.accordion-body') as HTMLElement;
+                            let badgeHTML = '';
+                            if (iconPath) {
+                                // Usa a classe 'item-icon-sm' para o ícone
+                                badgeHTML += `<img src="/static/${iconPath}" class="item-icon-sm" alt="${cropName} icon" style="height: 1em; width: 1em;">`;
+                            }
+                            badgeHTML += `<span>${cropName}</span>`;
 
-                            const renderBuffSection = (title: string, buffs: any[], targetElement: HTMLElement, isTimeBonus: boolean = false) => {
-                                if (buffs.length === 0) return;
-                                const titleEl = document.createElement('h6');
-                                titleEl.className = 'mt-2 mb-1 small text-muted';
-                                titleEl.textContent = title;
-                                targetElement.appendChild(titleEl);
+                            badge.innerHTML = badgeHTML;
+                            badge.href = `#crop-group-${cropName.replace(/\s+/g, '-')}`;
+                            filterBar.appendChild(badge);
+                        });
+                        
+                        this.cardBody!.appendChild(filterBar);
 
-                                const buffList = document.createElement('ul');
-                                buffList.className = 'list-group list-group-flush';
-                                renderBuffsToList(buffs, buffList, isTimeBonus);
-                                targetElement.appendChild(buffList);
-                            };
-
-                            renderBuffSection('Bônus de Rendimento', yieldBuffs, accordionBody, false);
-                            renderBuffSection('Bônus de Tempo', timeBuffs, accordionBody, true);
-
-                            packStatsList.appendChild(accordionItem);
-                        };
+                        // Event listener para a barra de filtro (scroll)
+                        filterBar.addEventListener('click', (e) => {
+                            const anchor = (e.target as HTMLElement).closest('a');
+                            if (anchor && anchor.hash) {
+                                e.preventDefault();
+                                const targetId = anchor.hash.substring(1);
+                                const targetElement = document.getElementById(targetId);
+                                if (targetElement) {
+                                    const scrollContainer = this.cardBody!;
+                                    // A altura da barra de filtro + um pequeno espaço
+                                    const offset = filterBar.offsetHeight + 45; 
+                                    
+                                    scrollContainer.scrollTo({
+                                        top: targetElement.offsetTop - offset,
+                                        behavior: 'smooth'
+                                    });
+                                }
+                            }
+                        });
                     }
-                    this.cardBody!.appendChild(packStatsList);
-                });
+
+                    Object.entries(groupedQueue).forEach(([cropName, packs]: [string, any], groupIndex) => {
+                        try {
+                            // Adiciona HR antes de cada grupo, exceto o primeiro
+                            if (groupIndex > 0) {
+                                const hr = document.createElement('hr');
+                                hr.className = 'my-3'; // Adiciona margem para separar visualmente
+                                this.cardBody!.appendChild(hr);
+                            }
+
+                            const groupWrapper = document.createElement('div');
+                            groupWrapper.className = 'crop-machine-group';
+                            // Adiciona um ID para que os botões de filtro possam rolar até ele
+                            groupWrapper.id = `crop-group-${cropName.replace(/\s+/g, '-')}`;
+
+                            const groupHeader = document.createElement('h6');
+                            groupHeader.className = 'd-flex align-items-center small mt-2';
+                            groupHeader.innerHTML = `<img src="/static/${packs[0].icon_path}" class="icon icon-2x me-2"> <span>${cropName}</span>`;
+                            groupWrapper.appendChild(groupHeader);
+
+                            const detailsContainer = document.createElement('div');
+                            detailsContainer.className = 'pack-details-content';
+
+                            if (packs.length > 1) {
+                                const navContainer = document.createElement('div');
+                                navContainer.className = 'nav nav-pills nav-pills-sm mb-2';
+                                packs.forEach((pack: any, index: number) => {
+                                    const button = document.createElement('button');
+                                    button.className = 'nav-link';
+                                    button.textContent = `Pct ${index + 1}`;
+                                    button.dataset.packIndex = String(index);
+                                    if (index === 0) button.classList.add('active');
+                                    navContainer.appendChild(button);
+                                });
+                                groupWrapper.appendChild(navContainer);
+
+                                navContainer.addEventListener('click', (e) => {
+                                    const target = e.target as HTMLElement;
+                                    if (target.tagName === 'BUTTON') {
+                                        navContainer.querySelector('.active')?.classList.remove('active');
+                                        target.classList.add('active');
+                                        const packIndex = parseInt(target.dataset.packIndex!, 10);
+                                        this.renderPackDetails(packs[packIndex], detailsContainer, statTemplate, buffTemplate, renderBuffsToList);
+                                    }
+                                });
+                            }
+                            
+                            groupWrapper.appendChild(detailsContainer);
+                            this.renderPackDetails(packs[0], detailsContainer, statTemplate, buffTemplate, renderBuffsToList);
+                            this.cardBody!.appendChild(groupWrapper);
+                        } catch (innerError) {
+                            console.error(`ResourceInfoCard: Erro ao renderizar o grupo de packs '${cropName}' da Crop Machine.`, innerError);
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error("ResourceInfoCard: Erro ao renderizar a fila de pacotes da Crop Machine.", error);
             }
         }
+    }
+
+    private renderPackDetails(pack: any, container: HTMLElement, statTemplate: HTMLTemplateElement, buffTemplate: HTMLTemplateElement, renderBuffsToList: Function) {
+        container.innerHTML = ''; // Limpa o container antes de renderizar
+        const statsList = document.createElement('ul');
+        statsList.className = 'list-group list-group-flush';
+
+        const addStat = (label: string, value: string | number | undefined | null, valueClass?: string) => {
+            if (value === undefined || value === null) return;
+            const clone = statTemplate.content.cloneNode(true) as DocumentFragment;
+            clone.querySelector('.stat-label')!.textContent = label;
+            const valueEl = clone.querySelector('.stat-value')! as HTMLElement;
+            valueEl.textContent = String(value);
+            if (valueClass) valueEl.classList.add(...valueClass.split(' '));
+            statsList.appendChild(clone);
+        };
+
+        const addBuffs = (title: string, buffs: any[], isTimeBonus: boolean = false) => {
+            if (!buffs || buffs.length === 0) return;
+            const titleEl = document.createElement('h6');
+            titleEl.className = 'mt-3 mb-1 small text-muted';
+            titleEl.textContent = title;
+            statsList.appendChild(titleEl);
+            renderBuffsToList(buffs, statsList, isTimeBonus);
+        };
+
+        addStat('Estado', pack.is_ready ? 'Pronto' : 'Processando');
+        addStat('Sementes', pack.seeds);
+        addStat('Rendimento Previsto', (pack.yield_info?.final_deterministic ?? 0).toFixed(2));
+        if (pack.yield_info?.average_yield_per_seed) {
+            addStat('Média por Semente', pack.yield_info.average_yield_per_seed.toFixed(2));
+        }
+        if (pack.oil_cost) {
+            addStat('Custo de Óleo', pack.oil_cost.toLocaleString('pt-BR', { maximumFractionDigits: 2 }));
+        }
+        if (!pack.is_ready) {
+            addStat('Pronto em', this.formatFullDateTime(pack.readyAt));
+        }
+
+        container.appendChild(statsList);
+
+        addBuffs('Bônus de Rendimento', pack.yield_info?.applied_buffs, false);
     }
 }

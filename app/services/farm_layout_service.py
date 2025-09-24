@@ -151,14 +151,24 @@ def generate_layout_map(farm_data: dict, analyzed_nodes: dict = None):
                 icon_name = "Crop Machine"
                 base_building_icon = get_item_image_path(source_key)
 
-                if analyzed_data and analyzed_data.get("queue") and analyzed_data["queue"]:
-                    # Get unique crop names from the queue
-                    crops_in_queue = sorted(list(set(item.get("crop") for item in analyzed_data["queue"] if item.get("crop"))))
-                    crops_in_machine_list.extend(crops_in_queue)
-                    # Rename to 'growing_plants' to match Greenhouse data structure for the frontend
-                    analyzed_data['growing_plants'] = crops_in_queue
+                if analyzed_data and analyzed_data.get("queue"):
+                    # NOVO: Agrupa os pacotes da fila por nome da cultura.
+                    grouped_queue = defaultdict(list)
+                    for pack in analyzed_data["queue"]:
+                        crop_name = pack.get("crop")
+                        if crop_name:
+                            grouped_queue[crop_name].append(pack)
+                    
+                    # Substitui a fila original pela estrutura agrupada.
+                    analyzed_data['grouped_queue'] = dict(grouped_queue)
+                    analyzed_data.pop('queue', None) # Remove a fila antiga para evitar confusão
+
+                    crops_in_queue = sorted(list(grouped_queue.keys()))
                     
                     if crops_in_queue:
+                        crops_in_machine_list.extend(crops_in_queue)
+                        # Rename to 'growing_plants' to match Greenhouse data structure for the frontend
+                        analyzed_data['growing_plants'] = crops_in_queue
                         # Add the names of the crops in the queue to the legend
                         legend_item_names.update(crops_in_queue)
                         # Create a list of overlay icons, just like the Greenhouse

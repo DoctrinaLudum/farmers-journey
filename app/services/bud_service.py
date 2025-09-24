@@ -115,9 +115,6 @@ def analyze_bud_buffs(farm_data: dict) -> dict:
     for key, value in final_farm_buffs.items():
         buff_summary_for_template.append(f"{key}: {value:.2f}")
 
-    # DEBUG: Log dos bônus finais calculados antes de serem retornados.
-    log.debug(f"Bud service calculated final farm buffs: {dict(final_farm_buffs)}")
-
     # O resultado é separado em duas chaves principais:
     # 'internal': Contém dados limpos para serem consumidos por outros serviços.
     # 'view': Contém dados formatados e detalhados para serem usados diretamente nos templates.

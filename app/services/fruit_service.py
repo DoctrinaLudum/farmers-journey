@@ -175,16 +175,23 @@ def analyze_fruit_patches(farm_data: dict) -> dict:
         
         # 1. Obtém todos os itens que o jogador possui (habilidades, vestíveis, etc.).
         player_items = _get_player_items(farm_data)
-        # Adiciona o fertilizante aplicado ao conjunto de itens do jogador, se houver.
-        if fertiliser_name:
-            player_items.add(fertiliser_name)
-
-        # 2. Obtém a lista inicial de bônus ativos do jogador, filtrados pelo catálogo de frutas.
+        
+        # 2. Obtém a lista de bônus globais ativos do jogador.
+        # A função `get_active_player_boosts` intencionalmente ignora fertilizantes,
+        # pois eles são específicos do nó e devem ser tratados pelo serviço do nó.
         active_boosts = get_active_player_boosts(
             player_items=player_items,
             boost_catalogue=FRUIT_BOOST_CATALOGUE,
             farm_data=farm_data
         )
+
+        # Adiciona manualmente o bônus do fertilizante, se aplicável a este canteiro.
+        if fertiliser_name and fertiliser_name in FRUIT_BOOST_CATALOGUE:
+            if FRUIT_BOOST_CATALOGUE[fertiliser_name].get("source_type") == "fertiliser":
+                for boost in FRUIT_BOOST_CATALOGUE[fertiliser_name].get("boosts", []):
+                    active_boosts.append(
+                        {"source_item": fertiliser_name, "source_type": "fertiliser", **boost}
+                    )
 
         # 3. Processa acertos críticos (critical hits) que já ocorreram.
         # A API informa se um acerto crítico ocorreu para uma habilidade específica.

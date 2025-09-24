@@ -190,8 +190,8 @@ function calculateAndShowSummary(filterId: string, triggerElement: HTMLElement):
     if (!mapWrapper || !summaryCard) return;
 
     // REATORADO: Seletor unificado para encontrar todos os tipos de recursos, incluindo os dentro de edifícios.
-    const matchingElements = mapWrapper.querySelectorAll<HTMLElement>( 
-        `[data-resource-filter-id="${filterId}"], [data-greenhouse-plants~="${filterId}"], [data-crop-machine-plants~="${filterId}"]`
+    const matchingElements = mapWrapper.querySelectorAll<HTMLElement>(
+        `[data-resource-filter-id="${filterId}"], [data-greenhouse-plants~="${filterId}"]`
     );
 
     if (matchingElements.length === 0) {
@@ -210,10 +210,8 @@ function calculateAndShowSummary(filterId: string, triggerElement: HTMLElement):
         // Precisamos do nome normal para o título e o ícone.
         const cropNameFromFilter = filterId.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 
-        // Filtra a fila para obter apenas os pacotes da cultura selecionada.
-        const packsForCrop = (analysisData?.queue || []).filter((pack: any) => 
-            (pack.crop || '').toLowerCase().replace(/ /g, '-') === filterId
-        );
+        // Acessa diretamente os pacotes da cultura selecionada a partir da fila agrupada.
+        const packsForCrop = analysisData?.grouped_queue?.[cropNameFromFilter] || [];
 
         const cropMachineSummary: CropMachineSummaryData = {
             isCropMachine: true,

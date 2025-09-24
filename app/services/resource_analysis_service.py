@@ -135,6 +135,7 @@ def filter_boosts_from_domains(resource_conditions: dict) -> dict:
     recovery_names = resource_conditions.get('recovery_resource_names', [])
     skill_tree = resource_conditions.get('skill_tree_name')
     boost_categories = resource_conditions.get('boost_category_names', [])
+    boost_type_names = resource_conditions.get('boost_type_names', []) # NEW
 
     for item_name, item_details in all_item_data.items():
         # Bônus podem estar em 'boosts' ou 'effects' dependendo do domínio.
@@ -187,6 +188,13 @@ def filter_boosts_from_domains(resource_conditions: dict) -> dict:
                         is_item_relevant = True
                         break
 
+        # NEW LOGIC 4: Check if any boost type matches boost_type_names
+        if not is_item_relevant and boost_type_names:
+            for boost in boost_list:
+                if boost.get("type") in boost_type_names:
+                    is_item_relevant = True
+                    break
+
         # Se o item não for relevante para nenhuma das lógicas de filtragem, pula para o próximo.
         if not is_item_relevant:
             continue
@@ -213,7 +221,10 @@ def filter_boosts_from_domains(resource_conditions: dict) -> dict:
             is_recovery = boost.get("type") in ["RECOVERY_TIME", "TREE_RECOVERY_TIME", "CROP_GROWTH_TIME", "GROWTH_TIME", "SUPER_TOTEM_TIME_BOOST"]
             is_sale_price = boost.get("type") == "SALE_PRICE"
 
-            if is_direct_yield or is_chance_or_other_yield or is_recovery or is_sale_price:
+            is_oil_cost = boost.get("type") == "OIL_COST"
+            is_crop_machine_time = boost.get("type") == "CROP_MACHINE_GROWTH_TIME"
+
+            if is_direct_yield or is_chance_or_other_yield or is_recovery or is_sale_price or is_oil_cost or is_crop_machine_time:
                 standardized_boost = boost.copy()
                 # Padroniza tipos de rendimento direto para 'YIELD' para simplificar o processamento posterior.
                 if is_direct_yield:
@@ -470,12 +481,25 @@ def get_active_player_boosts(player_items: set, boost_catalogue: dict, non_cumul
                     continue
                 active_boosts.append({"source_item": item_name, "source_type": source_type, **boost})
 
-    # 3. Processa e adiciona os bônus de Buds.
-    # Buds são tratados separadamente pois sua ativação e valor podem depender de lógicas complexas.
+    # 3. Processa e adiciona os bônus de Buds, se forem relevantes para o catálogo.
+    # Esta verificação garante que apenas os bônus de Bud cujo TIPO (ex: YIELD, GROWTH_TIME)
+    # e CATEGORIA (ex: Crop, Fruit) são relevantes para o serviço atual sejam considerados.
     bud_analysis_result = bud_service.analyze_bud_buffs(farm_data)
     if bud_analysis_result and bud_analysis_result["internal"]["active_buffs"]:
         winning_bud_buffs = bud_analysis_result["internal"]["active_buffs"]
         winning_bud_info = bud_analysis_result["internal"]["winning_bud_info"]
+
+        # Extrai as categorias e tipos de bônus relevantes do catálogo já filtrado.
+        relevant_boost_types = set()
+        relevant_boost_categories = set()
+        for item_data in boost_catalogue.values():
+            for boost in item_data.get("boosts", []):
+                relevant_boost_types.add(boost.get("type"))
+                if boost.get("conditions"): # Adiciona categorias das condições
+                    cond_cat = boost["conditions"].get("category")
+                    if cond_cat:
+                        cats = cond_cat if isinstance(cond_cat, list) else [cond_cat]
+                        relevant_boost_categories.update(cats)
 
         for buff_key, buff_value_float in winning_bud_buffs.items():
             original_buff_found = False
@@ -491,17 +515,29 @@ def get_active_player_boosts(player_items: set, boost_catalogue: dict, non_cumul
                     break
 
             if original_buff_found:
+                # FILTRO: Verifica se o tipo e a categoria do bônus do Bud são relevantes.
+                bud_boost_type = original_details.get("type")
+                bud_boost_category = None
+                if original_details.get("conditions"):
+                    bud_boost_category = original_details["conditions"].get("category")
+
+                is_type_relevant = bud_boost_type in relevant_boost_types
+                is_category_relevant = not bud_boost_category or bud_boost_category in relevant_boost_categories
+
+                if not (is_type_relevant and is_category_relevant):
+                    continue # Pula este bônus de Bud por não ser relevante.
+
                 source_bud = winning_bud_info.get(buff_key)
                 source_item_name = "Buds"
                 if source_bud:
-                    source_item_name = f"Bud #{source_bud['bud_id']} ({source_bud['type']}, {source_bud['aura']})" # Nome detalhado do Bud
+                    source_item_name = f"Bud #{source_bud['bud_id']} ({source_bud['type']}, {source_bud['aura']})"
 
                 active_boosts.append({
                     "source_item": source_item_name,
                     "source_type": "bud",
-                    "type": original_details.get("type"),
+                    "type": bud_boost_type,
                     "operation": original_details.get("operation"),
-                    "value": Decimal(str(buff_value_float)), # Valor do bônus do Bud
+                    "value": Decimal(str(buff_value_float)),
                     "conditions": original_details.get("conditions", {})
                 })
 
@@ -712,6 +748,17 @@ def _conditions_are_met(conditions: dict, resource_name: str, node_context: dict
             if current_tier not in required_list:
                 return False # O tier da cultura não corresponde ao requerido.
         
+        # Condição de Local de Plantio (ex: "planting_spot": "Fruit Patch")
+        elif condition_key == "planting_spot":
+            # Obtém os dados da fruta para verificar seu local de plantio.
+            fruit_data = fruit_domain.FRUIT_DATA.get(resource_name)
+            if not fruit_data:
+                return False # Se não for uma fruta válida, a condição falha.
+
+            actual_spot = fruit_data.get("planting_spot")
+            if actual_spot != required_value:
+                return False # O local de plantio não corresponde ao requerido.
+
         # Condição de Exclusão (ex: "exclude_target": ["Apple", "Banana"])
         # Se o `resource_name` estiver na lista de exclusão, a condição NÃO é atendida.
         elif condition_key == "exclude_target":

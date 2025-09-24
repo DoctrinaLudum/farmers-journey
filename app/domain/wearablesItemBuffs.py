@@ -917,7 +917,10 @@ WEARABLES_ITEM_BUFFS = {
                 "type": "YIELD",
                 "operation": "add",
                 "value": 0.10,
-                "conditions": {"resource": "Fruit"}
+                "conditions": {
+                    "resource": "Fruit", 
+                    "planting_spot": "Fruit Patch",
+                }
             }
         ],
         "enabled": True

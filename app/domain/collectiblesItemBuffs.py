@@ -164,7 +164,7 @@ COLLECTIBLES_ITEM_BUFFS = {
             {
                 "type": "YIELD",
                 "operation": "add",
-                "value": 0.10,
+                "value": 10,
                 "conditions": {
                     "category": "Crop"
                 }
@@ -313,10 +313,9 @@ COLLECTIBLES_ITEM_BUFFS = {
             {
                 "type": "YIELD",
                 "operation": "add",
-                "value": 0.5,
+                "value": 0.25,
                 "conditions": {
                     "resource": "Cabbage",
-                    "placed": "Cabbage Girl"
                 }
             }
         ]
@@ -2232,7 +2231,8 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "operation": "add",
                 "value": 0.1,
                 "conditions": {
-                    "category": "Fruit"
+                    "category": "Fruit",
+                    "planting_spot": "Fruit Patch",
                 }
             }
         ]
@@ -2751,14 +2751,14 @@ COLLECTIBLES_ITEM_BUFFS = {
     },
     "Groovy Gramophone": {
         "id": 2309,
-        "description": "Reduces the time it takes for the Crop Machine to produce by 10%.",
+        "description": "Reduces the time it takes for the Crop Machine to produce by 50%.",
         "boost_category": "Other",
         "enabled": True,
         "boosts": [
             {
-                "type": "RECOVERY_TIME",
+                "type": "CROP_MACHINE_GROWTH_TIME",
                 "operation": "percentage",
-                "value": -0.10,
+                "value": -0.50,
                 "conditions": {
                     "building": "Crop Machine"
                 }
@@ -3153,16 +3153,16 @@ COLLECTIBLES_ITEM_BUFFS = {
     },
     "Tortoise Shrine": {
         "id": 2297,
-        "description": "A shrine that reduces tree time by 10%.",
+        "description": "A shrine that reduces Crop Machine time by 25%.",
         "boost_category": "Resource",
         "enabled": True,
         "boosts": [
             {
-                "type": "RECOVERY_TIME",
+                "type": "CROP_MACHINE_GROWTH_TIME",
                 "operation": "percentage",
-                "value": -0.1,
+                "value": -0.25,
                 "conditions": {
-                    "resource": "Tree"
+                    "building": "Crop Machine"
                 }
             }
         ]

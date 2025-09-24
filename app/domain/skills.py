@@ -638,7 +638,7 @@ BUMPKIN_REVAMP_SKILLS = {
     },
 
     # --- Fishing ---
-    "Fisherman's FiveFold": {
+    "Fisherman's 5 Fold": {
         "tree": "Fishing",
         "tier": 1,
         "island": "basic",
@@ -695,7 +695,7 @@ BUMPKIN_REVAMP_SKILLS = {
             },
         ],
     },
-    "Fisherman's TenFold": {
+    "Fisherman's 10 Fold": {
         "tree": "Fishing",
         "tier": 2,
         "island": "basic",
@@ -838,8 +838,8 @@ BUMPKIN_REVAMP_SKILLS = {
         "effects": [
             {
                 "type": "RECOVERY_TIME",
-                "operation": "multiply",
-                "value": 0.90,
+                "operation": "percentage",
+                "value": -0.20,
             },
         ],
     },
@@ -1772,10 +1772,12 @@ BUMPKIN_REVAMP_SKILLS = {
         "island": "spring",
         "description": "Additional +0.1 crop yield after pollination (total +0.3)",
         "effects": [
-            {
+            {   
+                "type": "ITEM_MODIFICATION",
                 "type": "YIELD",
                 "operation": "add",
-                "value": 0.1,
+                "value": 0.10,
+                "conditions": {"category": "Crop", "source": "Pollination"},
             },
         ],
     },
@@ -1872,15 +1874,15 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-5% Crop Machine growth time; +10% Oil consumption in Crop Machine",
         "effects": [
             {
-                "type": "GROWTH_TIME",
+                "type": "CROP_MACHINE_GROWTH_TIME",
                 "operation": "multiply",
                 "value": 0.95,
                 "conditions": {"building": "Crop Machine"},
             },
             {
                 "type": "OIL_COST",
-                "operation": "multiply",
-                "value": 1.10,
+                "operation": "factor_add",
+                "value": 0.10,
                 "conditions": {"building": "Crop Machine"},
 
             },
@@ -1894,8 +1896,8 @@ BUMPKIN_REVAMP_SKILLS = {
         "effects": [
             {
                 "type": "OIL_COST",
-                "operation": "multiply",
-                "value": 0.90,
+                "operation": "factor_sub",
+                "value": 0.10,
                 "conditions": {"building": "Crop Machine"},
 
             },
@@ -1974,14 +1976,15 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-20% Crop Machine growth time; +40% Oil consumption in Crop Machine",
         "effects": [
             {
-                "type": "CROP_MACHINE_TIME",
+                "type": "CROP_MACHINE_GROWTH_TIME",
                 "operation": "multiply",
                 "value": 0.80,
+                "conditions": {"building": "Crop Machine"},
             },
             {
-                "type": "CROP_MACHINE_OIL_COST",
-                "operation": "multiply",
-                "value": 1.40,
+                "type": "OIL_COST",
+                "operation": "factor_add",
+                "value": 0.40,
             },
         ],
     },
@@ -2048,9 +2051,9 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-30% Oil consumption in Crop Machine",
         "effects": [
             {
-                "type": "CROP_MACHINE_OIL_COST",
-                "operation": "multiply",
-                "value": 0.70,
+                "type": "OIL_COST",
+                "operation": "factor_sub",
+                "value": 0.30,
             },
         ],
     },
@@ -2231,6 +2234,48 @@ BUMPKIN_REVAMP_SKILLS = {
                 "conditions": {"item": "Worm"},
             },
         ],
+    },
+    "Sprout Surge": {
+        "tree": "Compost",
+        "tier": 1,
+        "island": "basic",
+        "is_power_skill": True,
+        "description": "Put Sprout Mix on all plots",
+        "effects": [
+            {
+                "type": "POWER_SKILL",
+                "operation": "apply_to_all_plots",
+                "item": "Sprout Mix"
+            }
+        ]
+    },
+    "Blend-tastic": {
+        "tree": "Compost",
+        "tier": 1,
+        "island": "basic",
+        "is_power_skill": True,
+        "description": "Put Fruitful Blend on all plots",
+        "effects": [
+            {
+                "type": "POWER_SKILL",
+                "operation": "apply_to_all_plots",
+                "item": "Fruitful Blend"
+            }
+        ]
+    },
+    "Root Rocket": {
+        "tree": "Compost",
+        "tier": 2,
+        "island": "basic",
+        "is_power_skill": True,
+        "description": "Put Rapid Root on all plots",
+        "effects": [
+            {
+                "type": "POWER_SKILL",
+                "operation": "apply_to_all_plots",
+                "item": "Rapid Root"
+            }
+        ]
     },
 
 }
