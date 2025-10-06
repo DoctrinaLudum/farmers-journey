@@ -1,114 +1,171 @@
 {% extends "base.html" %}
 
-{# Define o título da aba do navegador para esta página específica #}
 {% block title %}Bem-vindo à Jornada do Fazendeiro{% endblock %}
 
-{% block content %}
-<div class="container my-5">
+{% block styles %}
+<style>
+    .farm-container {
+        background-color: #fdfaf4; /* Um branco-pergaminho muito sutil */
+    }
 
-    <div class="p-5 text-center bg-white rounded-3 shadow-sm mb-5">
-        <img src="{{ url_for('static', filename='images/resources/sunflower.png') }}" alt="Sunflower" class="mb-3" style="width: 80px;">
-        <h1 class="display-5 fw-bold">Jornada do Fazendeiro</h1>
-        <div class="col-lg-8 mx-auto">
-            <p class="lead mb-4">
-                Um painel avançado para sua fazenda em Sunflower Land. Otimize a colheita, planeje expansões e maximize sua eficiência.
+    .hero-farm {
+        padding: 5rem 1.5rem;
+        background: linear-gradient(to bottom, #a8d8ea 0%, #f9f2d0 100%);
+    }
+
+    .hero-icon {
+        width: 100px;
+        animation: subtle-bob 3s infinite ease-in-out;
+    }
+
+    @keyframes subtle-bob {
+        0% { transform: translateY(0); }
+        50% { transform: translateY(-8px); }
+        100% { transform: translateY(0); }
+    }
+
+    .feature-card-farm .card-header {
+        background-color: #6c9a65; /* Verde-prado */
+    }
+    
+    .feature-card-farm .card-header-icon {
+        width: 24px;
+        height: 24px;
+        object-fit: contain;
+        filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.3));
+    }
+
+    .feature-card-farm {
+        transition: transform 0.2s ease-in-out;
+    }
+
+    .feature-card-farm:hover {
+        transform: translateY(-5px);
+    }
+
+    .notice-board-wrapper {
+        background-color: #8B5A2B; /* Cor de madeira escura */
+    }
+
+    .note {
+        background-color: #FFFACD; /* Amarelo-pergaminho */
+        border-bottom: 5px solid #e0c653;
+        transition: transform 0.2s ease-in-out;
+    }
+    .note:hover {
+        transform: scale(1.05);
+    }
+
+    .row > div:nth-child(3n+1) .note { transform: rotate(-2deg); }
+    .row > div:nth-child(3n+2) .note { transform: rotate(1.5deg); }
+    .row > div:nth-child(3n+3) .note { transform: rotate(-1deg); }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="farm-container">
+    <!-- Hero Section -->
+    <div class="hero-farm text-center">
+        <div class="container">
+            <img src="{{ url_for('static', filename='images/crops/sunflower.webp') }}" alt="Sunflower Icon" class="hero-icon mb-4">
+            <h1 class="display-4 fw-bold">Jornada do Fazendeiro</h1>
+            <p class="lead col-lg-8 mx-auto">
+                A ferramenta definitiva para otimizar, analisar e planejar cada detalhe da sua fazenda em Sunflower Land.
             </p>
-            
-            <form action="{{ url_for('main.handle_farm_request') }}" method="POST" class="d-inline-flex flex-wrap justify-content-center gap-2">
-                <div class="col-auto">
-                    <label for="farm_id" class="visually-hidden">Farm ID</label>
-                    <input type="number" class="form-control form-control-lg" id="farm_id" name="farm_id" placeholder="Digite seu Farm ID" required>
-                </div>
-                <div class="col-auto">
-                    <button type="submit" class="btn btn-primary btn-lg px-4">
-                        <i class="bi bi-search me-2"></i>Acessar Painel
-                    </button>
+            <hr class="my-4 col-lg-6 mx-auto">
+            <form action="{{ url_for('main.handle_farm_request') }}" method="POST" class="d-flex justify-content-center">
+                <div class="col-lg-4 col-md-6">
+                    <div class="input-group input-group-lg">
+                        <input type="number" class="form-control" id="farm_id" name="farm_id" placeholder="Digite seu Farm ID" required>
+                        <button type="submit" class="btn btn-warning fw-bold">
+                            <i class="bi bi-search me-2"></i>Analisar Fazenda
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>
     </div>
 
-    <div class="row g-4 text-center">
-        <!-- Mapa Interativo -->
-        <div class="col-lg-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body">
-                    <i class="bi bi-map-fill fs-2 text-primary"></i>
-                    <h5 class="card-title mt-3">Mapa Interativo da Fazenda</h5>
-                    <p class="card-text small text-muted">
-                        Visualize toda a sua fazenda em um mapa detalhado. Clique em qualquer recurso para ver informações em tempo real, como tempos de recuperação e rendimentos.
-                    </p>
+    <!-- Features Section -->
+    <div class="container my-5">
+        <h2 class="text-center fw-bold mb-5">Explore as Ferramentas</h2>
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6">
+                <div class="card h-100 shadow-sm feature-card-farm">
+                    <div class="card-header text-white fw-bold d-flex align-items-center">
+                        <img src="{{ url_for('static', filename='images/expansions/14.webp') }}" class="card-header-icon me-2" alt="map icon">
+                        Análise Visual do Mapa
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            Visualize sua fazenda em um mapa interativo. Clique em recursos para ver detalhes de tempo, bônus e rendimentos em tempo real.
+                        </p>
+                    </div>
                 </div>
             </div>
-        </div>
-        <!-- Análise de Recursos -->
-        <div class="col-lg-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body">
-                    <i class="bi bi-bar-chart-line-fill fs-2 text-success"></i>
-                    <h5 class="card-title mt-3">Análise Detalhada de Recursos</h5>
-                    <p class="card-text small text-muted">
-                        Painéis completos para madeira, pedra, plantações e mais. Todos os bônus de NFTs, buds e skills são calculados automaticamente para você.
-                    </p>
+            <div class="col-lg-4 col-md-6">
+                <div class="card h-100 shadow-sm feature-card-farm">
+                    <div class="card-header text-white fw-bold d-flex align-items-center">
+                        <img src="{{ url_for('static', filename='images/tools/axe.webp') }}" class="card-header-icon me-2" alt="axe icon">
+                        Otimização de Recursos
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            Nosso motor calcula todos os seus bônus de skills, wearables e colecionáveis para garantir a máxima precisão nos seus ganhos.
+                        </p>
+                    </div>
                 </div>
             </div>
-        </div>
-        <!-- Planejador de Expansão -->
-        <div class="col-lg-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body">
-                    <i class="bi bi-arrows-fullscreen fs-2 text-info"></i>
-                    <h5 class="card-title mt-3">Planejador de Expansão</h5>
-                    <p class="card-text small text-muted">
-                        Acompanhe visualmente seu progresso de expansão e use o simulador para calcular exatamente o que você precisa para alcançar o próximo nível.
-                    </p>
+            <div class="col-lg-4 col-md-6">
+                <div class="card h-100 shadow-sm feature-card-farm">
+                    <div class="card-header text-white fw-bold d-flex align-items-center">
+                        <img src="{{ url_for('static', filename='images/npcs/blacksmith.webp') }}" class="card-header-icon me-2" alt="blacksmith icon">
+                        Planejador e Gestão
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            Use o simulador de expansão, acompanhe as entregas dos NPCs e gerencie as tarefas diárias do seu Bumpkin.
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Seção "E tem mais..." -->
-    <div class="mt-5 pt-4 border-top">
-        <h3 class="text-center mb-4">E tem mais...</h3>
-        <div class="row g-4 text-center">
-            <!-- Motor de Bônus -->
-            <div class="col-lg-4">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body">
-                        <i class="bi bi-calculator-fill fs-2 text-warning"></i>
-                        <h5 class="card-title mt-3">Motor de Bônus Abrangente</h5>
-                        <p class="card-text small text-muted">
-                            Nosso sistema calcula automaticamente todos os bônus de Skills, Buds, Wearables e Colecionáveis para garantir a precisão dos dados.
-                        </p>
+    <!-- Notice Board Section -->
+    <div class="notice-board-wrapper py-5">
+        <div class="container">
+            <h2 class="text-center fw-bold mb-5 text-white">Quadro de Avisos da Fazenda</h2>
+            <div class="row g-4">
+                <div class="col-lg-4 col-md-6">
+                    <div class="note p-4 shadow">
+                        <h5 class="fw-bold"><i class="bi bi-gem me-2"></i>Motor de Bônus</h5>
+                        <p>Cálculo preciso de todos os bônus, incluindo NFTs, Skills e até auras de Buds!</p>
                     </div>
                 </div>
-            </div>
-            <!-- Diário de Pesca e Entregas -->
-            <div class="col-lg-4">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body">
-                        <i class="bi bi-book-fill fs-2 text-danger"></i>
-                        <h5 class="card-title mt-3">Diário de Pesca e Entregas</h5>
-                        <p class="card-text small text-muted">
-                            Acompanhe seu histórico de pesca, recordes de tamanho e gerencie todas as entregas para os NPCs da vila.
-                        </p>
+                <div class="col-lg-4 col-md-6">
+                    <div class="note p-4 shadow">
+                        <h5 class="fw-bold"><i class="bi bi-bullseye me-2"></i>Visualizador de AOE</h5>
+                        <p>Clique em itens como o Espantalho ou a Queen Cornelia para ver a área de efeito no mapa.</p>
                     </div>
                 </div>
-            </div>
-            <!-- Gestão de Tarefas e Inventário -->
-            <div class="col-lg-4">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body">
-                        <i class="bi bi-check2-square fs-2" style="color: #6f42c1;"></i>
-                        <h5 class="card-title mt-3">Tarefas e Inventário</h5>
-                        <p class="card-text small text-muted">
-                            Visualize as tarefas diárias do seu Bumpkin e tenha um resumo completo do seu inventário com valores de mercado atualizados.
-                        </p>
+                <div class="col-lg-4 col-md-6">
+                    <div class="note p-4 shadow">
+                        <h5 class="fw-bold"><i class="bi bi-calendar-check me-2"></i>Diário Completo</h5>
+                        <p>Acompanhe seu histórico de pesca, entregas para NPCs e as tarefas diárias.</p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Animated NPC Container - O script vai popular isso -->
+    <div class="animated-npc-container"></div>
 
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }} {# Inclui os scripts do base.html se necessário #}
 {% endblock %}

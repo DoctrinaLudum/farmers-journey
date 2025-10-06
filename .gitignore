@@ -4,11 +4,13 @@
 # Arquivos de cache e compilados do Python
 __pycache__/
 *.pyc
+__pycache__
 
 # Dependências do Node.js
 node_modules/
 
 # Arquivos compilados do TypeScript
+gameTS
 # Ignora a pasta inteira onde o .js é gerado
 app/static/js/
 

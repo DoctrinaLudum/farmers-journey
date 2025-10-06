@@ -8,8 +8,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.3.2/css/flag-icons.min.css"/>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}">
+    {% block styles %}{% endblock %}
 </head>
-<body class="d-flex flex-column min-vh-100 bg-light" data-exchange-rates='{{ exchange_rates_json | default({}) | tojson | safe }}' data-sfl-prices='{{ prices_data | default({}) | tojson | safe }}'>
+<body class="d-flex flex-column min-vh-100" data-exchange-rates='{{ exchange_rates_json | default({}) | tojson | safe }}' data-sfl-prices='{{ prices_data | default({}) | tojson | safe }}'>
 
     <header class="py-3 bg-white border-bottom shadow-sm">
         <div class="container">
@@ -24,6 +26,9 @@
         {% block content %}{% endblock %}
     </main>
 
+    <!-- Animated NPC Container - O script vai popular isso -->
+    <div class="animated-npc-container"></div>
+
     <footer class="mt-auto py-3 bg-white border-top">
         <div class="container text-center text-muted small">
             <p class="mb-1">
@@ -37,6 +42,7 @@
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/animations.js') }}"></script>
         {% block scripts %}{% endblock %}
 </body>
 </html>

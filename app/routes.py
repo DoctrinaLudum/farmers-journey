@@ -20,7 +20,7 @@ from .domain import foods as foods_domain
 from .domain import fruits as fruit_domain
 from .domain import npcs as npc_domain
 from .game_state import GAME_STATE
-from .services import (bud_service, chop_service, chores_service,
+from .services import (animation_service, bud_service, chop_service, chores_service,
                        crop_machine_service, crop_service, delivery_service,
                        exchange_service, expansion_service,
                        farm_layout_service, flower_service, fruit_service,
@@ -119,6 +119,20 @@ def generate_currency_html(sfl_value, prefix=""):
         <span class="currency-value-display currency-brl">{brl_formatted}</span>
     </span>"""    
     return Markup(html)
+
+
+@bp.route('/api/animated-characters')
+def api_animated_characters():
+    """
+    Endpoint da API que busca os personagens animados do serviço e os retorna em JSON.
+    """
+    try:
+        characters = animation_service.get_animated_characters()
+        return jsonify(characters)
+    except Exception as e:
+        log.error(f"Erro ao buscar personagens animados para a API: {e}", exc_info=True)
+        return jsonify({"error": "Não foi possível buscar a lista de personagens"}), 500
+
 
 @bp.route('/', methods=['GET'])
 def index():

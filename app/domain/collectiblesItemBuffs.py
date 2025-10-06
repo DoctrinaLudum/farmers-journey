@@ -113,8 +113,8 @@ COLLECTIBLES_ITEM_BUFFS = {
             },
             {
                 "type": "YIELD",
-                "operation": "add",
-                "value": 0.20,
+                "operation": "multiply",
+                "value": 1.2,
                 "conditions": {
                     "category": "Crop"
                 }
@@ -137,8 +137,8 @@ COLLECTIBLES_ITEM_BUFFS = {
             },
             {
                 "type": "YIELD",
-                "operation": "add",
-                "value": 0.20,
+                "operation": "multiply",
+                "value": 1.2,
                 "conditions": {
                     "category": "Crop"
                 }
@@ -240,8 +240,8 @@ COLLECTIBLES_ITEM_BUFFS = {
         "boosts": [
             {
                 "type": "YIELD",
-                "operation": "add",
-                "value": 0.20,
+                "operation": "multiply",
+                "value": 1.2,
                 "conditions": {
                     "resource": "Pumpkin"
                 }
@@ -272,8 +272,8 @@ COLLECTIBLES_ITEM_BUFFS = {
         "boosts": [
             {
                 "type": "YIELD",
-                "operation": "add",
-                "value": 0.20,
+                "operation": "multiply",
+                "value": 1.2,
                 "conditions": {
                     "resource": "Carrot"
                 }
@@ -307,29 +307,21 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "operation": "add",
                 "value": 0.25,
                 "conditions": {
-                    "resource": "Cabbage",
-                }
-            },
-            {
-                "type": "YIELD",
-                "operation": "add",
-                "value": 0.25,
-                "conditions": {
-                    "resource": "Cabbage",
+                    "resource": "Cabbage"
                 }
             }
         ]
     },
     "Cabbage Girl": {
         "id": 435,
-        "description": "Don't wake the baby!",
+        "description": "Don't wake the baby! +0.25 Cabbage Yield if Cabbage Boy is placed.",
         "boost_category": "Crop",
         "enabled": True,
         "boosts": [
             {
-                "type": "RECOVERY_TIME",
-                "operation": "percentage",
-                "value": -0.50,
+                "type": "YIELD",
+                "operation": "add",
+                "value": 0.25,
                 "conditions": {
                     "resource": "Cabbage"
                 }
@@ -2622,30 +2614,118 @@ COLLECTIBLES_ITEM_BUFFS = {
     "Winter Guardian": {
         "id": 2261,
         "description": "Summoned from a land where snow never melts, this frostbound protector now watches over the skies.",
-        "boost_category": None,
+        "boost_category": "Seasonal",
         "enabled": True,
-        "boosts": []
+        "boosts": [
+            {
+                "type": "PREVENT_EVENT",
+                "operation": "equals",
+                "value": "greatFreeze",
+                "conditions": { "season": "Winter" }
+            },
+            {
+                "type": "YIELD",
+                "operation": "add",
+                "value": 1,
+                "conditions": { "season": "Winter", "calendar_event": "fishFrenzy" }
+            },
+            {
+                "type": "RECOVERY_TIME",
+                "operation": "percentage",
+                "value": -0.50,
+                "conditions": { "season": "Winter", "calendar_event": "sunshower" }
+            }
+        ]
     },
     "Autumn Guardian": {
         "id": 2264,
         "description": "With harvest hues and a wistful gaze, this Guardian carries the essence of changing seasons.",
-        "boost_category": None,
+        "boost_category": "Seasonal",
         "enabled": True,
-        "boosts": []
+        "boosts": [
+            {
+                "type": "PREVENT_EVENT",
+                "operation": "equals",
+                "value": "tornado",
+                "conditions": { "season": "Autumn" }
+            },
+            {
+                "type": "YIELD",
+                "operation": "add",
+                "value": 1,
+                "conditions": { "season": "Autumn", "calendar_event": "fishFrenzy" }
+            },
+            {
+                "type": "RECOVERY_TIME",
+                "operation": "percentage",
+                "value": -0.50,
+                "conditions": { "season": "Autumn", "calendar_event": "sunshower" }
+            }
+        ]
     },
     "Spring Guardian": {
         "id": 2263,
         "description": "Awakened from fertile fields far below, this gentle spirit now nurtures life among the drifting gardens of the sky.",
-        "boost_category": None,
+        "boost_category": "Seasonal",
         "enabled": True,
-        "boosts": []
+        "boosts": [
+            {
+                "type": "PREVENT_EVENT",
+                "operation": "equals",
+                "value": "tsunami",
+                "conditions": { "season": "Spring" }
+            },
+            {
+                "type": "PREVENT_EVENT",
+                "operation": "equals",
+                "value": "insectPlague",
+                "conditions": { "season": "Spring" }
+            },
+            {
+                "type": "YIELD",
+                "operation": "add",
+                "value": 1,
+                "conditions": { "season": "Spring", "calendar_event": "bountifulHarvest" }
+            },
+            {
+                "type": "YIELD",
+                "operation": "add",
+                "value": 1,
+                "conditions": { "season": "Spring", "calendar_event": "fishFrenzy" }
+            }
+        ]
     },
     "Summer Guardian": {
         "id": 2262,
         "description": "A blazing figure born under endless sun, this Guardian brings the heat of its homeland to the cooler heights of Sky Island.",
-        "boost_category": None,
+        "boost_category": "Seasonal",
         "enabled": True,
-        "boosts": []
+        "boosts": [
+            {
+                "type": "PREVENT_EVENT",
+                "operation": "equals",
+                "value": "insectPlague",
+                "conditions": { "season": "Summer" }
+            },
+            {
+                "type": "PREVENT_EVENT",
+                "operation": "equals",
+                "value": "tornado",
+                "conditions": { "season": "Summer" }
+            },
+            {
+                "type": "YIELD",
+                "operation": "add",
+                "value": 1,
+                "conditions": { "season": "Summer", "calendar_event": "bountifulHarvest" }
+            },
+            {
+                "type": "YIELD",
+                "operation": "add",
+                "value": 1,
+                "conditions": { "season": "Summer", "calendar_event": "fishFrenzy" }
+            }
+        ]
     },
     "Nurse Sheep": {
         "id": 2257,
@@ -2767,14 +2847,14 @@ COLLECTIBLES_ITEM_BUFFS = {
     },
     "Giant Onion": {
         "id": 2307,
-        "description": "A giant onion that gives +0.5 onion yield.",
+        "description": "A giant onion that gives +3 onion yield.",
         "boost_category": "Crop",
         "enabled": True,
         "boosts": [
             {
                 "type": "YIELD",
                 "operation": "add",
-                "value": 0.5,
+                "value": 3,
                 "conditions": {
                     "resource": "Onion"
                 }
@@ -2885,14 +2965,14 @@ COLLECTIBLES_ITEM_BUFFS = {
     },
     "Giant Artichoke": {
         "id": 2303,
-        "description": "A giant artichoke that gives +1 artichoke yield.",
+        "description": "A giant artichoke that gives +2 artichoke yield.",
         "boost_category": "Crop",
         "enabled": True,
         "boosts": [
             {
                 "type": "YIELD",
                 "operation": "add",
-                "value": 1,
+                "value": 2,
                 "conditions": {
                     "resource": "Artichoke"
                 }
@@ -3011,14 +3091,14 @@ COLLECTIBLES_ITEM_BUFFS = {
     },
     "Stag Shrine": {
         "id": 2288,
-        "description": "A shrine that reduces oil drill time by 10%.",
+        "description": "A shrine that provides a +0.2 Oil yield.",
         "boost_category": "Resource",
         "enabled": True,
         "boosts": [
             {
-                "type": "RECOVERY_TIME",
-                "operation": "percentage",
-                "value": -0.1,
+                "type": "YIELD",
+                "operation": "add",
+                "value": 0.2,
                 "conditions": {
                     "resource": "Oil"
                 }

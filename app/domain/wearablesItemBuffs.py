@@ -20,8 +20,8 @@ WEARABLES_ITEM_BUFFS = {
         "boosts": [
             {
                 "type": "YIELD",
-                "operation": "add",
-                "value": 0.10,
+                "operation": "multiply",
+                "value": 1.1,
                 "conditions": {"resource": "Sunflower"}
             }
         ],
@@ -48,8 +48,8 @@ WEARABLES_ITEM_BUFFS = {
         "boosts": [
             {
                 "type": "YIELD",
-                "operation": "add",
-                "value": 0.20,
+                "operation": "multiply",
+                "value": 1.2,
                 "conditions": {"resource": "Beetroot"}
             }
         ],
@@ -110,8 +110,8 @@ WEARABLES_ITEM_BUFFS = {
         "boosts": [
             {
                 "type": "YIELD",
-                "operation": "add",
-                "value": 0.20,
+                "operation": "multiply",
+                "value": 1.2,
                 "conditions": {"resource": "Parsnip"}
             }
         ],

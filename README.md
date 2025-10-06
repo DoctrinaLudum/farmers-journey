@@ -85,6 +85,7 @@ O projeto está em constante evolução. Aqui estão algumas das funcionalidades
     * [ ] **Suporte a Múltiplas Línguas (i18n)**: Preparar o projeto para ser traduzido, começando pelo inglês.
 
 * **Melhorias Técnicas e Otimização**:
+    * [ ] **Refatorar Cálculo de Bônus Multiplicativos**: Bônus de mel (Bee Suit, Honeycomb Shield, King of Bears) são aplicados como multiplicadores no jogo, mas estão configurados como aditivos nos arquivos de configuração. É necessário refatorar o `resource_analysis_service.py` para interpretar corretamente esses casos, possivelmente adicionando um campo de "display_value" para manter a consistência visual, sem hardcoding de exceções.
     * [ ] **Ampliar Cobertura de Testes**: Continuar a implementação de testes unitários para os serviços de back-end (`bud_service`, `mining_service`, etc.) para garantir a precisão dos cálculos de bônus e evitar regressões. (Testes básicos já existem para `analysis`, `domain_data` e `sunflower_api`).
     * [ ] **Valores de Mercado para Itens Internos**: Implementar cálculo de valor em SFL para `Coins`, `Gold` e `Oil`, que atualmente não possuem valor de mercado direto.
     * [ ] **Refinar Responsividade**: Melhorar a adaptação da interface para uma experiência otimizada em dispositivos móveis.

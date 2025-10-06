@@ -501,6 +501,14 @@ def get_active_player_boosts(player_items: set, boost_catalogue: dict, non_cumul
                         cats = cond_cat if isinstance(cond_cat, list) else [cond_cat]
                         relevant_boost_categories.update(cats)
 
+        # Expande as categorias relevantes para incluir sub-categorias de culturas.
+        # Isso corrige um bug onde bônus de Bud com condições específicas (ex: 'Advanced Crops')
+        # eram ignorados se a sub-categoria não estivesse explicitamente presente no catálogo.
+        if "Crop" in relevant_boost_categories:
+            relevant_boost_categories.add("Basic Crops")
+            relevant_boost_categories.add("Medium Crops")
+            relevant_boost_categories.add("Advanced Crops")
+
         for buff_key, buff_value_float in winning_bud_buffs.items():
             original_buff_found = False
             original_details = {}

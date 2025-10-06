@@ -33,15 +33,17 @@ CROP_BOOST_CATALOGUE = resource_analysis_service.filter_boosts_from_domains(CROP
 # FUNÇÕES DE CÁLCULO (LÓGICA INTERNA)
 # ==============================================================================
 
-def _get_crop_yield_amount(game_state: dict, plot: dict, crop_name: str) -> dict:
+def _get_crop_yield_amount(game_state: dict, plot: dict, crop_name: str, calendar_boosts: list = None) -> dict:
     """
     Calcula o rendimento final de uma cultura, aplicando bônus de itens, habilidades,
-    fertilizantes, AOE e acertos críticos, seguindo o padrão data-driven do sistema.
+    fertilizantes, AOE, eventos de calendário e acertos críticos, seguindo o padrão 
+    data-driven do sistema.
 
     Args:
         game_state (dict): O estado completo do jogo do jogador.
         plot (dict): Os dados específicos do canteiro de cultura (plot) sendo analisado.
         crop_name (str): O nome da cultura plantada no canteiro.
+        calendar_boosts (list, optional): Lista de bônus de eventos de calendário ativos.
 
     Returns:
         dict: Um dicionário contendo o rendimento final e uma lista detalhada de bônus.
@@ -54,11 +56,24 @@ def _get_crop_yield_amount(game_state: dict, plot: dict, crop_name: str) -> dict
 
     # 1. Obter bônus ativos. `get_active_player_boosts` omite o YIELD de itens críticos.
     active_boosts = resource_analysis_service.get_active_player_boosts(
-        player_items, CROP_BOOST_CATALOGUE, NON_CUMULATIVE_BOOST_GROUPS, game_state
+        player_items=player_items,
+        boost_catalogue=CROP_BOOST_CATALOGUE,
+        non_cumulative_groups=NON_CUMULATIVE_BOOST_GROUPS,
+        farm_data=game_state
     )
 
     # 2. Inicia a lista de bônus para este plot específico com os bônus gerais do jogador.
     plot_specific_boosts = list(active_boosts)
+
+    # 2.1 Adiciona bônus de calendário, se houver.
+    if calendar_boosts:
+        for boost in calendar_boosts:
+            if boost.get('type') == 'YIELD' and boost.get('item') == 'Crop':
+                plot_specific_boosts.append({
+                    "source_item": f"(Evento) {boost.get('event_name', 'Calendar Event')}",
+                    "source_type": "event",
+                    **boost
+                })
 
     # 3. Adiciona o fertilizante específico do plot, se houver.
     applied_fertiliser = plot.get("fertiliser", {}).get("name")
@@ -134,9 +149,10 @@ def _get_crop_yield_amount(game_state: dict, plot: dict, crop_name: str) -> dict
 
     return {"final_deterministic": float(final_yield), "applied_buffs": applied_buffs_details}
 
-def _get_crop_growth_time(game_state: dict, crop_name: str, plot: dict) -> dict:
+def _get_crop_growth_time(game_state: dict, crop_name: str, plot: dict, calendar_boosts: list = None) -> dict:
     """
-    Calcula o tempo de crescimento de uma cultura, espelhando a lógica de `plant.ts`.
+    Calcula o tempo de crescimento de uma cultura, espelhando a lógica de `plant.ts`,
+    e aplicando bônus de eventos de calendário como 'sunshower'.
     O fertilizante "Rapid Root" é excluído deste cálculo, pois sua lógica é aplicada
     separadamente no orquestrador principal.
     """
@@ -149,13 +165,24 @@ def _get_crop_growth_time(game_state: dict, crop_name: str, plot: dict) -> dict:
     collectibles = {**game_state.get("collectibles", {}), **game_state.get("home", {}).get("collectibles", {})}
 
     active_boosts = resource_analysis_service.get_active_player_boosts(
-        player_items,
-        CROP_BOOST_CATALOGUE,
-        NON_CUMULATIVE_BOOST_GROUPS,
-        game_state
+        player_items=player_items,
+        boost_catalogue=CROP_BOOST_CATALOGUE,
+        non_cumulative_groups=NON_CUMULATIVE_BOOST_GROUPS,
+        farm_data=game_state
     )
     
     plot_specific_boosts = list(active_boosts)
+
+    # Adiciona bônus de calendário, se houver.
+    if calendar_boosts:
+        for boost in calendar_boosts:
+            # O evento 'sunshower' afeta todas as culturas, então não há verificação de 'item'.
+            if boost.get('type') == 'TIME':
+                plot_specific_boosts.append({
+                    "source_item": f"(Evento) {boost.get('event_name', 'Calendar Event')}",
+                    "source_type": "event",
+                    **boost
+                })
 
     # Adiciona o fertilizante específico do plot, se houver, exceto "Rapid Root".
     applied_fertiliser = plot.get("fertiliser", {}).get("name")
@@ -181,18 +208,19 @@ def _get_crop_growth_time(game_state: dict, crop_name: str, plot: dict) -> dict:
 # FUNÇÃO PRINCIPAL (ORQUESTRADOR)
 # ==============================================================================
 
-def analyze_crop_resources(farm_data: dict) -> dict:
+def analyze_crop_resources(farm_data: dict, calendar_boosts: list = None) -> dict:
     """
     Analisa todos os canteiros de culturas na fazenda do jogador, calcula seus
     tempos de crescimento e rendimentos potenciais, e retorna um relatório
     detalhado e um sumário por tipo de cultura.
 
     Esta função orquestra a análise de cada canteiro individualmente, aplicando
-    todos os bônus relevantes (itens, habilidades, fertilizantes, AOE, críticos)
+    todos os bônus relevantes (itens, habilidades, fertilizantes, AOE, críticos, eventos)
     através de funções auxiliares e do `resource_analysis_service`.
 
     Args:
         farm_data (dict): O estado completo do jogo da fazenda do jogador.
+        calendar_boosts (list, optional): Lista de bônus de eventos de calendário ativos.
 
     Returns:
         dict: Um dicionário contendo:
@@ -226,7 +254,7 @@ def analyze_crop_resources(farm_data: dict) -> dict:
         base_growth_seconds = crops_domain.CROPS.get(crop_name, {}).get("harvestSeconds", 0)
         summary[crop_name]['base_recovery_time'] = base_growth_seconds
         
-        growth_time_info = _get_crop_growth_time(farm_data, crop_name, plot_data)
+        growth_time_info = _get_crop_growth_time(farm_data, crop_name, plot_data, calendar_boosts)
         final_growth_ms = growth_time_info["final"] * 1000
         
         planted_at_ms = crop_details.get("plantedAt", 0)
@@ -268,7 +296,8 @@ def analyze_crop_resources(farm_data: dict) -> dict:
         yield_info = _get_crop_yield_amount(
             game_state=farm_data,
             plot=plot_data,
-            crop_name=crop_name
+            crop_name=crop_name,
+            calendar_boosts=calendar_boosts
         )
         summary[crop_name]['total_yield'] += Decimal(str(yield_info['final_deterministic']))
 

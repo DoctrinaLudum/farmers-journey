@@ -17,6 +17,9 @@ from ..domain import fruits as fruit_domain
 from ..domain import resources as resources_domain
 # Importa as funções necessárias do serviço de análise centralizado.
 # Este serviço é a "fonte da verdade" para como os bônus são processados.
+from .calendar_service import CalendarService
+# Importa as funções necessárias do serviço de análise centralizado.
+# Este serviço é a "fonte da verdade" para como os bônus são processados.
 from .resource_analysis_service import (_get_player_items,
                                         calculate_final_recovery_time,
                                         calculate_final_yield,

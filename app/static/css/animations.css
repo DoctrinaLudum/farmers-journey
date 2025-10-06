@@ -1,0 +1,191 @@
+/* =================================
+   ANIMAÇÕES GLOBAIS DE PERSONAGENS
+   ================================= */
+
+.animated-npc-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%; /* Alterado de 100px para 100% para cobrir a tela toda */
+    pointer-events: none; /* Permite clicar através do container */
+    z-index: 999;
+}
+
+/* Classe base para todos os personagens que caminham */
+.walking-character {
+    position: absolute;
+    bottom: 10px; /* Posição vertical */
+    /* A animação será definida por classes de direção */
+}
+
+.walking-character img {
+    height: 80px; /* Tamanho padrão */
+    image-rendering: pixelated; /* Mantém o estilo pixel art */
+}
+
+/* Animação da Esquerda para a Direita (LTR) - para NPCs */
+.walk-ltr {
+    animation-name: walk-left-to-right;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    animation-fill-mode: forwards; /* Garante que o estado inicial seja mantido */
+}
+
+@keyframes walk-left-to-right {
+    0% {
+        transform: translateX(-100%); /* Começa fora da tela à esquerda */
+    }
+    100% {
+        transform: translateX(100vw); /* Termina fora da tela à direita */
+    }
+}
+
+/* Animação da Direita para a Esquerda (RTL) - para Pets e Animais */
+.walk-rtl {
+    animation-name: walk-right-to-left;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    animation-fill-mode: forwards; /* Garante que o estado inicial seja mantido */
+}
+
+@keyframes walk-right-to-left {
+    0% {
+        transform: translateX(100vw); /* Começa fora da tela à direita */
+    }
+    100% {
+        transform: translateX(-100%); /* Termina fora da tela à esquerda */
+    }
+}
+
+/* =================================
+   ANIMAÇÃO PET DORMINDO
+   ================================= */
+
+.sleeping-pet {
+    position: absolute;
+    cursor: pointer;
+    pointer-events: auto; /* Permite que este elemento receba cliques */
+    z-index: 1000;      /* Garante que fique por cima de outros elementos */
+}
+
+.sleeping-pet img {
+    height: 70px; /* Um pouco menor para diferenciar */
+    image-rendering: pixelated;
+    transition: transform 0.15s ease-out;
+}
+
+.zzz-particle {
+    position: absolute;
+    font-size: 20px;
+    font-weight: bold;
+    color: #a0a0a0;
+    top: 10px;
+    opacity: 0;
+    animation: zzz-float 2.5s linear infinite;
+}
+
+@keyframes zzz-float {
+    0% {
+        transform: translateY(0);
+        opacity: 0;
+    }
+    20% {
+        transform: translateY(-20px);
+        opacity: 1;
+    }
+    80% {
+        transform: translateY(-80px);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-100px);
+        opacity: 0;
+    }
+}
+
+/* Animação para os pulinhos ao acordar */
+.is-waking-up img {
+    animation: wake-up-jumps 0.9s ease-in-out;
+}
+
+@keyframes wake-up-jumps {
+    0%, 100% { transform: translateY(0); }
+    15%, 45%, 75% { transform: translateY(-25px); } /* Pulo 1, 2, 3 */
+    30%, 60%, 90% { transform: translateY(0); }
+}
+
+/* =================================
+   ANIMAÇÃO PET BRINCANDO (OCIOSO)
+   ================================= */
+
+.playing-pet {
+    position: absolute;
+    pointer-events: auto; /* Pode ser clicável se quisermos adicionar interações */
+    z-index: 1001;      /* Acima de outros elementos */
+    transform-origin: bottom center; /* A animação de escala/pulo parece mais natural */
+}
+
+.playing-pet img {
+    height: 60px; /* Um pouco menor */
+    image-rendering: pixelated;
+    animation: play-around 4s ease-in-out forwards; /* Duração total da brincadeira */
+}
+
+@keyframes play-around {
+    0% {
+        transform: translateY(0) scale(1);
+        opacity: 0;
+    }
+    10% {
+        transform: translateY(-30px) scale(1.1); /* Pulo inicial */
+        opacity: 1;
+    }
+    20% {
+        transform: translateY(0) scale(1);
+    }
+    30% {
+        transform: translateX(-20px) rotate(-15deg); /* Esconde para a esquerda */
+    }
+    40% {
+        transform: translateX(20px) rotate(15deg); /* Esconde para a direita */
+    }
+    50% {
+        transform: translateY(-25px) scale(1.1); /* Outro pulo */
+    }
+    60% {
+        transform: translateY(0) scale(1);
+    }
+    70% {
+        transform: scale(0.9) rotate(-5deg); /* Curioso */
+    }
+    80% {
+        transform: scale(1.1) rotate(5deg); /* Mais curioso */
+    }
+    90% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(20px) scale(0); /* Desaparece para baixo */
+        opacity: 0;
+    }
+}
+
+/* =================================
+   ANIMAÇÃO PET SEGUINDO O MOUSE
+   ================================= */
+
+.following-pet {
+    position: absolute;
+    z-index: 1002; /* Acima de tudo */
+    pointer-events: none; /* Não interfere com o mouse */
+    transition: opacity 0.5s ease-in-out;
+}
+
+.following-pet img {
+    height: 70px;
+    image-rendering: pixelated;
+    /* A rotação será controlada via JS para virar na direção do movimento */
+    transition: transform 0.2s ease-out;
+}

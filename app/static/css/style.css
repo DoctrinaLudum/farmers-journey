@@ -1,5 +1,7 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap');
+
 /* =================================
-   VARIÁVEIS GLOBAIS E ESTILOS DE BASE (v2.0)
+   VARIÁVEIS GLOBAIS E ESTILOS DE BASE (v2.1)
    ================================= */
 :root {
     --cor-primaria: #0d6efd;
@@ -9,7 +11,15 @@
     --cor-texto: #212529;
     --cor-fundo-claro: #f8f9fa;
     --cor-borda: #dee2e6;
+    --font-principal: 'Nunito', sans-serif;
 }
+
+body {
+    font-family: var(--font-principal);
+    background-color: #f4f7f6; /* Fallback de fundo */
+}
+
+
 /* Adicionado para evitar seleção de texto durante o arrasto de elementos flutuantes */
 body.is-dragging,
 body.is-dragging-card {
@@ -1684,3 +1694,6 @@ body.show-brl .currency-flag-display.currency-brl {
     max-height: 350px;
     overflow-y: auto;
 }
+
+
+
