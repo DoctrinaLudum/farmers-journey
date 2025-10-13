@@ -14,128 +14,153 @@ CROPS = {
         "type": "Crop", "sell_price": 0.02,
         "season": ["Spring", "Summer", "Autumn", "Winter"],
         "harvestSeconds": 60, "enabled": True,
+        "planting_spot": "Crop Plot"
     },
     "Potato": {
         "type": "Crop", "sell_price": 0.14,
         "season": ["Summer", "Autumn", "Winter"],
         "harvestSeconds": 300, "enabled": True,
+        "planting_spot": "Crop Plot"
     },
     "Rhubarb": {
         "type": "Crop", "sell_price": 0.24,
         "season": ["Spring"],
         "harvestSeconds": 600, "enabled": True,
+        "planting_spot": "Crop Plot"
     },
     "Pumpkin": {
         "type": "Crop", "sell_price": 0.4,
         "season": ["Autumn"],
         "harvestSeconds": 1800, "enabled": True,
+        "planting_spot": "Crop Plot"
     },
     "Zucchini": {
         "type": "Crop", "sell_price": 0.4,
         "season": ["Summer"],
         "harvestSeconds": 1800, "enabled": True,
+        "planting_spot": "Crop Plot"
     },
     "Carrot": {
         "type": "Crop", "sell_price": 0.8,
         "season": ["Spring", "Autumn"],
         "harvestSeconds": 3600, "enabled": True,
+        "planting_spot": "Crop Plot"
     },
     "Yam": {
         "type": "Crop", "sell_price": 0.8,
         "season": ["Autumn"],
         "harvestSeconds": 3600, "enabled": True,
+        "planting_spot": "Crop Plot"
     },
     "Cabbage": {
         "type": "Crop", "sell_price": 1.5,
         "season": ["Spring", "Winter"],
         "harvestSeconds": 7200, "enabled": True,
+        "planting_spot": "Crop Plot"
     },
     "Broccoli": {
         "type": "Crop", "sell_price": 1.5,
         "season": ["Autumn"],
         "harvestSeconds": 7200, "enabled": True,
+        "planting_spot": "Crop Plot"
     },
     "Soybean": {
         "type": "Crop", "sell_price": 2.3,
         "season": ["Spring", "Autumn"],
         "harvestSeconds": 10800, "enabled": True,
+        "planting_spot": "Crop Plot"
     },
     "Beetroot": {
         "type": "Crop", "sell_price": 2.8,
         "season": ["Summer", "Winter"],
         "harvestSeconds": 14400, "enabled": True,
+        "planting_spot": "Crop Plot"
     },
     "Pepper": {
         "type": "Crop", "sell_price": 3,
         "season": ["Summer"],
         "harvestSeconds": 14400, "enabled": True,
+        "planting_spot": "Crop Plot"
     },
     "Cauliflower": {
         "type": "Crop", "sell_price": 4.25,
         "season": ["Summer", "Winter"],
         "harvestSeconds": 28800, "enabled": True,
+        "planting_spot": "Crop Plot"
     },
     "Parsnip": {
         "type": "Crop", "sell_price": 6.5,
         "season": ["Winter"], "tier": "medium",
         "harvestSeconds": 43200, "enabled": True,
+        "planting_spot": "Crop Plot"
     },
     "Eggplant": {
         "type": "Crop", "sell_price": 8,
         "season": ["Summer"],
         "harvestSeconds": 57600, "enabled": True,
+        "planting_spot": "Crop Plot"
     },
     "Corn": {
         "type": "Crop", "sell_price": 9,
         "season": ["Spring"],
         "harvestSeconds": 72000, "enabled": True,
+        "planting_spot": "Crop Plot"
     },
     "Onion": {
         "type": "Crop", "sell_price": 10,
         "season": ["Winter"],
         "harvestSeconds": 72000, "enabled": True,
+        "planting_spot": "Crop Plot"
     },
     "Radish": {
         "type": "Crop", "sell_price": 9.5,
         "season": ["Summer"],
         "harvestSeconds": 86400, "enabled": True,
+        "planting_spot": "Crop Plot"
     },
     "Wheat": {
         "type": "Crop", "sell_price": 7,
         "season": ["Spring", "Summer", "Autumn", "Winter"],
         "harvestSeconds": 86400, "enabled": True,
+        "planting_spot": "Crop Plot"
     },
     "Turnip": {
         "type": "Crop", "sell_price": 8,
         "season": ["Winter"],
         "harvestSeconds": 86400, "enabled": True,
+        "planting_spot": "Crop Plot"
     },
     "Kale": {
         "type": "Crop", "sell_price": 10,
         "season": ["Spring", "Winter"],
         "harvestSeconds": 129600, "enabled": True,
+        "planting_spot": "Crop Plot"
     },
     "Artichoke": {
         "type": "Crop", "sell_price": 12,
         "season": ["Autumn"],
         "harvestSeconds": 129600, "enabled": True,
+        "planting_spot": "Crop Plot"
     },
     "Barley": {
         "type": "Crop", "sell_price": 12,
         "season": ["Spring", "Autumn"], "tier": "advanced",
         "harvestSeconds": 172800, "enabled": True,
+        "planting_spot": "Crop Plot"
     },
 
     # --- Greenhouse Produce (Crops & Fruits) ---
     "Rice": {
-        "type": "GreenhouseCrop", "sell_price": 320,
+        "type": "Crop", "sell_price": 320,
         "season": ["Spring", "Summer", "Autumn", "Winter"],
-        "harvestSeconds": 115200, "enabled": True
+        "harvestSeconds": 115200, "enabled": True,
+        "planting_spot": "Greenhouse"
     },
     "Olive": {
-        "type": "GreenhouseCrop", "sell_price": 400,
+        "type": "Crop", "sell_price": 400,
         "season": ["Spring", "Summer", "Autumn", "Winter"],
-        "harvestSeconds": 158400, "enabled": True
+        "harvestSeconds": 158400, "enabled": True,
+        "planting_spot": "Greenhouse"
     },
 
     # --- Exotic Crops (from Magic Beans) ---
@@ -172,7 +197,7 @@ CROPS = {
 # --- DADOS DERIVADOS ---
 GREENHOUSE_CROPS = {
     name: data for name, data in CROPS.items()
-    if data.get("type") == "GreenhouseCrop"
+    if data.get("planting_spot") == "Greenhouse"
 }
 
 # --- DADOS DERIVADOS: TIERS DAS CULTURAS ---

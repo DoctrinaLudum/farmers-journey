@@ -1510,7 +1510,10 @@ WEARABLES_ITEM_BUFFS = {
                 "type": "RECOVERY_TIME",
                 "operation": "percentage",
                 "value": -0.50,
-                "conditions": {"season": "Autumn"}
+                "conditions": {
+                    "season": "Autumn",
+                    "planting_spot": "Crop Plot"
+                }
             }
         ],
         "enabled": True

@@ -25,7 +25,7 @@ from .services import (animation_service, bud_service, chop_service, chores_serv
                        exchange_service, expansion_service,
                        farm_layout_service, flower_service, fruit_service,
                        greenhouse_service, mining_service, mushrooms_service,
-                       pricing_service, summary_service, treasure_dig_service)
+                       pricing_service, summary_service, treasure_dig_service, calendar_service)
 
 log = logging.getLogger(__name__)
 bp = Blueprint('main', __name__)
@@ -520,8 +520,11 @@ def farm_dashboard(farm_id):
     context['crop_analysis'] = None
     crop_data = None
     try:
-        # Passa os buffs de bud para o serviço de culturas
-        crop_data = crop_service.analyze_crop_resources(main_farm_data)
+        # NOVO: Chama o calendar_service refatorado para obter bônus para a categoria 'Crop'
+        calendar_boosts = calendar_service.get_active_event_boosts(main_farm_data, 'Crop')
+
+        # Passa os boosts de calendário para o serviço de culturas
+        crop_data = crop_service.analyze_crop_resources(main_farm_data, calendar_boosts=calendar_boosts)
         crop_view_data = crop_data.get("view") if crop_data else None
 
         if crop_view_data:

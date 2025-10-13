@@ -37,7 +37,7 @@ TREE_RECOVERY_TIME_SECONDS = 2 * 60 * 60  # 2 horas em segundos
 # FUNÇÕES DE CÁLCULO (LÓGICA INTERNA)
 # ==============================================================================
 
-def _get_wood_drop_amount(active_boosts: list) -> dict:
+def _get_wood_drop_amount(active_boosts: list, node_context: dict = None) -> dict:
     """
     Calcula o rendimento de madeira, espelhando getWoodDropAmount de chop.ts.
     """
@@ -45,17 +45,19 @@ def _get_wood_drop_amount(active_boosts: list) -> dict:
     return resource_analysis_service.calculate_final_yield(
         base_yield=1.0,
         active_boosts=active_boosts,
-        resource_name="Wood"
+        resource_name="Wood",
+        node_context=node_context
     )
 
-def _get_tree_recovery_time(active_boosts: list) -> dict:
+def _get_tree_recovery_time(active_boosts: list, node_context: dict = None) -> dict:
     """
     Calcula o tempo de recuperação da árvore, espelhando getChoppedAt de chop.ts.
     """
     return resource_analysis_service.calculate_final_recovery_time(
         base_time=TREE_RECOVERY_TIME_SECONDS,
         active_boosts=active_boosts,
-        resource_name="Tree"
+        resource_name="Tree",
+        node_context=node_context
     )
 
 # ==============================================================================
@@ -115,8 +117,11 @@ def analyze_wood_resources(farm_data: dict) -> dict:
         }
     )
 
+    # Define o contexto para árvores
+    tree_context = {"planting_spot": "Tree"}
+
     # Calcula o tempo de recuperação com todos os bônus do jogador (sem AOE)
-    player_wide_recovery_info = _get_tree_recovery_time(active_boosts)
+    player_wide_recovery_info = _get_tree_recovery_time(active_boosts, node_context=tree_context)
 
     trees_api_data = farm_data.get("trees", {})
     analyzed_trees = {}
@@ -176,10 +181,10 @@ def analyze_wood_resources(farm_data: dict) -> dict:
                             "source_type": source_type
                         })
 
-        yield_info = _get_wood_drop_amount(tree_specific_boosts)
+        yield_info = _get_wood_drop_amount(tree_specific_boosts, node_context=tree_context)
         summary['total_yield'] += Decimal(str(yield_info['final_deterministic']))
 
-        recovery_info = _get_tree_recovery_time(tree_specific_boosts)
+        recovery_info = _get_tree_recovery_time(tree_specific_boosts, node_context=tree_context)
         final_recovery_ms = recovery_info["final"] * 1000 # O resultado já está em segundos
 
         is_ready = not chopped_at_ms or current_timestamp_ms >= (chopped_at_ms + final_recovery_ms)

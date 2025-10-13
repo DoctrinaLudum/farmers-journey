@@ -1259,12 +1259,15 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "25% chance of +1 greenhouse produce",
         "effects": [
             {
-                "type": "YIELD_CHANCE",
-                "operation": "set_chance",
-                "value": 0.25,
-                "bonus_amount": 1,
-                "conditions": {"category": "GreenhouseProduce"},
-            },
+                "type": "YIELD",
+                "operation": "add",
+                "value": 1,
+                "conditions": {
+                    "category": ["Crop", "Fruit"],
+                    "building": "Greenhouse"
+                },
+                "chance": 0.25
+            }
         ],
     },
     "Slick Saver": {
@@ -2386,8 +2389,8 @@ LEGACY_BADGES = {
         "effects": [
             {
                 "type": "RESOURCE_YIELD",
-                "operation": "add",
-                "value": 0.20,
+                "operation": "multiply",
+                "value": 1.20,
                 "conditions": {"resource": "Stone"},
             },
         ],

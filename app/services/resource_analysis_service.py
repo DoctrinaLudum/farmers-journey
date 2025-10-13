@@ -283,8 +283,9 @@ def _process_boost_modifiers(active_boosts: list, player_items: set) -> list:
         if not item_data:
             continue
         
-        effects = item_data.get("effects", [])
-        for effect in effects:
+        # Combina 'effects' e 'boosts' para encontrar todos os potenciais modificadores.
+        possible_effects = item_data.get("effects", []) + item_data.get("boosts", [])
+        for effect in possible_effects:
             effect_type = effect.get("type")
             # Filtra apenas os tipos de efeito que modificam outros itens/bônus.
             if effect_type in ["ITEM_MODIFICATION", "COLLECTIBLE_EFFECT_MULTIPLIER"]:
@@ -357,13 +358,14 @@ def _process_boost_modifiers(active_boosts: list, player_items: set) -> list:
 
     return final_boosts
 
-def get_active_player_boosts(player_items: set, boost_catalogue: dict, non_cumulative_groups: dict = None, farm_data: dict = None) -> list:
+def get_active_player_boosts(player_items: set, boost_catalogue: dict, non_cumulative_groups: dict = None, farm_data: dict = None, external_boosts: list = None) -> list:
     """
     Pega um conjunto de itens que o jogador possui e os cruza com um catálogo de bônus
     para retornar uma lista de todos os bônus ativos. Esta função lida com:
     - Bônus hierárquicos (onde apenas o melhor de um grupo se aplica).
     - Bônus cumulativos (onde todos os bônus se somam).
     - Aplicação de modificadores de bônus.
+    - **NOVO**: Validação de bônus baseados em contexto (temporada, facção).
 
     Args:
         player_items (set): Um conjunto com os nomes de todos os itens que o jogador possui.
@@ -372,7 +374,7 @@ def get_active_player_boosts(player_items: set, boost_catalogue: dict, non_cumul
                                                 o item de maior prioridade (primeiro na lista)
                                                 aplica seu bônus. Ex: {"beavers": ["Foreman Beaver", ...]}.
         farm_data (dict, opcional): Os dados completos da fazenda, necessários para
-                                    verificações de estado (ex: tempo de ativação de coletáveis).
+                                    verificações de estado (ex: tempo de ativação, temporada, facção).
 
     Returns:
         list: Uma lista de dicionários, onde cada dicionário representa um bônus ativo
@@ -381,64 +383,69 @@ def get_active_player_boosts(player_items: set, boost_catalogue: dict, non_cumul
     active_boosts = []
     farm_data = farm_data or {}
     non_cumulative_groups = non_cumulative_groups or {}
-    all_item_data = _get_all_item_data() # Necessário para checar os efeitos originais
+    all_item_data = _get_all_item_data()
+
+    # Extrai o contexto de temporada e facção uma única vez para otimização.
+    current_season = farm_data.get("season", {}).get("season")
+    player_faction = farm_data.get("faction", {}).get("name")
     
-    # Rastreia itens que já foram processados por grupos não cumulativos.
     items_in_any_group = set()
     for group_items in non_cumulative_groups.values():
         items_in_any_group.update(group_items)
 
     # 1. Processa os grupos hierárquicos (não cumulativos).
-    # Apenas o primeiro item encontrado no `player_items` dentro de cada grupo
-    # (baseado na ordem definida em `non_cumulative_groups`) terá seu bônus aplicado.
     for group_name, ordered_items in non_cumulative_groups.items():
         for item_name in ordered_items:
             if item_name in player_items and item_name in boost_catalogue:
-                first_boost = boost_catalogue[item_name]["boosts"][0] # Pega o primeiro bônus para verificar condições gerais
-                conditions = first_boost.get("conditions", {})
                 source_type = boost_catalogue[item_name].get("source_type")
-                duration_days = conditions.get("duration_days")
-                duration_hours = conditions.get("duration_hours")
-
-                # Verifica a validade de bônus temporais (se aplicável).
-                if duration_days or duration_hours:
-                    all_placed_items = {**farm_data.get("collectibles", {}), **farm_data.get("home", {}).get("collectibles", {})}
-                    placements = all_placed_items.get(item_name, [])
-                    if placements:
-                        activation_ts = placements[0].get("createdAt", 0)
-                        now_ts = int(time.time() * 1000)
-                        duration_ms = (duration_days or 0) * 24 * 60 * 60 * 1000 + (duration_hours or 0) * 60 * 60 * 1000
-                        
-                        if now_ts > (activation_ts + duration_ms):
-                            continue # Bônus temporal expirou, não aplica.
                 
-                # Ignora bônus AOE aqui, pois são tratados separadamente por posição de recurso.
+                # Ignora bônus AOE aqui, pois são tratados separadamente.
                 if boost_catalogue[item_name].get("has_aoe"):
                     continue
 
                 item_boosts = boost_catalogue[item_name]["boosts"]
-                # Verifica se o item tem um bônus de CRITICAL_CHANCE.
                 is_critical_item = any(b.get("type") == "CRITICAL_CHANCE" for b in item_boosts)
 
                 for boost in item_boosts:
-                    # Se for um item crítico, seu bônus YIELD não é adicionado aqui,
-                    # pois será adicionado apenas se o crítico realmente ocorrer (ver `fruit_service`).
+                    conditions = boost.get("conditions", {})
+                    
+                    # VALIDAÇÃO DE CONTEXTO (TEMPORADA/FACÇÃO)
+                    required_season = conditions.get("season")
+                    if required_season and current_season and required_season.lower() != current_season.lower():
+                        continue
+
+                    required_faction = conditions.get("faction")
+                    if required_faction and player_faction and required_faction.lower() != player_faction.lower():
+                        continue
+                    
+                    # Validação de bônus temporais.
+                    duration_days = conditions.get("duration_days")
+                    duration_hours = conditions.get("duration_hours")
+                    if duration_days or duration_hours:
+                        all_placed_items = {**farm_data.get("collectibles", {}), **farm_data.get("home", {}).get("collectibles", {})}
+                        placements = all_placed_items.get(item_name, [])
+                        if placements:
+                            activation_ts = placements[0].get("createdAt", 0)
+                            now_ts = int(time.time() * 1000)
+                            duration_ms = (duration_days or 0) * 24 * 60 * 60 * 1000 + (duration_hours or 0) * 60 * 60 * 1000
+                            if now_ts > (activation_ts + duration_ms):
+                                continue
+                        else: # Se não há 'placements', o bônus temporal não pode ser validado/ativado.
+                            continue
+                    
+                    # Lógica para bônus de crítico.
                     if is_critical_item and boost.get("type") == "YIELD":
                         continue
+                        
                     active_boosts.append({"source_item": item_name, "source_type": source_type, **boost})
-                break # Apenas o primeiro item do grupo se aplica, então sai do loop.
+                break
 
     # 2. Processa todos os outros bônus que não são hierárquicos (cumulativos).
-    # Estes bônus são adicionados independentemente de outros itens, desde que o jogador os possua.
     for item_name in player_items:
         if item_name in boost_catalogue and item_name not in items_in_any_group:
-            # --- NOVO: Checa se o item é puramente um modificador ---
-            # Para isso, consultamos a definição original do item, não o catálogo filtrado.
             original_item_details = all_item_data.get(item_name, {})
             original_effects = original_item_details.get("effects", [])
             
-            # Um item é considerado "apenas modificador" se TODOS os seus efeitos são tipos de modificação.
-            # Se a lista de efeitos estiver vazia, não é um modificador.
             is_modifier_only = False
             if original_effects:
                 is_modifier_only = all(
@@ -447,38 +454,45 @@ def get_active_player_boosts(player_items: set, boost_catalogue: dict, non_cumul
                 )
             
             if is_modifier_only:
-                continue # Pula itens que são apenas modificadores, pois sua lógica é tratada em outro lugar.
+                continue
 
-            first_boost = boost_catalogue[item_name]["boosts"][0]
-            conditions = first_boost.get("conditions", {})
             source_type = boost_catalogue[item_name].get("source_type")
-            duration_days = conditions.get("duration_days")
-            duration_hours = conditions.get("duration_hours")
-
-            # Verifica a validade de bônus temporais (se aplicável).
-            if duration_days or duration_hours:
-                all_placed_items = {**farm_data.get("collectibles", {}), **farm_data.get("home", {}).get("collectibles", {})}
-                placements = all_placed_items.get(item_name, [])
-                if placements:
-                    activation_ts = placements[0].get("createdAt", 0)
-                    now_ts = int(time.time() * 1000)
-                    duration_ms = (duration_days or 0) * 24 * 60 * 60 * 1000 + (duration_hours or 0) * 60 * 60 * 1000
-                    
-                    if now_ts > (activation_ts + duration_ms):
-                        continue # Bônus temporal expirou, não aplica.
-            
-            # Ignora bônus AOE aqui, pois são tratados separadamente por posição de recurso.
             if boost_catalogue[item_name].get("has_aoe") or source_type == "fertiliser":
                 continue
 
             item_boosts = boost_catalogue[item_name]["boosts"]
-            # Verifica se o item tem um bônus de CRITICAL_CHANCE.
             is_critical_item = any(b.get("type") == "CRITICAL_CHANCE" for b in item_boosts)
+
             for boost in item_boosts:
-                # Se for um item crítico, seu bônus YIELD não é adicionado aqui,
-                # pois será adicionado apenas se o crítico realmente ocorrer (ver `fruit_service`).
+                conditions = boost.get("conditions", {})
+
+                # VALIDAÇÃO DE CONTEXTO (TEMPORADA/FACÇÃO)
+                required_season = conditions.get("season")
+                if required_season and current_season and required_season.lower() != current_season.lower():
+                    continue
+
+                required_faction = conditions.get("faction")
+                if required_faction and player_faction and required_faction.lower() != player_faction.lower():
+                    continue
+
+                # Validação de bônus temporais.
+                duration_days = conditions.get("duration_days")
+                duration_hours = conditions.get("duration_hours")
+                if duration_days or duration_hours:
+                    all_placed_items = {**farm_data.get("collectibles", {}), **farm_data.get("home", {}).get("collectibles", {})}
+                    placements = all_placed_items.get(item_name, [])
+                    if placements:
+                        activation_ts = placements[0].get("createdAt", 0)
+                        now_ts = int(time.time() * 1000)
+                        duration_ms = (duration_days or 0) * 24 * 60 * 60 * 1000 + (duration_hours or 0) * 60 * 60 * 1000
+                        if now_ts > (activation_ts + duration_ms):
+                            continue
+                    else:
+                        continue
+                
                 if is_critical_item and boost.get("type") == "YIELD":
                     continue
+                    
                 active_boosts.append({"source_item": item_name, "source_type": source_type, **boost})
 
     # 3. Processa e adiciona os bônus de Buds, se forem relevantes para o catálogo.
@@ -549,7 +563,11 @@ def get_active_player_boosts(player_items: set, boost_catalogue: dict, non_cumul
                     "conditions": original_details.get("conditions", {})
                 })
 
-    # 4. ETAPA FINAL: Processa todos os modificadores sobre a lista de bônus ativos.
+    # 4. Adiciona bônus externos (ex: eventos de calendário) à lista antes de processar os modificadores.
+    if external_boosts:
+        active_boosts.extend(external_boosts)
+
+    # 5. ETAPA FINAL: Processa todos os modificadores sobre a lista de bônus ativos.
     # Isso garante que bônus que alteram outros bônus sejam aplicados por último.
     final_processed_boosts = _process_boost_modifiers(active_boosts, player_items)
 
@@ -755,17 +773,20 @@ def _conditions_are_met(conditions: dict, resource_name: str, node_context: dict
             required_list = required_value if isinstance(required_value, list) else [required_value]
             if current_tier not in required_list:
                 return False # O tier da cultura não corresponde ao requerido.
+
+        # Condição de Construção (ex: "building": "Greenhouse")
+        elif condition_key == "building":
+            current_building = context.get("building")
+            if current_building != required_value:
+                return False
         
         # Condição de Local de Plantio (ex: "planting_spot": "Fruit Patch")
         elif condition_key == "planting_spot":
-            # Obtém os dados da fruta para verificar seu local de plantio.
-            fruit_data = fruit_domain.FRUIT_DATA.get(resource_name)
-            if not fruit_data:
-                return False # Se não for uma fruta válida, a condição falha.
-
-            actual_spot = fruit_data.get("planting_spot")
-            if actual_spot != required_value:
-                return False # O local de plantio não corresponde ao requerido.
+            # Verifica o contexto para saber onde o recurso está plantado.
+            # O contexto pode ter 'building' ou 'planting_spot'.
+            current_spot = context.get("building") or context.get("planting_spot")
+            if current_spot != required_value:
+                return False
 
         # Condição de Exclusão (ex: "exclude_target": ["Apple", "Banana"])
         # Se o `resource_name` estiver na lista de exclusão, a condição NÃO é atendida.
@@ -774,13 +795,11 @@ def _conditions_are_met(conditions: dict, resource_name: str, node_context: dict
             if resource_name in excluded_list:
                 return False
         
-        # Condição de Fação (ex: "faction": "Goblins")
+        # A condição de 'faction' é validada em `get_active_player_boosts`.
+        # Ignorar a chave 'faction' aqui é intencional, pois ela já foi verificada
+        # com o contexto global do jogador (farm_data).
         elif condition_key == "faction":
-            # Assume que a facção do jogador está no contexto ou em algum lugar acessível.
-            # Esta lógica precisaria ser expandida se a facção não estiver no `node_context`.
-            player_faction = context.get("player_faction") # Exemplo: obter a facção do jogador do contexto
-            if player_faction != required_value:
-                return False
+            pass
 
     return True # Todas as condições foram atendidas.
 

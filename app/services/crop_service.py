@@ -54,26 +54,17 @@ def _get_crop_yield_amount(game_state: dict, plot: dict, crop_name: str, calenda
     player_skills = set(game_state.get("bumpkin", {}).get("skills", {}).keys())
     collectibles = {**game_state.get("collectibles", {}), **game_state.get("home", {}).get("collectibles", {})}
 
-    # 1. Obter bônus ativos. `get_active_player_boosts` omite o YIELD de itens críticos.
+    # 1. Obter bônus ativos, incluindo os de calendário, para processamento unificado.
     active_boosts = resource_analysis_service.get_active_player_boosts(
         player_items=player_items,
         boost_catalogue=CROP_BOOST_CATALOGUE,
         non_cumulative_groups=NON_CUMULATIVE_BOOST_GROUPS,
-        farm_data=game_state
+        farm_data=game_state,
+        external_boosts=calendar_boosts
     )
 
-    # 2. Inicia a lista de bônus para este plot específico com os bônus gerais do jogador.
+    # 2. Inicia a lista de bônus para este plot.
     plot_specific_boosts = list(active_boosts)
-
-    # 2.1 Adiciona bônus de calendário, se houver.
-    if calendar_boosts:
-        for boost in calendar_boosts:
-            if boost.get('type') == 'YIELD' and boost.get('item') == 'Crop':
-                plot_specific_boosts.append({
-                    "source_item": f"(Evento) {boost.get('event_name', 'Calendar Event')}",
-                    "source_type": "event",
-                    **boost
-                })
 
     # 3. Adiciona o fertilizante específico do plot, se houver.
     applied_fertiliser = plot.get("fertiliser", {}).get("name")
@@ -106,7 +97,7 @@ def _get_crop_yield_amount(game_state: dict, plot: dict, crop_name: str, calenda
                             "type": "YIELD",
                             "operation": boost["operation"],
                             "value": boost["value"],
-                            "source_item": f"{hit_name} (Critical)",
+                            "source_item": f"{hit_name} (Critical Hit)",
                             "source_type": source_type,
                             "conditions": boost.get("conditions", {})
                         })
@@ -168,21 +159,11 @@ def _get_crop_growth_time(game_state: dict, crop_name: str, plot: dict, calendar
         player_items=player_items,
         boost_catalogue=CROP_BOOST_CATALOGUE,
         non_cumulative_groups=NON_CUMULATIVE_BOOST_GROUPS,
-        farm_data=game_state
+        farm_data=game_state,
+        external_boosts=calendar_boosts
     )
     
     plot_specific_boosts = list(active_boosts)
-
-    # Adiciona bônus de calendário, se houver.
-    if calendar_boosts:
-        for boost in calendar_boosts:
-            # O evento 'sunshower' afeta todas as culturas, então não há verificação de 'item'.
-            if boost.get('type') == 'TIME':
-                plot_specific_boosts.append({
-                    "source_item": f"(Evento) {boost.get('event_name', 'Calendar Event')}",
-                    "source_type": "event",
-                    **boost
-                })
 
     # Adiciona o fertilizante específico do plot, se houver, exceto "Rapid Root".
     applied_fertiliser = plot.get("fertiliser", {}).get("name")
@@ -202,7 +183,7 @@ def _get_crop_growth_time(game_state: dict, crop_name: str, plot: dict, calendar
     ]
     plot_specific_boosts.extend(filtered_aoe_boosts)
 
-    return resource_analysis_service.calculate_final_recovery_time(base_time, plot_specific_boosts, crop_name)
+    return resource_analysis_service.calculate_final_recovery_time(base_time, plot_specific_boosts, crop_name, node_context={"building": "plot"})
 
 # ==============================================================================
 # FUNÇÃO PRINCIPAL (ORQUESTRADOR)

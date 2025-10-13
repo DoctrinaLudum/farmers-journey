@@ -1,6 +1,121 @@
 // typescript/resource_info_card.ts
 import { positionCard } from './card_positioner.js';
 
+// --- INTERFACES DE DADOS ---
+
+/**
+ * Representa um bônus ou penalidade que afeta um recurso.
+ */
+interface Buff {
+    source_type: 'skill' | 'skill_legacy' | 'collectible' | 'wearable' | 'bud' | 'game_mechanic' | 'fertiliser' | 'tool' | 'event';
+    source_item: string;
+    count: number;
+    value: number | string;
+    operation: 'percentage' | 'multiply' | 'add';
+    type?: 'OIL_COST' | 'CROP_MACHINE_GROWTH_TIME';
+    total_bonus_yield?: number;
+    modifiers?: Modifier[];
+}
+
+/**
+ * Representa um modificador que altera o efeito de um Buff.
+ * Ex: Um Bud que aumenta o bônus de um colecionável.
+ */
+interface Modifier {
+    source_type: string;
+    source_item: string;
+    value: number | string;
+    operation: 'multiply' | 'add';
+}
+
+/**
+ * Representa um vaso de planta na Estufa (Greenhouse).
+ */
+interface Pot {
+    id: number;
+    plant_name: string;
+    state_name: string;
+    ready_at_timestamp_ms: number;
+    calculations: {
+        yield: {
+            final_deterministic: number;
+            applied_buffs: Buff[];
+        };
+        growth: {
+            applied_buffs: Buff[];
+        };
+    };
+}
+
+/**
+ * Representa um pacote de sementes na Crop Machine.
+ */
+interface Pack {
+    is_ready: boolean;
+    seeds: number;
+    yield_info?: {
+        final_deterministic: number;
+        average_yield_per_seed?: number;
+        applied_buffs: Buff[];
+    };
+    oil_cost?: number;
+    readyAt: number;
+    icon_path: string;
+}
+
+/**
+ * Estrutura principal dos dados de análise de um recurso.
+ */
+interface AnalysisData {
+    crop_name?: string;
+    fruit_name?: string;
+    tree_name?: string;
+    resource_name?: string;
+    name?: string;
+    state_name: string;
+    ready_at_timestamp_ms?: number;
+    crimstone_reset_at_ms?: number;
+    base_amount?: number;
+    mines_left?: number;
+    harvests_left?: number;
+    beeSwarm?: boolean;
+    bonus_reward?: { [key: string]: number };
+    calculations?: {
+        yield: {
+            final_deterministic: number;
+            applied_buffs: Buff[];
+        };
+        recovery?: {
+            applied_buffs: Buff[];
+        };
+        growth?: {
+            applied_buffs: Buff[];
+        };
+    };
+    applied_boosts?: Buff[];
+    summary?: {
+        next_wild_spawn_at?: number;
+        next_magic_spawn_at?: number;
+    };
+    pots?: { [key: string]: Pot };
+    global_oil_buffs?: any; // Manter como 'any' por enquanto devido à estrutura complexa
+    global_time_buffs?: any; // Manter como 'any' por enquanto
+    grouped_queue?: { [key: string]: Pack[] };
+    max_queue_size?: number;
+    used_queue_size?: number;
+}
+
+/**
+ * Estrutura completa dos dados passados para o card.
+ */
+interface ResourceData {
+    type: 'Greenhouse' | 'Crop Machine' | string;
+    analysis: AnalysisData;
+    base_building_icon?: string;
+    icon?: string;
+}
+
+
 /**
  * Configura o card flutuante que exibe informações detalhadas sobre um recurso
  * quando ele é clicado no mapa da fazenda.
@@ -126,7 +241,7 @@ export class ResourceInfoCard {
     }
 
     // --- Função principal para popular o card com dados ---
-    private populateCard(data: any) {
+    private populateCard(data: ResourceData) {
         // Limpeza de elementos dinâmicos de execuções anteriores
         this.cardHeader!.querySelector('.global-buffs-btn')?.remove();
         document.getElementById('global-buffs-panel')?.remove();
@@ -150,7 +265,7 @@ export class ResourceInfoCard {
         const statsList = document.createElement('ul');
         statsList.className = 'list-group list-group-flush';
 
-        const renderBuffsToList = (buffs: any[], targetList: HTMLElement, isTimeBonus: boolean = false) => {
+        const renderBuffsToList = (buffs: Buff[], targetList: HTMLElement, isTimeBonus: boolean = false) => {
             if (!buffs || buffs.length === 0) return;
 
             const sourceTypeToLabel: { [key: string]: string } = {
@@ -161,10 +276,11 @@ export class ResourceInfoCard {
                 bud: '(Bud)',
                 game_mechanic: '(Nativo)',
                 fertiliser: '(Fertiliser)',
-                tool: '(Ferramenta)'
+                tool: '(Ferramenta)',
+                event: '(Evento)'
             };
 
-            buffs.forEach(buff => {
+            buffs.forEach((buff: Buff) => {
                 const clone = buffTemplate.content.cloneNode(true) as DocumentFragment;
                 
                 const prefix = sourceTypeToLabel[buff.source_type] || '';
@@ -185,49 +301,45 @@ export class ResourceInfoCard {
                     let formattedValue: string;
                     let operator = '';
 
-                    if (buff.operation === 'percentage') {
-                        formattedValue = (numericBuffValue * 100).toFixed(0);
-                        operator = numericBuffValue > 0 ? '+' : '';
-                        valueText = `${operator}${formattedValue}%`;
-                    } else if (buff.operation === 'multiply') {
-                        // NOVO: Se for um bônus de tempo e o valor for menor que 1,
-                        // exibe como uma redução percentual para maior clareza.
-                        if (isTimeBonus && numericBuffValue < 1) {
-                            formattedValue = ((1 - numericBuffValue) * 100).toFixed(0);
-                            valueText = `-${formattedValue}%`;
-                        } else {
-                            // Mantém o comportamento original para outros casos (ex: bônus de rendimento x2)
-                            formattedValue = numericBuffValue.toFixed(2);
-                            operator = 'x';
-                            valueText = `${operator}${formattedValue}`;
-                        }
-                    } else if (buff.type === 'OIL_COST') { // Handle OIL_COST as percentage
-                        formattedValue = (numericBuffValue * 100).toFixed(0);
-                        operator = numericBuffValue >= 0 ? '+' : '';
-                        valueText = `${operator}${formattedValue}%`;
-                    } else if (buff.type === 'CROP_MACHINE_GROWTH_TIME') { // Handle CROP_MACHINE_GROWTH_TIME
+                    // Lógica de formatação refatorada para evitar erros de tipo
+                    if (buff.type === 'CROP_MACHINE_GROWTH_TIME') {
                         if (buff.operation === 'multiply') {
                             formattedValue = ((1 - numericBuffValue) * 100).toFixed(0);
-                            valueText = `-${formattedValue}%`; // e.g., 0.95 -> -5%
+                            valueText = `-${formattedValue}%`;
                         } else if (buff.operation === 'percentage') {
                             formattedValue = (numericBuffValue * 100).toFixed(0);
                             operator = numericBuffValue > 0 ? '+' : '';
                             valueText = `${operator}${formattedValue}%`;
-                        } else {
+                        } else if (buff.operation === 'add') { // 'add'
                             formattedValue = numericBuffValue.toFixed(2);
                             operator = numericBuffValue >= 0 ? '+' : '';
                             valueText = `${operator}${formattedValue}`;
                         }
-                    }
-                    else { // Default handling for other numeric operations
+                    } else if (buff.type === 'OIL_COST') {
+                        formattedValue = (numericBuffValue * 100).toFixed(0);
+                        operator = numericBuffValue >= 0 ? '+' : '';
+                        valueText = `${operator}${formattedValue}%`;
+                    } else if (buff.operation === 'percentage') {
+                        formattedValue = (numericBuffValue * 100).toFixed(0);
+                        operator = numericBuffValue > 0 ? '+' : '';
+                        valueText = `${operator}${formattedValue}%`;
+                    } else if (buff.operation === 'multiply') {
+                        if (isTimeBonus && numericBuffValue < 1) {
+                            formattedValue = ((1 - numericBuffValue) * 100).toFixed(0);
+                            valueText = `-${formattedValue}%`;
+                        } else {
+                            formattedValue = numericBuffValue.toFixed(2);
+                            operator = 'x';
+                            if (!isTimeBonus && numericBuffValue > 1 && !buff.source_item.includes('(Critical Hit)')) {
+                                const bonus = (numericBuffValue - 1).toFixed(2);
+                                valueText = `${operator}${formattedValue} (+${bonus})`;
+                            } else {
+                                valueText = `${operator}${formattedValue}`;
+                            }
+                        }
+                    } else if (buff.operation === 'add') { // Default is 'add'
                         formattedValue = numericBuffValue.toFixed(2);
                         operator = numericBuffValue >= 0 ? '+' : '';
-                        valueText = `${operator}${formattedValue}`;
-                    }
-
-                    if (buff.source_type === 'bud') { // This block seems to override previous formatting for buds, keep it for now.
-                        formattedValue = numericBuffValue.toFixed(2);
-                        operator = numericBuffValue > 0 ? '+' : '';
                         valueText = `${operator}${formattedValue}`;
                     }
                 } else {
@@ -236,39 +348,41 @@ export class ResourceInfoCard {
 
                 const valueEl = clone.querySelector('.buff-value')!;
                 valueEl.textContent = valueText;
+
+                if (buff.total_bonus_yield && buff.total_bonus_yield > 0) {
+                    const totalBonusEl = document.createElement('span');
+                    totalBonusEl.className = 'text-muted small ps-1';
+                    totalBonusEl.textContent = `(Total: +${buff.total_bonus_yield.toFixed(2)})`;
+                    valueEl.appendChild(totalBonusEl);
+                }
+
                 if (!isNaN(numericBuffValue)) {
                     if (isTimeBonus) {
-                        // Um bônus de tempo é bom (verde) se for um valor negativo (redução)
-                        // OU se for uma multiplicação por um valor menor que 1.
                         const isGoodTimeBonus = numericBuffValue < 0 || (buff.operation === 'multiply' && numericBuffValue < 1);
                         valueEl.classList.add(isGoodTimeBonus ? 'text-success' : 'text-danger');
                     } else {
-                        // Para outros bônus (ex: rendimento), um valor positivo é bom.
                         valueEl.classList.add(numericBuffValue > 0 ? 'text-success' : 'text-danger');
                     }
                 }
 
                 targetList.appendChild(clone);
 
-                // NOVO: Renderiza modificadores se eles existirem no objeto de bônus
                 if (buff.modifiers && Array.isArray(buff.modifiers)) {
-                    buff.modifiers.forEach((modBuff: any) => {
+                    buff.modifiers.forEach((modBuff: Modifier) => {
                         const modifierEl = document.createElement('div');
                         modifierEl.className = 'modifier-buff d-flex align-items-center small text-muted ms-3';
                         
                         const modPrefix = sourceTypeToLabel[modBuff.source_type] || '';
                         const modTypeClass = modBuff.source_type ? `is-type-${modBuff.source_type}` : '';
                         const modPrefixTag = modPrefix ? `<span class="buff-source-tag ${modTypeClass}">${modPrefix}</span>` : '';
-                        const iconHtml = '<i class="bi bi-stars me-1"></i>'; // Ícone de estrela para TODOS os modificadores
+                        const iconHtml = '<i class="bi bi-stars me-1"></i>';
 
                         let modifierText = '';
                         const modValueStr = String(modBuff.value);
 
-                        // Padroniza a exibição do modificador
                         if (modBuff.operation === 'multiply') {
                             modifierText = `${modPrefixTag} ${modBuff.source_item}: ${modValueStr}`;
                         } else {
-                            // Para bônus de soma, exibe texto descritivo para evitar confusão
                             modifierText = `<span class="buff-source-tag is-type-special">Modificado por</span> ${modPrefixTag} ${modBuff.source_item}`;
                         }
 
@@ -311,8 +425,8 @@ export class ResourceInfoCard {
             }
         };
 
-        const addBuffs = (title: string, buffs: any[], isTimeBonus: boolean = false) => {
-            if (!buffs || buffs.length === 0) return;
+        const addBuffs = (buffs: Buff[] | undefined, title: string, isTimeBonus: boolean = false) => {
+            if (!buffs || buffs.length === 0) return; 
             
             const titleEl = document.createElement('h6');
             titleEl.className = 'mt-2 mb-1 small text-muted';
@@ -335,15 +449,12 @@ export class ResourceInfoCard {
                 const remainingSeconds = (analysisData.crimstone_reset_at_ms - nowMs) / 1000;
                 
                 let criticalityClass = '';
-                // Menos de 10 minutos (mais crítico)
                 if (remainingSeconds < 10 * 60) {
                     criticalityClass = 'text-danger fw-bold';
                 } 
-                // Menos de 1 hora
                 else if (remainingSeconds < 60 * 60) {
                     criticalityClass = 'text-warning fw-bold';
                 }
-                // Menos de 12 horas (aviso)
                 else if (remainingSeconds < 12 * 60 * 60) {
                     criticalityClass = 'text-warning';
                 }
@@ -355,7 +466,6 @@ export class ResourceInfoCard {
         if (yieldAmount !== undefined && yieldAmount !== null) {
             addStat('Rendimento Previsto', yieldAmount.toFixed(2));
         } else if (analysisData.base_amount !== undefined) {
-            // Para cogumelos e outros recursos que não usam a estrutura 'calculations'
             addStat('Rendimento Previsto', analysisData.base_amount?.toFixed(2));
         }
 
@@ -373,20 +483,31 @@ export class ResourceInfoCard {
         }
 
         if (analysisData.calculations?.yield?.applied_buffs) {
-            addBuffs('Bônus de Rendimento', analysisData.calculations.yield.applied_buffs);
+            const buffs = analysisData.calculations.yield.applied_buffs;
+            addBuffs(buffs, 'Bônus de Rendimento');
+
+            const shouldShowDisclaimer = buffs.some((b: Buff) => 
+                b.operation === 'multiply' && 
+                b.source_item.includes('(Critical Hit)') && 
+                b.total_bonus_yield && b.total_bonus_yield > 0
+            );
+
+            if (shouldShowDisclaimer) {
+                const disclaimer = this.createDisclaimer(
+                    `<i class="bi bi-info-circle me-1"></i> <strong>Nota:</strong> O valor 'Total' de um 'Critical Hit' é o ganho real, calculado após a aplicação de outros bônus multiplicativos.`
+                );
+                statsList.appendChild(disclaimer);
+            }
         }
         const recoveryBuffs = analysisData.calculations?.recovery?.applied_buffs || analysisData.calculations?.growth?.applied_buffs;
         if (recoveryBuffs) {
-            addBuffs('Bônus de Tempo', recoveryBuffs, true);
+            addBuffs(recoveryBuffs, 'Bônus de Tempo', true);
         }
 
-        // NOVO: Adiciona a lista de bônus aplicados para cogumelos (padronizado)
-        if (analysisData.applied_boosts && analysisData.applied_boosts.length > 0) { // analysisData.applied_boosts já é uma lista de objetos
-            // Usa a função helper padrão para exibir os bônus com o título correto e as tags de origem.
-            addBuffs('Bônus de Rendimento', analysisData.applied_boosts);
+        if (analysisData.applied_boosts && analysisData.applied_boosts.length > 0) {
+            addBuffs(analysisData.applied_boosts, 'Bônus de Rendimento');
         }
 
-        // NOVO: Adiciona o resumo de spawn para cogumelos com data/hora completa
         if (analysisData.summary) {
             let spawnTimestamp: number | undefined;
 
@@ -402,132 +523,63 @@ export class ResourceInfoCard {
         }
 
         if (data.type === 'Greenhouse' && analysisData.pots) {
-            const pots = Object.values(analysisData.pots as any[]);
-            const plantsInPots = pots.map((pot: any) => pot.plant_name).filter(Boolean);
-            const uniquePlants = [...new Set(plantsInPots)];
-
-            if (uniquePlants.length === 0) {
-                this.cardTitle!.textContent = 'Greenhouse (Vazia)';
-            } else {
-                if (uniquePlants.length === 1) {
-                    this.cardTitle!.textContent = `Greenhouse (${uniquePlants[0]})`;
-                } else {
-                    this.cardTitle!.textContent = `Greenhouse (${uniquePlants.length} plantas diferentes)`;
-                }
-            }
+            const pots = Object.values(analysisData.pots).filter(p => p.plant_name);
 
             if (pots.length === 0) {
+                this.cardTitle!.textContent = 'Greenhouse (Vazia)';
                 const noItemsEl = document.createElement('p');
                 noItemsEl.className = 'text-muted small mt-2 mb-0';
                 noItemsEl.textContent = 'Nenhum vaso com plantas.';
                 this.cardBody!.appendChild(noItemsEl);
             } else {
-                const groupedPots = new Map<string, any[]>();
-                pots.forEach((pot: any) => {
-                    const yieldValue = (pot.calculations?.yield?.final_deterministic ?? 0).toFixed(2);
-                    const readyTime = this.timeRemaining(pot.ready_at_timestamp_ms);
-                    const groupKey = `${pot.plant_name}|${pot.state_name}|${yieldValue}|${readyTime}`;
+                this.cardTitle!.textContent = `Greenhouse`;
 
-                    if (!groupedPots.has(groupKey)) {
-                        groupedPots.set(groupKey, []);
+                const navContainer = document.createElement('div');
+                navContainer.className = 'nav nav-pills nav-pills-sm mb-2 d-flex align-items-center';
+                
+                const navLabel = document.createElement('span');
+                navLabel.className = 'text-muted small me-2';
+                navLabel.textContent = 'Vaso:';
+                navContainer.appendChild(navLabel);
+
+                const detailsContainer = document.createElement('div');
+                detailsContainer.className = 'pot-details-content';
+
+                pots.forEach((pot: Pot, index: number) => {
+                    const button = document.createElement('button');
+                    button.className = 'nav-link';
+                    button.textContent = `#${pot.id}`;
+                    button.dataset.potIndex = String(index);
+                    if (index === 0) {
+                        button.classList.add('active');
                     }
-                    groupedPots.get(groupKey)!.push(pot);
+                    navContainer.appendChild(button);
                 });
 
-                let firstGroup = true;
-                Array.from(groupedPots.values()).forEach((potGroup: any[], groupIndex: number) => {
-                    if (!firstGroup) {
-                        this.cardBody!.appendChild(document.createElement('hr'));
-                    }
-                    firstGroup = false;
+                this.cardBody!.appendChild(navContainer);
+                this.cardBody!.appendChild(detailsContainer);
 
-                    const firstPot = potGroup[0];
-                    const potIds = potGroup.map(p => `#${p.id}`).join(', ');
-
-                    const potHeader = document.createElement('h6');
-                    potHeader.className = 'd-flex align-items-center small mt-2';
-                    potHeader.innerHTML = `
-                        <img src="/static/${firstPot.icon_path}" class="icon icon-2x me-2">
-                        <span>${firstPot.plant_name} (Vaso ${potIds})</span>
-                    `;
-                    this.cardBody!.appendChild(potHeader);
-
-                    const potStatsList = document.createElement('ul');
-                    potStatsList.className = 'list-group list-group-flush';
-
-                    const addPotStat = (label: string, value: string | number | undefined | null) => {
-                        if (value === undefined || value === null) return;
-                        const clone = statTemplate.content.cloneNode(true) as HTMLElement;
-                        clone.querySelector('.stat-label')!.textContent = label;
-                        clone.querySelector('.stat-value')!.textContent = String(value);
-                        potStatsList.appendChild(clone);
-                    };
-                    
-                    addPotStat('Estado', firstPot.state_name);
-                    addPotStat('Rendimento/Vaso', firstPot.calculations.yield.final_deterministic.toFixed(2));
-                    if (firstPot.state_name !== 'Pronta') {
-                        addPotStat('Pronta em', this.timeRemaining(firstPot.ready_at_timestamp_ms));
-                    }
-
-                    if (potGroup.length > 1) {
-                        const totalYield = potGroup.reduce((sum, p) => sum + p.calculations.yield.final_deterministic, 0);
-                        addPotStat('Rendimento Total (Grupo)', totalYield.toFixed(2));
-                    }
-                    this.cardBody!.appendChild(potStatsList);
-
-                    const yieldBuffs = firstPot.calculations?.yield?.applied_buffs || [];
-                    const timeBuffs = firstPot.calculations?.growth?.applied_buffs || [];
-                    const allBuffs = [...yieldBuffs, ...timeBuffs];
-
-                    if (allBuffs.length > 0) {
-                        const accordionId = `pot-buffs-collapse-${groupIndex}`;
-                        const accordionParentId = `accordion-pot-${groupIndex}`;
-
-                        const accordionItem = document.createElement('li');
-                        accordionItem.className = 'list-group-item px-0 py-1';
-                        accordionItem.innerHTML = `
-                            <div class="accordion accordion-flush" id="${accordionParentId}">
-                            <div class="accordion-item bg-transparent">
-                                <h2 class="accordion-header">
-                                    <button class="accordion-button accordion-button-sm collapsed py-1" type="button" data-bs-toggle="collapse" data-bs-target="#${accordionId}">
-                                        Bônus Aplicados (${allBuffs.length})
-                                    </button>
-                                </h2>
-                                <div id="${accordionId}" class="accordion-collapse collapse" data-bs-parent="#${accordionParentId}">
-                                    <div class="accordion-body pt-1 pb-0">
-                                        <!-- As seções de bônus serão renderizadas aqui -->
-                                    </div>
-                                </div>
-                            </div>
-                        `;
+                navContainer.addEventListener('click', (e) => {
+                    const target = e.target as HTMLElement;
+                    if (target.tagName === 'BUTTON' && target.dataset.potIndex) {
+                        navContainer.querySelector('.active')?.classList.remove('active');
+                        target.classList.add('active');
                         
-                        const accordionBody = accordionItem.querySelector('.accordion-body') as HTMLElement;
-
-                        const renderBuffSection = (title: string, buffs: any[], targetElement: HTMLElement, isTimeBonus: boolean = false) => {
-                            if (buffs.length === 0) return;
-                            const titleEl = document.createElement('h6');
-                            titleEl.className = 'mt-2 mb-1 small text-muted';
-                            titleEl.textContent = title;
-                            targetElement.appendChild(titleEl);
-
-                            const buffList = document.createElement('ul');
-                            buffList.className = 'list-group list-group-flush';
-                            renderBuffsToList(buffs, buffList, isTimeBonus);
-                            targetElement.appendChild(buffList);
-                        };
-
-                        renderBuffSection('Bônus de Rendimento', yieldBuffs, accordionBody, false);
-                        renderBuffSection('Bônus de Tempo', timeBuffs, accordionBody, true);
-
-                        potStatsList.appendChild(accordionItem);
+                        const potIndex = parseInt(target.dataset.potIndex, 10);
+                        const selectedPot = pots[potIndex];
+                        
+                        this.renderPotDetails(selectedPot, detailsContainer, statTemplate, buffTemplate, renderBuffsToList);
                     }
                 });
+
+                if (pots.length > 0) {
+                    this.renderPotDetails(pots[0], detailsContainer, statTemplate, buffTemplate, renderBuffsToList);
+                }
             }
         }
 
         if (data.type === 'Crop Machine' && analysisData) {
             try {
-                // Lógica para criar o painel de bônus como um filho do card principal
                 const oilBuffsExist = analysisData.global_oil_buffs && (analysisData.global_oil_buffs.increases.length > 0 || analysisData.global_oil_buffs.decreases.length > 0);
                 const timeBuffsExist = analysisData.global_time_buffs && analysisData.global_time_buffs.buffs.length > 0;
                 
@@ -553,7 +605,6 @@ export class ResourceInfoCard {
                     const panelList = document.createElement('ul');
                     panelList.className = 'list-group list-group-flush';
 
-                    // CORREÇÃO: Padroniza o contador da fila de pacotes
                     if (analysisData.max_queue_size) {
                         const usedQueue = analysisData.used_queue_size ?? 0;
                         const maxQueue = analysisData.max_queue_size;
@@ -590,7 +641,7 @@ export class ResourceInfoCard {
                             const typeClass = buff.source_type ? `is-type-${buff.source_type}` : '';
                             const prefixTag = prefix ? `<span class="buff-source-tag ${typeClass}">${prefix}</span>` : '';
                             buffSourceEl.innerHTML = `${prefixTag} ${buff.source_item}`.trim();
-                            buffValueEl.textContent = buff.effect_str.replace(/\n/g, '');
+                            buffValueEl.textContent = buff.effect_str.replace(/\\n/g, '');
                             if (buff.sentiment === 'positive') {
                                 buffValueEl.classList.add('text-success');
                             } else if (buff.sentiment === 'negative') {
@@ -599,7 +650,6 @@ export class ResourceInfoCard {
                             targetList.appendChild(clone);
                         });
 
-                        // CORREÇÃO: Padroniza o consumo final de óleo
                         if (buffsData.rate) {
                             const rate = Number(buffsData.rate);
                             const rateEl = document.createElement('li');
@@ -648,6 +698,15 @@ export class ResourceInfoCard {
 
             try {
                 const groupedQueue = analysisData.grouped_queue;
+                if (!groupedQueue) {
+                    this.cardTitle!.textContent = 'Crop Machine (Vazia)';
+                    const noItemsEl = document.createElement('p');
+                    noItemsEl.className = 'text-muted small mt-2 mb-0';
+                    noItemsEl.textContent = 'Nenhum pacote na fila.';
+                    this.cardBody!.appendChild(noItemsEl);
+                    return;
+                }
+
                 const cropGroups = Object.keys(groupedQueue);
 
                 if (cropGroups.length === 0) {
@@ -663,10 +722,8 @@ export class ResourceInfoCard {
                         this.cardTitle!.textContent = `Crop Machine (${cropGroups.join(', ')})`;
                     }
 
-                    // Lógica para botões de "ir para" (scroll) com ícones e barra fixa
                     if (cropGroups.length > 1) {
                         const filterBar = document.createElement('div');
-                        // Adiciona a classe para a barra de navegação fixa
                         filterBar.className = 'd-flex flex-wrap gap-1 mb-3 pb-2 border-bottom sticky-filter-bar';
 
                         cropGroups.forEach(cropName => {
@@ -674,12 +731,10 @@ export class ResourceInfoCard {
                             const iconPath = packs[0]?.icon_path;
 
                             const badge = document.createElement('a');
-                            // Adiciona classes para alinhar ícone e texto
                             badge.className = 'badge text-decoration-none bg-info-subtle text-info-emphasis d-flex align-items-center gap-1';
                             
                             let badgeHTML = '';
                             if (iconPath) {
-                                // Usa a classe 'item-icon-sm' para o ícone
                                 badgeHTML += `<img src="/static/${iconPath}" class="item-icon-sm" alt="${cropName} icon" style="height: 1em; width: 1em;">`;
                             }
                             badgeHTML += `<span>${cropName}</span>`;
@@ -691,7 +746,6 @@ export class ResourceInfoCard {
                         
                         this.cardBody!.appendChild(filterBar);
 
-                        // Event listener para a barra de filtro (scroll)
                         filterBar.addEventListener('click', (e) => {
                             const anchor = (e.target as HTMLElement).closest('a');
                             if (anchor && anchor.hash) {
@@ -700,7 +754,6 @@ export class ResourceInfoCard {
                                 const targetElement = document.getElementById(targetId);
                                 if (targetElement) {
                                     const scrollContainer = this.cardBody!;
-                                    // A altura da barra de filtro + um pequeno espaço
                                     const offset = filterBar.offsetHeight + 45; 
                                     
                                     scrollContainer.scrollTo({
@@ -712,18 +765,16 @@ export class ResourceInfoCard {
                         });
                     }
 
-                    Object.entries(groupedQueue).forEach(([cropName, packs]: [string, any], groupIndex) => {
+                    Object.entries(groupedQueue).forEach(([cropName, packs]: [string, Pack[]], groupIndex) => {
                         try {
-                            // Adiciona HR antes de cada grupo, exceto o primeiro
                             if (groupIndex > 0) {
                                 const hr = document.createElement('hr');
-                                hr.className = 'my-3'; // Adiciona margem para separar visualmente
+                                hr.className = 'my-3';
                                 this.cardBody!.appendChild(hr);
                             }
 
                             const groupWrapper = document.createElement('div');
                             groupWrapper.className = 'crop-machine-group';
-                            // Adiciona um ID para que os botões de filtro possam rolar até ele
                             groupWrapper.id = `crop-group-${cropName.replace(/\s+/g, '-')}`;
 
                             const groupHeader = document.createElement('h6');
@@ -737,7 +788,7 @@ export class ResourceInfoCard {
                             if (packs.length > 1) {
                                 const navContainer = document.createElement('div');
                                 navContainer.className = 'nav nav-pills nav-pills-sm mb-2';
-                                packs.forEach((pack: any, index: number) => {
+                                packs.forEach((pack: Pack, index: number) => {
                                     const button = document.createElement('button');
                                     button.className = 'nav-link';
                                     button.textContent = `Pct ${index + 1}`;
@@ -772,8 +823,8 @@ export class ResourceInfoCard {
         }
     }
 
-    private renderPackDetails(pack: any, container: HTMLElement, statTemplate: HTMLTemplateElement, buffTemplate: HTMLTemplateElement, renderBuffsToList: Function) {
-        container.innerHTML = ''; // Limpa o container antes de renderizar
+    private renderPackDetails(pack: Pack, container: HTMLElement, statTemplate: HTMLTemplateElement, buffTemplate: HTMLTemplateElement, renderBuffsToList: Function) {
+        container.innerHTML = '';
         const statsList = document.createElement('ul');
         statsList.className = 'list-group list-group-flush';
 
@@ -787,7 +838,7 @@ export class ResourceInfoCard {
             statsList.appendChild(clone);
         };
 
-        const addBuffs = (title: string, buffs: any[], isTimeBonus: boolean = false) => {
+        const addBuffs = (buffs: Buff[] | undefined, title: string, isTimeBonus: boolean = false) => {
             if (!buffs || buffs.length === 0) return;
             const titleEl = document.createElement('h6');
             titleEl.className = 'mt-3 mb-1 small text-muted';
@@ -811,6 +862,92 @@ export class ResourceInfoCard {
 
         container.appendChild(statsList);
 
-        addBuffs('Bônus de Rendimento', pack.yield_info?.applied_buffs, false);
+        const yieldBuffs = pack.yield_info?.applied_buffs;
+        addBuffs(yieldBuffs, 'Bônus de Rendimento', false);
+
+        if (yieldBuffs) {
+            const shouldShowDisclaimer = yieldBuffs.some((b: Buff) => 
+                b.operation === 'multiply' && 
+                b.source_item.includes('(Critical Hit)') && 
+                b.total_bonus_yield && b.total_bonus_yield > 0
+            );
+
+            if (shouldShowDisclaimer) {
+                const disclaimer = this.createDisclaimer(
+                    `<i class="bi bi-info-circle me-1"></i> <strong>Nota:</strong> O valor 'Total' de um 'Critical Hit' é o ganho real, calculado após a aplicação de outros bônus multiplicativos.`
+                );
+                statsList.appendChild(disclaimer);
+            }
+        }
+    }
+
+    private renderPotDetails(pot: Pot, container: HTMLElement, statTemplate: HTMLTemplateElement, buffTemplate: HTMLTemplateElement, renderBuffsToList: Function) {
+        container.innerHTML = '';
+        const potStatsList = document.createElement('ul');
+        potStatsList.className = 'list-group list-group-flush';
+
+        const addPotStat = (label: string, value: string | number | undefined | null) => {
+            if (value === undefined || value === null) return;
+            const clone = statTemplate.content.cloneNode(true) as HTMLElement;
+            clone.querySelector('.stat-label')!.textContent = label;
+            clone.querySelector('.stat-value')!.textContent = String(value);
+            potStatsList.appendChild(clone);
+        };
+        
+        addPotStat('Estado', pot.state_name);
+        addPotStat('Rendimento/Vaso', pot.calculations.yield.final_deterministic.toFixed(2));
+        if (pot.state_name !== 'Pronta') {
+            addPotStat('Pronta em', this.timeRemaining(pot.ready_at_timestamp_ms));
+        }
+
+        container.appendChild(potStatsList);
+
+        const yieldBuffs = pot.calculations?.yield?.applied_buffs || [];
+        const timeBuffs = pot.calculations?.growth?.applied_buffs || [];
+
+        const renderBuffSection = (title: string, buffs: Buff[], targetList: HTMLElement, isTimeBonus: boolean = false) => {
+            if (buffs.length === 0) return;
+            const titleEl = document.createElement('h6');
+            titleEl.className = 'mt-2 mb-1 small text-muted';
+            titleEl.textContent = title;
+            targetList.appendChild(titleEl);
+
+            const buffList = document.createElement('ul');
+            buffList.className = 'list-group list-group-flush';
+            renderBuffsToList(buffs, buffList, isTimeBonus);
+            targetList.appendChild(buffList);
+        };
+
+        renderBuffSection('Bônus de Rendimento', yieldBuffs, potStatsList, false);
+
+        if (yieldBuffs && yieldBuffs.length > 0) {
+            const shouldShowDisclaimer = yieldBuffs.some((b: Buff) => 
+                b.operation === 'multiply' && 
+                b.source_item.includes('(Critical Hit)') && 
+                b.total_bonus_yield && b.total_bonus_yield > 0
+            );
+
+            if (shouldShowDisclaimer) {
+                const disclaimer = this.createDisclaimer(
+                    `<i class="bi bi-info-circle me-1"></i> <strong>Nota:</strong> O valor 'Total' de um 'Critical Hit' é o ganho real, calculado após a aplicação de outros bônus multiplicativos.`
+                );
+                disclaimer.classList.add('list-group-item');
+                potStatsList.appendChild(disclaimer);
+            }
+        }
+
+        renderBuffSection('Bônus de Tempo', timeBuffs, potStatsList, true);
+    }
+
+    /**
+     * Cria um elemento de disclaimer padronizado.
+     * @param innerHTML O conteúdo HTML a ser inserido no disclaimer.
+     * @returns O elemento HTMLElement do disclaimer.
+     */
+    private createDisclaimer(innerHTML: string): HTMLElement {
+        const disclaimer = document.createElement('p');
+        disclaimer.className = 'small mb-0 mt-2 p-2 bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle rounded';
+        disclaimer.innerHTML = innerHTML;
+        return disclaimer;
     }
 }

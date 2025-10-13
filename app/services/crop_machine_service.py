@@ -223,9 +223,16 @@ def analyze_crop_machine(farm_data: dict) -> dict:
                     "total_yield": float(yield_from_this_crit)
                 }
 
+                bonus_per_crit = yield_per_crit_seed - yield_per_normal_seed
+                total_bonus_from_this_crit = bonus_per_crit * Decimal(str(hit_count))
+
                 source_type = CROP_MACHINE_YIELD_BOOST_CATALOGUE[hit_name].get("source_type")
                 applied_yield_buffs.append({
-                    **crit_boost_info, "source_item": f"{hit_name} (Critical)", "source_type": source_type, "count": hit_count
+                    **crit_boost_info, 
+                    "source_item": f"{hit_name} (Critical Hit)", 
+                    "source_type": source_type, 
+                    "count": hit_count,
+                    "total_bonus_yield": float(total_bonus_from_this_crit)
                 })
 
         normal_seeds_count = max(0, seeds_count - total_critical_seeds)

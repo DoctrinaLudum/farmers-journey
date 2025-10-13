@@ -543,7 +543,7 @@ COLLECTIBLES_ITEM_BUFFS = {
             {
                 "type": "RECOVERY_TIME",
                 "operation": "percentage",
-                "value": -0.5,
+                "value": -0.50,
                 "conditions": {
                     "building": "Greenhouse"
                 }
@@ -2624,16 +2624,20 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "conditions": { "season": "Winter" }
             },
             {
-                "type": "YIELD",
+                "type": "ITEM_MODIFICATION",
+                "target_item": "Fish Frenzy",
+                "target_property": "YIELD",
                 "operation": "add",
                 "value": 1,
-                "conditions": { "season": "Winter", "calendar_event": "fishFrenzy" }
+                "conditions": { "season": "Winter" }
             },
             {
-                "type": "RECOVERY_TIME",
+                "type": "ITEM_MODIFICATION",
+                "target_item": "Sunshower",
+                "target_property": "RECOVERY_TIME",
                 "operation": "percentage",
                 "value": -0.50,
-                "conditions": { "season": "Winter", "calendar_event": "sunshower" }
+                "conditions": { "season": "Winter" }
             }
         ]
     },
@@ -2650,16 +2654,20 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "conditions": { "season": "Autumn" }
             },
             {
-                "type": "YIELD",
+                "type": "ITEM_MODIFICATION",
+                "target_item": "Fish Frenzy",
+                "target_property": "YIELD",
                 "operation": "add",
                 "value": 1,
-                "conditions": { "season": "Autumn", "calendar_event": "fishFrenzy" }
+                "conditions": { "season": "Autumn" }
             },
             {
-                "type": "RECOVERY_TIME",
+                "type": "ITEM_MODIFICATION",
+                "target_item": "Sunshower",
+                "target_property": "RECOVERY_TIME",
                 "operation": "percentage",
                 "value": -0.50,
-                "conditions": { "season": "Autumn", "calendar_event": "sunshower" }
+                "conditions": { "season": "Autumn" }
             }
         ]
     },
@@ -2682,16 +2690,20 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "conditions": { "season": "Spring" }
             },
             {
-                "type": "YIELD",
+                "type": "ITEM_MODIFICATION",
+                "target_item": "Bountiful Harvest",
+                "target_property": "YIELD",
                 "operation": "add",
                 "value": 1,
-                "conditions": { "season": "Spring", "calendar_event": "bountifulHarvest" }
+                "conditions": { "season": "Spring" }
             },
             {
-                "type": "YIELD",
+                "type": "ITEM_MODIFICATION",
+                "target_item": "Fish Frenzy",
+                "target_property": "YIELD",
                 "operation": "add",
                 "value": 1,
-                "conditions": { "season": "Spring", "calendar_event": "fishFrenzy" }
+                "conditions": { "season": "Spring" }
             }
         ]
     },
@@ -2714,16 +2726,20 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "conditions": { "season": "Summer" }
             },
             {
-                "type": "YIELD",
+                "type": "ITEM_MODIFICATION",
+                "target_item": "Bountiful Harvest",
+                "target_property": "YIELD",
                 "operation": "add",
                 "value": 1,
-                "conditions": { "season": "Summer", "calendar_event": "bountifulHarvest" }
+                "conditions": { "season": "Summer" }
             },
             {
-                "type": "YIELD",
+                "type": "ITEM_MODIFICATION",
+                "target_item": "Fish Frenzy",
+                "target_property": "YIELD",
                 "operation": "add",
                 "value": 1,
-                "conditions": { "season": "Summer", "calendar_event": "fishFrenzy" }
+                "conditions": { "season": "Summer" }
             }
         ]
     },

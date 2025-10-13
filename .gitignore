@@ -10,7 +10,7 @@ __pycache__
 node_modules/
 
 # Arquivos compilados do TypeScript
-gameTS
+
 # Ignora a pasta inteira onde o .js é gerado
 app/static/js/
 
