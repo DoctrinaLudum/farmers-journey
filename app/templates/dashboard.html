@@ -61,9 +61,9 @@
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <a class="nav-link" href="{{ url_for('main.wip_dashboard', farm_id=farm_id) }}" role="tab">
-                <i class="bi bi-cone-striped me-1"></i> WIP
-            </a>
+            <button class="nav-link" id="summary-tab" data-bs-toggle="tab" data-bs-target="#summary-pane" type="button" role="tab" aria-controls="summary-pane" aria-selected="false">
+                <i class="bi bi-cone-striped me-1"></i> Sumário
+            </button>
         </li>
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="buds-tab" data-bs-toggle="tab" data-bs-target="#buds-pane" type="button" role="tab" aria-controls="buds-pane" aria-selected="false">
@@ -108,6 +108,10 @@
 
         <div class="tab-pane fade" id="layout-map-pane" role="tabpanel" aria-labelledby="layout-map-tab">
             {% include 'partials/_layout_map_panel.html' %}
+        </div>
+
+        <div class="tab-pane fade" id="summary-pane" role="tabpanel" aria-labelledby="summary-tab">
+            {% include 'partials/_summary_panel.html' %}
         </div>
 
         <div class="tab-pane fade" id="buds-pane" role="tabpanel" aria-labelledby="buds-tab">

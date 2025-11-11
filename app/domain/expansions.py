@@ -6,27 +6,18 @@ Combina os requisitos para desbloquear um nível e os recursos (nodes)
 que esse nível fornece, numa única estrutura de dados.
 """
 
-ISLAND_ORDER = ["basic", "petal", "desert", "volcano", "swamp"]
-
-# Coordenadas para cada lote de expansão para o mini-mapa
-EXPANSION_COORDINATES = {
-    # Lote 0 é omitido, pois não é uma expansão comprável
-    1: {"x": 0, "y": 0}, 2: {"x": 0, "y": 1}, 3: {"x": -1, "y": 1},
-    4: {"x": -2, "y": 1}, 5: {"x": -2, "y": 0}, 6: {"x": -2, "y": -1},
-    7: {"x": -1, "y": -1}, 8: {"x": 0, "y": -1}, 9: {"x": 1, "y": -1},
-    10: {"x": 1, "y": 0}, 11: {"x": 1, "y": 1}, 12: {"x": 1, "y": 2},
-    13: {"x": 0, "y": 2}, 14: {"x": -1, "y": 2}, 15: {"x": -2, "y": 2},
-    16: {"x": -3, "y": 2}, 17: {"x": -3, "y": 1}, 18: {"x": -3, "y": 0},
-    19: {"x": -3, "y": -1}, 20: {"x": -3, "y": -2}, 21: {"x": -2, "y": -2},
-    22: {"x": -1, "y": -2}, 23: {"x": 0, "y": -2}, 24: {"x": 1, "y": -2},
-    25: {"x": 2, "y": -2}, 26: {"x": 2, "y": -1}, 27: {"x": 2, "y": 0},
-    28: {"x": 2, "y": 1}, 29: {"x": 2, "y": 2}, 30: {"x": 2, "y": 3},
-    31: {"x": 3, "y": 3}, 32: {"x": 3, "y": 2}, 33: {"x": 3, "y": 1},
-    34: {"x": 3, "y": 0}, 35: {"x": 3, "y": -1}, 36: {"x": 3, "y": -2}
-}
+ISLAND_ORDER = ["basic", "spring", "desert", "volcano", "swamp"]
 
 EXPANSION_DATA = {
     "basic": {
+        1: {
+            "requirements": {},
+            "nodes": {"Crop Plot": 5, "Tree": 2, "Stone Rock": 1, "Iron Rock": 0, "Gold Rock": 0, "Crimstone Rock": 0, "Sunstone Rock": 0, "Fruit Patch": 0, "Flower Bed": 0, "Beehive": 0, "Oil Reserve": 0, "Lava Pit": 0}
+        },
+        2: {
+            "requirements": {},
+            "nodes": {"Crop Plot": 8, "Tree": 3, "Stone Rock": 2, "Iron Rock": 0, "Gold Rock": 0, "Crimstone Rock": 0, "Sunstone Rock": 0, "Fruit Patch": 0, "Flower Bed": 0, "Beehive": 0, "Oil Reserve": 0, "Lava Pit": 0}
+        },
         3: {
             "requirements": {}, # Nível 3 não tem requisitos de expansão, apenas desbloqueia nodes
             "nodes": {"Crop Plot": 0, "Tree": 3, "Stone Rock": 2, "Iron Rock": 0, "Gold Rock": 0, "Crimstone Rock": 0, "Sunstone Rock": 0, "Fruit Patch": 0, "Flower Bed": 0, "Beehive": 0, "Oil Reserve": 0, "Lava Pit": 0}
@@ -55,64 +46,65 @@ EXPANSION_DATA = {
             "requirements": {"Bumpkin Level": 11, "Time": "12:00:00", "Wood": 100, "Stone": 40, "Iron": 5},
             "nodes": {"Crop Plot": 31, "Tree": 9, "Stone Rock": 7, "Iron Rock": 4, "Gold Rock": 2, "Crimstone Rock": 0, "Sunstone Rock": 0, "Fruit Patch": 0, "Flower Bed": 0, "Beehive": 0, "Oil Reserve": 0, "Lava Pit": 0}
         },
-        10: {
-            "requirements": {}, # Requisitos para o nível 10 estão na ilha "petal"
-            "nodes": {"Crop Plot": 31, "Tree": 9, "Stone Rock": 7, "Iron Rock": 4, "Gold Rock": 2, "Crimstone Rock": 0, "Sunstone Rock": 0, "Fruit Patch": 2, "Flower Bed": 0, "Beehive": 0, "Oil Reserve": 0, "Lava Pit": 0}
-        },
-        11: {
-            "requirements": {},
-            "nodes": {"Crop Plot": 33, "Tree": 11, "Stone Rock": 9, "Iron Rock": 5, "Gold Rock": 3, "Crimstone Rock": 0, "Sunstone Rock": 0, "Fruit Patch": 3, "Flower Bed": 0, "Beehive": 0, "Oil Reserve": 0, "Lava Pit": 0}
-        },
-        12: {
-            "requirements": {},
-            "nodes": {"Crop Plot": 33, "Tree": 12, "Stone Rock": 10, "Iron Rock": 5, "Gold Rock": 3, "Crimstone Rock": 0, "Sunstone Rock": 0, "Fruit Patch": 4, "Flower Bed": 0, "Beehive": 0, "Oil Reserve": 0, "Lava Pit": 0}
-        },
-        13: {
-            "requirements": {},
-            "nodes": {"Crop Plot": 35, "Tree": 13, "Stone Rock": 11, "Iron Rock": 5, "Gold Rock": 3, "Crimstone Rock": 0, "Sunstone Rock": 0, "Fruit Patch": 4, "Flower Bed": 0, "Beehive": 0, "Oil Reserve": 0, "Lava Pit": 0}
-        },
-        14: {
-            "requirements": {},
-            "nodes": {"Crop Plot": 37, "Tree": 13, "Stone Rock": 12, "Iron Rock": 6, "Gold Rock": 4, "Crimstone Rock": 0, "Sunstone Rock": 0, "Fruit Patch": 5, "Flower Bed": 0, "Beehive": 0, "Oil Reserve": 0, "Lava Pit": 0}
-        },
-        15: {
-            "requirements": {},
-            "nodes": {"Crop Plot": 37, "Tree": 14, "Stone Rock": 12, "Iron Rock": 6, "Gold Rock": 4, "Crimstone Rock": 0, "Sunstone Rock": 0, "Fruit Patch": 6, "Flower Bed": 0, "Beehive": 0, "Oil Reserve": 0, "Lava Pit": 0}
-        },
-        16: {
-            "requirements": {},
-            "nodes": {"Crop Plot": 37, "Tree": 14, "Stone Rock": 12, "Iron Rock": 7, "Gold Rock": 5, "Crimstone Rock": 0, "Sunstone Rock": 0, "Fruit Patch": 7, "Flower Bed": 0, "Beehive": 0, "Oil Reserve": 0, "Lava Pit": 0}
-        },
-        17: {
-            "requirements": {},
-            "nodes": {"Crop Plot": 39, "Tree": 15, "Stone Rock": 13, "Iron Rock": 7, "Gold Rock": 5, "Crimstone Rock": 0, "Sunstone Rock": 0, "Fruit Patch": 8, "Flower Bed": 0, "Beehive": 0, "Oil Reserve": 0, "Lava Pit": 0}
-        },
-        18: {
-            "requirements": {},
-            "nodes": {"Crop Plot": 41, "Tree": 15, "Stone Rock": 13, "Iron Rock": 7, "Gold Rock": 5, "Crimstone Rock": 0, "Sunstone Rock": 0, "Fruit Patch": 8, "Flower Bed": 0, "Beehive": 0, "Oil Reserve": 0, "Lava Pit": 0}
-        },
-        19: {
-            "requirements": {},
-            "nodes": {"Crop Plot": 41, "Tree": 16, "Stone Rock": 14, "Iron Rock": 8, "Gold Rock": 5, "Crimstone Rock": 0, "Sunstone Rock": 0, "Fruit Patch": 9, "Flower Bed": 0, "Beehive": 0, "Oil Reserve": 0, "Lava Pit": 0}
-        },
-        20: {
-            "requirements": {},
-            "nodes": {"Crop Plot": 43, "Tree": 16, "Stone Rock": 14, "Iron Rock": 8, "Gold Rock": 5, "Crimstone Rock": 0, "Sunstone Rock": 0, "Fruit Patch": 10, "Flower Bed": 0, "Beehive": 0, "Oil Reserve": 0, "Lava Pit": 0}
-        },
-        21: {
-            "requirements": {},
-            "nodes": {"Crop Plot": 44, "Tree": 17, "Stone Rock": 15, "Iron Rock": 9, "Gold Rock": 5, "Crimstone Rock": 0, "Sunstone Rock": 0, "Fruit Patch": 11, "Flower Bed": 0, "Beehive": 0, "Oil Reserve": 0, "Lava Pit": 0}
-        },
-        22: {
-            "requirements": {},
-            "nodes": {"Crop Plot": 45, "Tree": 18, "Stone Rock": 15, "Iron Rock": 9, "Gold Rock": 6, "Crimstone Rock": 0, "Sunstone Rock": 0, "Fruit Patch": 11, "Flower Bed": 0, "Beehive": 0, "Oil Reserve": 0, "Lava Pit": 0}
-        },
-        23: {
-            "requirements": {},
-            "nodes": {"Crop Plot": 46, "Tree": 18, "Stone Rock": 16, "Iron Rock": 10, "Gold Rock": 6, "Crimstone Rock": 0, "Sunstone Rock": 0, "Fruit Patch": 12, "Flower Bed": 0, "Beehive": 0, "Oil Reserve": 0, "Lava Pit": 0}
-        }
+        # LEGACY - Used for refunding expansions - do not remove
+        # 10: {
+        #     "requirements": {"Bumpkin Level": 13, "Time": "24:00:00", "Wood": 100, "Stone": 50, "Iron": 5, "Gold": 2, "Gem": 15},
+        #     "nodes": {"Crop Plot": 31, "Tree": 9, "Stone Rock": 7, "Iron Rock": 4, "Gold Rock": 2, "Crimstone Rock": 0, "Sunstone Rock": 0, "Fruit Patch": 2, "Flower Bed": 0, "Beehive": 0, "Oil Reserve": 0, "Lava Pit": 0}
+        # },
+        # 11: {
+        #     "requirements": {"Bumpkin Level": 15, "Time": "24:00:00", "Gold": 10, "Gem": 15},
+        #     "nodes": {"Crop Plot": 33, "Tree": 11, "Stone Rock": 9, "Iron Rock": 5, "Gold Rock": 3, "Crimstone Rock": 0, "Sunstone Rock": 0, "Fruit Patch": 3, "Flower Bed": 0, "Beehive": 0, "Oil Reserve": 0, "Lava Pit": 0}
+        # },
+        # 12: {
+        #     "requirements": {"Bumpkin Level": 17, "Time": "24:00:00", "Wood": 500, "Stone": 20, "Gold": 2, "Gem": 15},
+        #     "nodes": {"Crop Plot": 33, "Tree": 12, "Stone Rock": 10, "Iron Rock": 5, "Gold Rock": 3, "Crimstone Rock": 0, "Sunstone Rock": 0, "Fruit Patch": 4, "Flower Bed": 0, "Beehive": 0, "Oil Reserve": 0, "Lava Pit": 0}
+        # },
+        # 13: {
+        #     "requirements": {"Bumpkin Level": 20, "Time": "24:00:00", "Wood": 100, "Stone": 150, "Gold": 5, "Gem": 15},
+        #     "nodes": {"Crop Plot": 35, "Tree": 13, "Stone Rock": 11, "Iron Rock": 5, "Gold Rock": 3, "Crimstone Rock": 0, "Sunstone Rock": 0, "Fruit Patch": 4, "Flower Bed": 0, "Beehive": 0, "Oil Reserve": 0, "Lava Pit": 0}
+        # },
+        # 14: {
+        #     "requirements": {"Bumpkin Level": 23, "Time": "36:00:00", "Wood": 40, "Stone": 30, "Iron": 10, "Gold": 10, "Gem": 15},
+        #     "nodes": {"Crop Plot": 37, "Tree": 13, "Stone Rock": 12, "Iron Rock": 6, "Gold Rock": 4, "Crimstone Rock": 0, "Sunstone Rock": 0, "Fruit Patch": 5, "Flower Bed": 0, "Beehive": 0, "Oil Reserve": 0, "Lava Pit": 0}
+        # },
+        # 15: {
+        #     "requirements": {"Bumpkin Level": 26, "Time": "36:00:00", "Wood": 200, "Gold": 15, "Gem": 15},
+        #     "nodes": {"Crop Plot": 37, "Tree": 14, "Stone Rock": 12, "Iron Rock": 6, "Gold Rock": 4, "Crimstone Rock": 0, "Sunstone Rock": 0, "Fruit Patch": 6, "Flower Bed": 0, "Beehive": 0, "Oil Reserve": 0, "Lava Pit": 0}
+        # },
+        # 16: {
+        #     "requirements": {"Bumpkin Level": 30, "Time": "36:00:00", "Stone": 150, "Iron": 30, "Gold": 10, "Gem": 15},
+        #     "nodes": {"Crop Plot": 37, "Tree": 14, "Stone Rock": 12, "Iron Rock": 7, "Gold Rock": 5, "Crimstone Rock": 0, "Sunstone Rock": 0, "Fruit Patch": 7, "Flower Bed": 0, "Beehive": 0, "Oil Reserve": 0, "Lava Pit": 0}
+        # },
+        # 17: {
+        #     "requirements": {"Bumpkin Level": 34, "Time": "36:00:00", "Wood": 200, "Stone": 50, "Gold": 25, "Gem": 15},
+        #     "nodes": {"Crop Plot": 39, "Tree": 15, "Stone Rock": 13, "Iron Rock": 7, "Gold Rock": 5, "Crimstone Rock": 0, "Sunstone Rock": 0, "Fruit Patch": 8, "Flower Bed": 0, "Beehive": 0, "Oil Reserve": 0, "Lava Pit": 0}
+        # },
+        # 18: {
+        #     "requirements": {"Bumpkin Level": 37, "Time": "36:00:00", "Wood": 300, "Stone": 200, "Iron": 30, "Gold": 10, "Gem": 15},
+        #     "nodes": {"Crop Plot": 41, "Tree": 15, "Stone Rock": 13, "Iron Rock": 7, "Gold Rock": 5, "Crimstone Rock": 0, "Sunstone Rock": 0, "Fruit Patch": 8, "Flower Bed": 0, "Beehive": 0, "Oil Reserve": 0, "Lava Pit": 0}
+        # },
+        # 19: {
+        #     "requirements": {"Bumpkin Level": 40, "Time": "48:00:00", "Wood": 100, "Stone": 250, "Gold": 30, "Gem": 15},
+        #     "nodes": {"Crop Plot": 41, "Tree": 16, "Stone Rock": 14, "Iron Rock": 8, "Gold Rock": 5, "Crimstone Rock": 0, "Sunstone Rock": 0, "Fruit Patch": 9, "Flower Bed": 0, "Beehive": 0, "Oil Reserve": 0, "Lava Pit": 0}
+        # },
+        # 20: {
+        #     "requirements": {"Bumpkin Level": 45, "Time": "48:00:00", "Wood": 1000, "Stone": 100, "Iron": 10, "Gold": 25, "Gem": 15},
+        #     "nodes": {"Crop Plot": 43, "Tree": 16, "Stone Rock": 14, "Iron Rock": 8, "Gold Rock": 5, "Crimstone Rock": 0, "Sunstone Rock": 0, "Fruit Patch": 10, "Flower Bed": 0, "Beehive": 0, "Oil Reserve": 0, "Lava Pit": 0}
+        # },
+        # 21: {
+        #     "requirements": {"Bumpkin Level": 50, "Time": "48:00:00", "Wood": 1500, "Stone": 100, "Iron": 20, "Gold": 25, "Gem": 30},
+        #     "nodes": {"Crop Plot": 44, "Tree": 17, "Stone Rock": 15, "Iron Rock": 9, "Gold Rock": 5, "Crimstone Rock": 0, "Sunstone Rock": 0, "Fruit Patch": 11, "Flower Bed": 0, "Beehive": 0, "Oil Reserve": 0, "Lava Pit": 0}
+        # },
+        # 22: {
+        #     "requirements": {"Bumpkin Level": 55, "Time": "48:00:00", "Wood": 2000, "Stone": 200, "Iron": 20, "Gold": 40, "Gem": 30},
+        #     "nodes": {"Crop Plot": 45, "Tree": 18, "Stone Rock": 15, "Iron Rock": 9, "Gold Rock": 6, "Crimstone Rock": 0, "Sunstone Rock": 0, "Fruit Patch": 11, "Flower Bed": 0, "Beehive": 0, "Oil Reserve": 0, "Lava Pit": 0}
+        # },
+        # 23: {
+        #     "requirements": {"Bumpkin Level": 60, "Time": "48:00:00", "Wood": 2000, "Stone": 250, "Iron": 50, "Gold": 60, "Gem": 30},
+        #     "nodes": {"Crop Plot": 46, "Tree": 18, "Stone Rock": 16, "Iron Rock": 10, "Gold Rock": 6, "Crimstone Rock": 0, "Sunstone Rock": 0, "Fruit Patch": 12, "Flower Bed": 0, "Beehive": 0, "Oil Reserve": 0, "Lava Pit": 0}
+        # }
     },
-    "petal": {
+    "spring": {
         4: {
             "requirements": {}, # Os requisitos para o nível 4 ainda são da ilha "basic"
             "nodes": {"Crop Plot": 31, "Fruit Patch": 2, "Tree": 9, "Stone Rock": 7, "Iron Rock": 4, "Gold Rock": 2, "Crimstone Rock": 0, "Sunstone Rock": 0, "Beehive": 0, "Oil Reserve": 0, "Flower Bed": 0, "Lava Pit": 0}
@@ -166,19 +158,19 @@ EXPANSION_DATA = {
             "nodes": {"Crop Plot": 45, "Fruit Patch": 11, "Tree": 18, "Stone Rock": 15, "Iron Rock": 9, "Gold Rock": 6, "Crimstone Rock": 2, "Sunstone Rock": 2, "Beehive": 3, "Flower Bed": 3, "Oil Reserve": 0, "Lava Pit": 0}
         },
         17: {
-            "requirements": {},
+            "requirements": {"Bumpkin Level": 47, "Time": "36:00:00", "Wood": 100, "Stone": 20, "Iron": 10, "Gold": 5, "Crimstone": 12, "Gem": 30},
             "nodes": {"Crop Plot": 46, "Fruit Patch": 12, "Tree": 18, "Stone Rock": 16, "Iron Rock": 10, "Gold Rock": 6, "Crimstone Rock": 2, "Sunstone Rock": 2, "Beehive": 3, "Flower Bed": 3, "Oil Reserve": 0, "Lava Pit": 0}
         },
         18: {
-            "requirements": {},
+            "requirements": {"Bumpkin Level": 51, "Time": "36:00:00", "Wood": 150, "Stone": 20, "Iron": 10, "Gold": 5, "Crimstone": 16, "Gem": 30},
             "nodes": {"Crop Plot": 46, "Fruit Patch": 12, "Tree": 18, "Stone Rock": 16, "Iron Rock": 10, "Gold Rock": 6, "Crimstone Rock": 2, "Sunstone Rock": 3, "Beehive": 3, "Flower Bed": 3, "Oil Reserve": 0, "Lava Pit": 0}
         },
         19: {
-            "requirements": {},
+            "requirements": {"Bumpkin Level": 53, "Time": "36:00:00", "Wood": 150, "Stone": 10, "Iron": 5, "Gold": 5, "Crimstone": 20, "Gem": 30},
             "nodes": {"Crop Plot": 48, "Fruit Patch": 12, "Tree": 18, "Stone Rock": 16, "Iron Rock": 10, "Gold Rock": 6, "Crimstone Rock": 3, "Sunstone Rock": 3, "Beehive": 3, "Flower Bed": 3, "Oil Reserve": 0, "Lava Pit": 0}
         },
         20: {
-            "requirements": {},
+            "requirements": {"Bumpkin Level": 55, "Time": "48:00:00", "Wood": 50, "Stone": 5, "Iron": 5, "Gold": 5, "Crimstone": 24, "Gem": 30},
             "nodes": {"Crop Plot": 50, "Fruit Patch": 12, "Tree": 18, "Stone Rock": 16, "Iron Rock": 10, "Gold Rock": 6, "Crimstone Rock": 3, "Sunstone Rock": 4, "Beehive": 3, "Flower Bed": 3, "Oil Reserve": 0, "Lava Pit": 0}
         },
     },
@@ -378,10 +370,53 @@ EXPANSION_DATA = {
         30: {
             "requirements": {"Bumpkin Level": 120, "Time": "72:00:00", "Coins": 50000, "Wood": 1500, "Stone": 600, "Iron": 70, "Gold": 50, "Crimstone": 125, "Oil": 300, "Obsidian": 42, "Gem": 225},
             "nodes": {"Crop Plot": 65, "Tree": 23, "Stone Rock": 20, "Iron Rock": 13, "Gold Rock": 8, "Fruit Patch": 15, "Crimstone Rock": 5, "Sunstone Rock": 13, "Oil Reserve": 4, "Lava Pit": 3, "Beehive": 3, "Flower Bed": 3}
-        },
-        "swamp": {
-        level: {"requirements": {}, "nodes": {}} for level in range(31, 37)
         }
+    },
+    "swamp": {
     }
 }
 
+# NOVO: Sistema de coordenadas exclusivo para cada ilha
+# Isso garante que cada ilha tenha um layout compacto e separado no minimapa.
+
+# 1. Define uma lista genérica de coordenadas em espiral
+# O suficiente para a maior ilha (que tem 30+ lotes)
+_SPIRAL_COORDS_LIST = [
+    {"y": 5, "x": 5}, {"y": 5, "x": 6}, {"y": 4, "x": 6}, {"y": 4, "x": 5},
+    {"y": 4, "x": 4}, {"y": 5, "x": 4}, {"y": 6, "x": 4}, {"y": 6, "x": 5},
+    {"y": 6, "x": 6}, {"y": 6, "x": 7}, {"y": 5, "x": 7}, {"y": 4, "x": 7},
+    {"y": 3, "x": 7}, {"y": 3, "x": 6}, {"y": 3, "x": 5}, {"y": 3, "x": 4},
+    {"y": 3, "x": 3}, {"y": 4, "x": 3}, {"y": 5, "x": 3}, {"y": 6, "x": 3},
+    {"y": 7, "x": 3}, {"y": 7, "x": 4}, {"y": 7, "x": 5}, {"y": 7, "x": 6},
+    {"y": 7, "x": 7}, {"y": 7, "x": 8}, {"y": 6, "x": 8}, {"y": 5, "x": 8},
+    {"y": 4, "x": 8}, {"y": 3, "x": 8}, {"y": 2, "x": 8}, {"y": 2, "x": 7},
+    {"y": 2, "x": 6}, {"y": 2, "x": 5}, {"y": 2, "x": 4}, {"y": 2, "x": 3}
+]
+
+# 2. Define a sequência de lotes para cada ilha, incluindo os lotes iniciais.
+# Isso se torna a fonte da verdade para a renderização do mapa.
+ISLAND_PLOT_SEQUENCE = {
+    "basic": [f"inherent_{i}" for i in range(3)] + list(range(4, 10)),
+    "spring": [f"inherent_{i}" for i in range(4)] + list(range(5, 21)),
+    "desert": [f"inherent_{i}" for i in range(4)] + list(range(5, 26)),
+    "volcano": [f"inherent_{i}" for i in range(5)] + list(range(6, 31)),
+    "swamp": [f"inherent_{i}" for i in range(5)] + list(range(6, 37))
+}
+
+def _generate_island_layouts():
+    """
+    Gera os layouts de coordenadas para cada ilha com base na sequência de lotes definida.
+    Para cada ilha, mapeia seus identificadores de lote (sejam 'inerentes' ou numerados)
+    para a lista de coordenadas em espiral.
+    """
+    layouts = {}
+    for island_name, plot_sequence in ISLAND_PLOT_SEQUENCE.items():
+        layouts[island_name] = {
+            plot_id: _SPIRAL_COORDS_LIST[i]
+            for i, plot_id in enumerate(plot_sequence)
+            if i < len(_SPIRAL_COORDS_LIST)
+        }
+    return layouts
+
+# 3. Gera e expõe o dicionário final de coordenadas por ilha
+ISLAND_COORDINATES = _generate_island_layouts()

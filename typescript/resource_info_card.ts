@@ -548,7 +548,7 @@ export class ResourceInfoCard {
                 pots.forEach((pot: Pot, index: number) => {
                     const button = document.createElement('button');
                     button.className = 'nav-link';
-                    button.textContent = `#${pot.id}`;
+                    button.textContent = `${pot.plant_name} #${pot.id}`;
                     button.dataset.potIndex = String(index);
                     if (index === 0) {
                         button.classList.add('active');

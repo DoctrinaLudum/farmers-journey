@@ -1265,8 +1265,16 @@ BUMPKIN_REVAMP_SKILLS = {
                 "conditions": {
                     "category": ["Crop", "Fruit"],
                     "building": "Greenhouse"
-                },
-                "chance": 0.25
+                }
+            },
+            {
+                "type": "CRITICAL_CHANCE",
+                "operation": "set_chance",
+                "value": 0.25,
+                "conditions": {
+                    "category": ["Crop", "Fruit"],
+                    "building": "Greenhouse"
+                }
             }
         ],
     },

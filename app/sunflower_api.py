@@ -1,4 +1,5 @@
 import logging
+import config
 
 import requests
 from requests.exceptions import JSONDecodeError
@@ -116,7 +117,12 @@ def get_farm_data(farm_id: int):
         # Esta fonte é a mais completa e contém as 'milestones'.
         sfl_api_url = f"{SFL_API_BASE_URL}{farm_id}"
         log.info(f"Buscando dados principais: {sfl_api_url}")
-        response = requests.get(sfl_api_url, timeout=10)
+        
+        headers = {}
+        if config.SFL_API_KEY:
+            headers['x-api-key'] = config.SFL_API_KEY
+        
+        response = requests.get(sfl_api_url, headers=headers, timeout=10)
         response.raise_for_status()
         main_data = response.json().get('farm')
 

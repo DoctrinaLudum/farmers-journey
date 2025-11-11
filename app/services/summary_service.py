@@ -5,12 +5,16 @@ import time
 from decimal import Decimal
 
 # Importa os domínios de dados necessários
-from ..domain import \
-    collectiblesItemBuffs as collectibles_domain  # Corrected import
-from ..domain import resources as resources_domain
-from ..domain import skills as skills_domain
-from ..domain import tools as tools_domain
-from ..domain import wearablesItemBuffs as wearables_domain  # Corrected import
+from ..domain import (
+    crops as crops_domain,
+    fruits as fruits_domain,
+    seeds as seeds_domain,
+    collectiblesItemBuffs as collectibles_domain,  # Corrected import
+    resources as resources_domain,
+    skills as skills_domain,
+    tools as tools_domain,
+    wearablesItemBuffs as wearables_domain  # Corrected import
+)
 # Importa as funções de análise genéricas do serviço de análise de recursos
 from . import resource_analysis_service as ras
 
@@ -87,6 +91,7 @@ def analyze_resources_summary(farm_data: dict) -> dict:
     categorized_summary = {}
     player_items = ras._get_player_items(farm_data)
 
+    # Análise de Recursos
     for resource_name, resource_info in resources_domain.RESOURCES_DATA.items():
         if not resource_info or not resource_info.get("enabled"):
             continue
@@ -96,20 +101,14 @@ def analyze_resources_summary(farm_data: dict) -> dict:
             continue
 
         source_node = resource_info.get("source")
-        # Some resources (like animal products, mushrooms) don't have a source node
-        # or cycle details in the same way as Wood/Stone/etc.
-        # For now, we will only process resources that have a source node and cycle details.
-        # This can be expanded later to include other types of resources.
         if not source_node or not resource_info.get("details", {}).get("cycle"):
             continue
 
-        # 1. Obter dados base do recurso
         base_details = resource_info.get("details", {}).get("cycle", {}).get(source_node, {})
         base_yield = Decimal(str(base_details.get("yield_amount", 1)))
         base_recovery_time = Decimal(str(base_details.get("recovery_time_seconds", 0)))
         tool_name = resource_info.get("tool_required")
 
-        # 2. Obter todos os bônus relevantes
         resource_conditions = {
             'yield_resource_names': [resource_name],
             'recovery_resource_names': [source_node],
@@ -119,15 +118,12 @@ def analyze_resources_summary(farm_data: dict) -> dict:
         boost_catalogue = ras.filter_boosts_from_domains(resource_conditions)
         active_boosts = ras.get_active_player_boosts(player_items, boost_catalogue, farm_data=farm_data)
 
-        # 3. Calcular Rendimento Mínimo (determinístico)
         min_yield_calc = ras.calculate_final_yield(float(base_yield), active_boosts, resource_name)
         min_yield = Decimal(str(min_yield_calc['final_deterministic']))
 
-        # 4. Calcular Rendimento Máximo (com todos os bônus críticos possíveis)
         all_potential_yield_boosts = list(active_boosts)
         crit_chance_boosts = []
 
-        # Adiciona o bônus inerente "Native"
         native_skill_data = skills_domain.BUMPKIN_REVAMP_SKILLS.get("Native")
         if native_skill_data:
             for boost in native_skill_data.get("effects", []):
@@ -137,12 +133,10 @@ def analyze_resources_summary(farm_data: dict) -> dict:
                     elif boost.get("type") == "CRITICAL_CHANCE":
                         crit_chance_boosts.append({"source_item": "Native", "operation": "add", **boost})
 
-        # Adiciona bônus de itens que o jogador possui
         for item_name in player_items:
             if item_name in boost_catalogue:
                 item_boosts = boost_catalogue[item_name].get("boosts", [])
                 for boost in item_boosts:
-                    # Certifique-se de que o boost tem um tipo e uma operação
                     if "type" in boost and "operation" in boost:
                         if boost.get("type") == "YIELD":
                             all_potential_yield_boosts.append({"source_item": item_name, **boost})
@@ -152,14 +146,12 @@ def analyze_resources_summary(farm_data: dict) -> dict:
         max_yield_calc = ras.calculate_final_yield(float(base_yield), all_potential_yield_boosts, resource_name)
         max_yield = Decimal(str(max_yield_calc['final_deterministic']))
 
-        # 5. Calcular a Chance Crítica Total e o Rendimento Médio
         total_crit_chance = sum(Decimal(str(b.get("value", 0))) for b in crit_chance_boosts)
-        total_crit_chance = min(total_crit_chance, Decimal('1')) # Cap at 100%
+        total_crit_chance = min(total_crit_chance, Decimal('1'))
 
         avg_yield = (min_yield * (Decimal('1') - total_crit_chance)) + (max_yield * total_crit_chance)
 
-        # 6. Calcular Tempo de Ciclo e Custo da Ferramenta
-        cycle_calc = ras.calculate_final_recovery_time(float(base_recovery_time), active_boosts, source_node)
+        cycle_calc = ras.calculate_final_recovery_time(float(base_recovery_time), active_boosts, resource_name)
         final_cycle_seconds = int(cycle_calc['final'])
 
         tool_cost = Decimal('0')
@@ -175,7 +167,6 @@ def analyze_resources_summary(farm_data: dict) -> dict:
                         tool_buffs.append(boost)
                 tool_cost = base_tool_cost * cost_reduction_factor
 
-        # 7. Montar o sumário com o formato de bônus simplificado e na ordem desejada
         resource_summary_data = {
             "min": f"{float(min_yield):.2f}",
             "avg": f"{float(avg_yield):.2f}",
@@ -192,5 +183,111 @@ def analyze_resources_summary(farm_data: dict) -> dict:
         if resource_type not in categorized_summary:
             categorized_summary[resource_type] = {}
         categorized_summary[resource_type][resource_name.lower()] = resource_summary_data
+
+    # Análise de Plantações (Crops)
+    for crop_name, crop_info in crops_domain.CROPS.items():
+        if not crop_info or not crop_info.get("enabled") or crop_info.get("type") != "Crop":
+            continue
+
+        base_yield = Decimal('1')
+        base_recovery_time = Decimal(str(crop_info.get("harvestSeconds", 0)))
+        seed_name = f"{crop_name} Seed"
+        seed_info = seeds_domain.SEEDS_DATA.get(seed_name, {})
+        tool_cost = Decimal(str(seed_info.get("cost_coins", 0)))
+
+        resource_conditions = {
+            'yield_resource_names': [crop_name],
+            'recovery_resource_names': [crop_name],
+            'skill_tree_name': "Crops",
+            'boost_category_names': ["Crop"]
+        }
+        boost_catalogue = ras.filter_boosts_from_domains(resource_conditions)
+        active_boosts = ras.get_active_player_boosts(player_items, boost_catalogue, farm_data=farm_data)
+
+        min_yield_calc = ras.calculate_final_yield(float(base_yield), active_boosts, crop_name)
+        min_yield = Decimal(str(min_yield_calc['final_deterministic']))
+
+        all_potential_yield_boosts = list(active_boosts)
+        crit_chance_boosts = []
+
+        max_yield_calc = ras.calculate_final_yield(float(base_yield), all_potential_yield_boosts, crop_name)
+        max_yield = Decimal(str(max_yield_calc['final_deterministic']))
+
+        total_crit_chance = sum(Decimal(str(b.get("value", 0))) for b in crit_chance_boosts)
+        total_crit_chance = min(total_crit_chance, Decimal('1'))
+
+        avg_yield = (min_yield * (Decimal('1') - total_crit_chance)) + (max_yield * total_crit_chance)
+
+        cycle_calc = ras.calculate_final_recovery_time(float(base_recovery_time), active_boosts, crop_name)
+        final_cycle_seconds = int(cycle_calc['final'])
+
+        crop_summary_data = {
+            "min": f"{float(min_yield):.2f}",
+            "avg": f"{float(avg_yield):.2f}",
+            "max": f"{float(max_yield):.2f}",
+            "tool_cost": f"{float(tool_cost):.2f}",
+            "cycle": _format_seconds_to_hhmmss(final_cycle_seconds),
+            "buffs_aplicados": {
+                "yield_buffs": _format_buffs(min_yield_calc['applied_buffs'] + crit_chance_boosts),
+                "recovery_buffs": _format_buffs(cycle_calc['applied_buffs']),
+                "tools_buff": []
+            }
+        }
+
+        if "Crop" not in categorized_summary:
+            categorized_summary["Crop"] = {}
+        categorized_summary["Crop"][crop_name.lower()] = crop_summary_data
+
+    # Análise de Frutas
+    for fruit_name, fruit_info in fruits_domain.FRUIT_DATA.items():
+        if not fruit_info or fruit_info.get("type") != "Fruit":
+            continue
+
+        base_yield = Decimal('1')
+        base_recovery_time = Decimal(str(fruit_info.get("plant_seconds", 0)))
+        tool_cost = Decimal(str(fruit_info.get("seed_price", 0)))
+
+        resource_conditions = {
+            'yield_resource_names': [fruit_name],
+            'recovery_resource_names': [fruit_name],
+            'skill_tree_name': "Fruits",
+            'boost_category_names': ["Fruit"]
+        }
+        boost_catalogue = ras.filter_boosts_from_domains(resource_conditions)
+        active_boosts = ras.get_active_player_boosts(player_items, boost_catalogue, farm_data=farm_data)
+
+        min_yield_calc = ras.calculate_final_yield(float(base_yield), active_boosts, fruit_name)
+        min_yield = Decimal(str(min_yield_calc['final_deterministic']))
+
+        all_potential_yield_boosts = list(active_boosts)
+        crit_chance_boosts = []
+
+        max_yield_calc = ras.calculate_final_yield(float(base_yield), all_potential_yield_boosts, fruit_name)
+        max_yield = Decimal(str(max_yield_calc['final_deterministic']))
+
+        total_crit_chance = sum(Decimal(str(b.get("value", 0))) for b in crit_chance_boosts)
+        total_crit_chance = min(total_crit_chance, Decimal('1'))
+
+        avg_yield = (min_yield * (Decimal('1') - total_crit_chance)) + (max_yield * total_crit_chance)
+
+        cycle_calc = ras.calculate_final_recovery_time(float(base_recovery_time), active_boosts, fruit_name)
+        final_cycle_seconds = int(cycle_calc['final'])
+
+        fruit_summary_data = {
+            "min": f"{float(min_yield):.2f}",
+            "avg": f"{float(avg_yield):.2f}",
+            "max": f"{float(max_yield):.2f}",
+            "tool_cost": f"{float(tool_cost):.2f}",
+            "cycle": _format_seconds_to_hhmmss(final_cycle_seconds),
+            "buffs_aplicados": {
+                "yield_buffs": _format_buffs(min_yield_calc['applied_buffs'] + crit_chance_boosts),
+                "recovery_buffs": _format_buffs(cycle_calc['applied_buffs']),
+                "tools_buff": []
+            }
+        }
+
+        if "Fruit" not in categorized_summary:
+            categorized_summary["Fruit"] = {}
+        categorized_summary["Fruit"][fruit_name.lower()] = fruit_summary_data
 
     return categorized_summary

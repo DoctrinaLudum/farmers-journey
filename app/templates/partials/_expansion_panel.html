@@ -126,39 +126,45 @@
                     <div class="col-lg-5 mt-4 mt-lg-0">
                         <div class="ps-lg-3">
                             <div class="map-controls">
-                                <h6 class="mb-0 fw-bold">Mapa de Expansão</h6>
-                                <div id="map-filter-tabs">
-                                    <div class="d-grid mb-2">
-                                        <button type="button" class="btn btn-sm btn-secondary active" data-island-filter="all">Todos</button>
-                                    </div>
-                                    <div class="btn-group btn-group-sm w-100" role="group">
-                                        <button type="button" class="btn btn-outline-secondary" data-island-filter="basic">Basic</button>
-                                        <button type="button" class="btn btn-outline-secondary" data-island-filter="petal">Petal</button>
-                                        <button type="button" class="btn btn-outline-secondary" data-island-filter="desert">Desert</button>
-                                        <button type="button" class="btn btn-outline-secondary" data-island-filter="volcano">Volcano</button>
-                                        <button type="button" class="btn btn-outline-secondary" data-island-filter="swamp">Swamp</button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="expansion-map-wrapper">
-                                <div id="expansion-map-grid">
-                                    {% for plot in map_plots %}
-                                        <div class="map-plot plot-{{ plot.number }} island-{{ plot.island }} state-{{ plot.state }}" 
-                                             title="Lote {{ plot.number }}"
-                                             data-plot-number="{{ plot.number }}"
-                                             data-plot-island="{{ plot.island }}"
-                                             data-plot-state="{{ plot.state }}"
-                                             data-plot-requirements='{{ plot.requirements_data }}'
-                                             data-plot-nodes='{{ plot.nodes_data }}'>
-                                            {{ plot.number }}
-                                        </div>
+                                <h6 class="mb-2 fw-bold">Mapa de Expansão</h6>
+                                <!-- NOVO: Abas de Navegação Bootstrap -->
+                                <ul class="nav nav-pills nav-fill nav-justified btn-group btn-group-sm w-100" id="map-filter-tabs" role="tablist">
+                                    {% for island_name in plots_by_island.keys() %}
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link btn btn-outline-secondary {% if island_name == current_land_type %}active{% endif %}" id="map-tab-{{ island_name }}" data-bs-toggle="tab" data-bs-target="#map-pane-{{ island_name }}" type="button" role="tab" aria-controls="map-pane-{{ island_name }}" aria-selected="{% if island_name == current_land_type %}true{% else %}false{% endif %}">
+                                                {{ island_name|title }}
+                                            </button>
+                                        </li>
                                     {% endfor %}
-                                </div>
-                                <div id="map-tooltip" class="map-tooltip" style="display: none;"></div>
+                                </ul>
+                            </div>
+                            <!-- NOVO: Conteúdo das Abas -->
+                            <div class="tab-content mt-2" id="map-tab-content">
+                                {% for island_name, plots in plots_by_island.items() %}
+                                    <div class="tab-pane fade {% if island_name == current_land_type %}show active{% endif %}" id="map-pane-{{ island_name }}" role="tabpanel" aria-labelledby="map-tab-{{ island_name }}">
+                                        <div class="expansion-map-wrapper">
+                                            <div class="expansion-map-grid">
+                                                {% for plot in plots %}
+                                                    <div class="map-plot island-{{ plot.island }} state-{{ plot.state }}" 
+                                                         style="grid-area: {{ plot.y }} / {{ plot.x }};"
+                                                         title="Lote {{ plot.number }}"
+                                                         data-plot-number="{{ plot.number }}"
+                                                         data-plot-island="{{ plot.island }}"
+                                                         data-plot-state="{{ plot.state }}"
+                                                         data-plot-requirements='{{ plot.requirements_data }}'
+                                                         data-plot-nodes='{{ plot.nodes_data }}'>
+                                                        {{ plot.number }}
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                            <div id="map-tooltip-{{ island_name }}" class="map-tooltip" style="display: none;"></div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
                             </div>
                             <div class="map-legend">
                                 <div class="legend-item"><span class="legend-color island-basic"></span> Basic</div>
-                                <div class="legend-item"><span class="legend-color island-petal"></span> Petal</div>
+                                <div class="legend-item"><span class="legend-color island-spring"></span> Spring</div>
                                 <div class="legend-item"><span class="legend-color island-desert"></span> Desert</div>
                                 <div class="legend-item"><span class="legend-color island-volcano"></span> Volcano</div>
                                 <div class="legend-item"><span class="legend-color island-swamp"></span> Swamp</div>

@@ -226,28 +226,26 @@ body.is-dragging-card {
     gap: 0.25rem; /* Adiciona um pequeno espaçamento se os botões quebrarem a linha */
 }
 
-#map-filter-tabs .btn.active {
+
+#map-filter-tabs .nav-link.active {
     color: white;
 }
-#map-filter-tabs .btn[data-island-filter="basic"].active {
-    background-color: #28a745;
-    border-color: #28a745;
+#map-tab-basic.active {
+    background-color: #28a745 !important;
 }
-#map-filter-tabs .btn[data-island-filter="petal"].active {
-    background-color: #4de706;
-    border-color: #4de706;
+#map-tab-spring.active {
+    background-color: #4de706 !important;
+    color: #212529 !important;
 }
-#map-filter-tabs .btn[data-island-filter="desert"].active {
-    background-color: #ffc107;
-    border-color: #ffc107;
+#map-tab-desert.active {
+    background-color: #ffc107 !important;
+    color: #212529 !important;
 }
-#map-filter-tabs .btn[data-island-filter="volcano"].active {
-    background-color: #3a3a3a;
-    border-color: #3a3a3a;
+#map-tab-volcano.active {
+    background-color: #3a3a3a !important;
 }
-#map-filter-tabs .btn[data-island-filter="swamp"].active {
-    background-color: #20c997;
-    border-color: #20c997;
+#map-tab-swamp.active {
+    background-color: #20c997 !important;
 }
 
 .expansion-map-wrapper {
@@ -261,7 +259,7 @@ body.is-dragging-card {
     min-height: 310px;
 }
 
-#expansion-map-grid {
+.expansion-map-grid {
     display: grid;
     grid-template-columns: repeat(9, 1fr);
     grid-template-rows: repeat(9, 1fr);
@@ -286,7 +284,7 @@ body.is-dragging-card {
     cursor: help;
 }
 
-/* Posicionamento de cada lote via classe */
+/* Posicionamento de cada lote via classe (LÓGICA ANTIGA - AGORA NO BACKEND) 
 .plot-1 { grid-area: 5 / 5; } .plot-2 { grid-area: 5 / 6; } .plot-3 { grid-area: 4 / 6; }
 .plot-4 { grid-area: 4 / 5; } .plot-5 { grid-area: 4 / 4; } .plot-6 { grid-area: 5 / 4; }
 .plot-7 { grid-area: 6 / 4; } .plot-8 { grid-area: 6 / 5; } .plot-9 { grid-area: 6 / 6; }
@@ -299,10 +297,11 @@ body.is-dragging-card {
 .plot-28 { grid-area: 5 / 8; } .plot-29 { grid-area: 4 / 8; } .plot-30 { grid-area: 3 / 8; }
 .plot-31 { grid-area: 2 / 8; } .plot-32 { grid-area: 2 / 7; } .plot-33 { grid-area: 2 / 6; }
 .plot-34 { grid-area: 2 / 5; } .plot-35 { grid-area: 2 / 4; } .plot-36 { grid-area: 2 / 3; }
+*/
 
 /* Estilos de estado e ilha do mapa */
 .map-plot.island-basic { background-color: #28a745; }
-.map-plot.island-petal { background-color: #4de706; }
+.map-plot.island-spring { background-color: #4de706; }
 .map-plot.island-desert { background-color: #ffc107; }
 .map-plot.island-volcano { background-color: #3a3a3a; }
 .map-plot.island-swamp { background-color: #20c997; }
@@ -326,15 +325,13 @@ body.is-dragging-card {
     opacity: 0.4;
     background-color: #6c757d;
 }
-.map-plot.is-filtered {
-    opacity: 0.2;
-    pointer-events: none;
-}
+
 .map-plot:hover {
     transform: scale(1.2);
     z-index: 10;
     border-color: #fff !important;
 }
+
 
 @keyframes pulse-blue {
     0% {

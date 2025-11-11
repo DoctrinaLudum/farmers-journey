@@ -177,6 +177,10 @@ def farm_dashboard(farm_id):
         "expansion_goals": {}, "fishing_info": None,
         "expansion_construction_info": None, "current_level_nodes": None, "bumpkin_image_url": None,
         "chore_analysis": None, "crop_machine_analysis": None, "greenhouse_analysis": None,
+        "plots_by_island": {},
+        "summary_data": {},
+        "layout_map": None,
+        "unified_resource_analyses": [],
 
         # Domínios de dados para uso nos templates
         "flower_domain": flower_domain, "fruit_domain": fruit_domain, "foods_domain": foods_domain,
@@ -363,50 +367,16 @@ def farm_dashboard(farm_id):
 
     # 8. Processamento do Mini-Mapa de Expansão
     try:
-        map_plots = []
-        # Define os lotes que pertencem a cada tipo de ilha
-        island_map = {
-            "basic": range(1, 10), "petal": range(10, 16),
-            "desert": range(16, 26), "volcano": range(26, 31),
-            "swamp": range(31, 37)
-        }
-
-        # Pega a informação completa da construção, se existir
-        construction_info = context.get("expansion_construction_info")
-
-        # Variáveis para controlar a legenda dinâmica
-        context['in_progress_plot_island'] = None
-        context['complete_plot_island'] = None
-
-        for plot_number, coords in expansions.EXPANSION_COORDINATES.items():
-            if plot_number == 0: continue
-
-            plot_state = "locked"
-            if plot_number <= context['current_land_level']:
-                plot_state = "owned"
-            elif construction_info and plot_number == construction_info["target_level"]:
-                plot_island_type = next((island for island, r in island_map.items() if plot_number in r), "basic")
-                if construction_info["is_complete"]:
-                    plot_state = "construction_complete"
-                    context['complete_plot_island'] = plot_island_type # Guarda a cor da ilha
-                else:
-                    plot_state = "in_progress"
-                    context['in_progress_plot_island'] = plot_island_type # Guarda a cor da ilha
-            # elif plot_number == context['current_land_level'] + 1:
-            #    plot_state = "next_available"
-            
-            plot_island = next((island for island, r in island_map.items() if plot_number in r), "basic")
-            
-            map_plots.append({
-                "number": plot_number, "x": coords['x'], "y": coords['y'],
-                "state": plot_state, "island": plot_island,
-                "requirements_data": json.dumps(expansions.EXPANSION_DATA.get(plot_island, {}).get(plot_number, {}).get("requirements", {})),
-                "nodes_data": json.dumps({k: v for k, v in expansions.EXPANSION_DATA.get(plot_island, {}).get(plot_number, {}).get("nodes", {}).items() if v > 0})
-            })
-        
-        context['map_plots'] = map_plots
+        map_data = expansion_service.generate_map_plots_data(
+            current_land_level=context['current_land_level'],
+            current_land_type=context['current_land_type'],
+            construction_info=context.get("expansion_construction_info")
+        )
+        context.update(map_data) # Adiciona 'map_plots', 'in_progress_plot_island', etc., ao contexto
     except Exception as e:
-        log.error(f"Erro ao processar o mapa de expansão: {e}")
+        log.error(f"Erro ao processar o mapa de expansão: {e}", exc_info=True)
+        context['map_plots'] = [] # Garante que map_plots exista mesmo em caso de erro
+        context['plots_by_island'] = {} # Evita que o template quebre
 
     # 9. Processamento das FLORES.
     try:
@@ -734,6 +704,16 @@ def farm_dashboard(farm_id):
     except Exception as e:
         log.error(f"Falha ao gerar o mapa da fazenda: {e}", exc_info=True)
 
+    # Análise de Sumário de Recursos (anteriormente na página WIP)
+    try:
+        summary_data = summary_service.analyze_resources_summary(main_farm_data)
+        context['summary_data'] = summary_data
+        log.info(f"Análise de sumário de recursos concluída para a fazenda #{farm_id}.")
+    except Exception as e:
+        log.error(f"Falha ao analisar o sumário de recursos: {e}", exc_info=True)
+        context['summary_data'] = {}
+
+
     return render_template('dashboard.html', title=f"Painel de {context['username']}", **context)
     
 
@@ -872,32 +852,3 @@ def api_treasure_dig_update(farm_id):
     except Exception as e:
         log.error(f"Erro inesperado ao atualizar dados de escavação para a fazenda {farm_id}: {e}", exc_info=True)
         return jsonify({"error": "Um erro inesperado ocorreu no servidor."}), 500
-
-@bp.route('/farm/<int:farm_id>/wip')
-def wip_dashboard(farm_id):
-    """
-    Exibe uma página de trabalho em progresso (WIP) com a análise de sumário de recursos.
-    """
-    log.info(f"Iniciando a montagem do painel WIP para a fazenda #{farm_id}")
-
-    # Busca os dados da fazenda
-    main_farm_data, secondary_farm_data, api_error = sunflower_api.get_farm_data(farm_id)
-
-    if api_error:
-        return render_template('wip.html', error=api_error, farm_id=farm_id)
-
-    if not main_farm_data:
-        return render_template('wip.html', error="Não foi possível obter os dados principais da fazenda.", farm_id=farm_id)
-
-    # Adiciona dados secundários, se disponíveis
-    if secondary_farm_data:
-        if 'bumpkin' not in main_farm_data:
-            main_farm_data['bumpkin'] = {}
-        main_farm_data['bumpkin']['level'] = secondary_farm_data.get('bumpkin', {}).get('level', 0)
-        main_farm_data['land_level'] = secondary_farm_data.get('land', {}).get('level', 0)
-
-    # Executa a análise de sumário
-    summary_data = summary_service.analyze_resources_summary(main_farm_data)
-
-    # Renderiza a página WIP com os dados do sumário
-    return render_template('wip.html', farm_id=farm_id, summary_data=summary_data, username=main_farm_data.get('username', f"Fazenda #{farm_id}"))

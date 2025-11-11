@@ -1,5 +1,6 @@
 # app/services/expansion_service.py
 import logging
+import json
 from collections import defaultdict
 from datetime import timedelta
 from decimal import Decimal, InvalidOperation
@@ -164,7 +165,6 @@ def calculate_total_requirements(current_land_type, current_level, goal_land_typ
     }
 # ---> FIM FUNÇÃO PARA CÁLCULO DE META TOTAL ---
 
-
 def calculate_total_gains(start_land_type: str, start_level: int, goal_land_type: str, goal_level: int):
     """Calcula os ganhos de nodes e edifícios na simulação."""
     gains_by_level = defaultdict(lambda: {"nodes": defaultdict(int), "buildings": []})
@@ -247,3 +247,89 @@ def calculate_total_gains(start_land_type: str, start_level: int, goal_land_type
         })
     
     return {"summary": sorted(summary_list, key=lambda x: x['name'])}
+
+def generate_map_plots_data(current_land_level, current_land_type, construction_info):
+    """
+    Gera os dados para os lotes do mapa de expansão, agrupados por ilha,
+    usando o novo sistema de coordenadas por ilha para garantir layouts compactos.
+    """
+    plots_by_island = defaultdict(list)
+    island_order = expansions.ISLAND_ORDER
+    all_expansions_data = expansions.EXPANSION_DATA
+    island_coords_map = expansions.ISLAND_COORDINATES
+
+    try:
+        current_island_index = island_order.index(current_land_type)
+    except ValueError:
+        current_island_index = 0
+
+    in_progress_plot_island = None
+    complete_plot_island = None
+
+    # Itera sobre a fonte da verdade para os layouts: ISLAND_COORDINATES
+    for island_name, plots_in_island in island_coords_map.items():
+        if island_name not in island_order:
+            continue
+
+        for plot_id, coords in plots_in_island.items():
+            is_inherent = isinstance(plot_id, str) and 'inherent' in plot_id
+            plot_number = None if is_inherent else int(plot_id)
+
+            # Determina o estado do lote
+            plot_state = "locked"
+            try:
+                plot_island_index = island_order.index(island_name)
+                if plot_island_index < current_island_index:
+                    plot_state = "owned"
+                elif plot_island_index == current_island_index:
+                    if is_inherent:
+                        plot_state = "owned"
+                    elif plot_number is not None and plot_number <= current_land_level:
+                        plot_state = "owned"
+            except ValueError:
+                pass
+
+            # Verifica o estado de construção para lotes numerados
+            if not is_inherent and construction_info and plot_number == construction_info.get("target_level"):
+                target_level = construction_info.get("target_level")
+                target_island = None
+                for island, plot_seq in expansions.ISLAND_PLOT_SEQUENCE.items():
+                    if target_level in plot_seq:
+                        target_island = island
+                        break
+
+                if plot_number == target_level and island_name == target_island:
+                    if construction_info.get("is_complete"):
+                        plot_state = "construction_complete"
+                        complete_plot_island = island_name
+                    else:
+                        plot_state = "in_progress"
+                        in_progress_plot_island = island_name
+
+            # Busca dados de requisitos e nós
+            requirements_data = {}
+            nodes_data = {}
+            if not is_inherent:
+                requirements_data = all_expansions_data.get(island_name, {}).get(plot_number, {}).get("requirements", {})
+                nodes_data = all_expansions_data.get(island_name, {}).get(plot_number, {}).get("nodes", {})
+
+            plot_data = {
+                "id": plot_id,
+                "number": plot_number if not is_inherent else None,
+                "x": coords['x'], "y": coords['y'],
+                "state": plot_state, "island": island_name,
+                "requirements_data": json.dumps(requirements_data),
+                "nodes_data": json.dumps({k: v for k, v in nodes_data.items() if v > 0})
+            }
+            plots_by_island[island_name].append(plot_data)
+
+    # Ordena os lotes dentro de cada ilha com base na sequência mestre
+    for island_name, plot_list in plots_by_island.items():
+        sequence = expansions.ISLAND_PLOT_SEQUENCE.get(island_name, [])
+        plot_list.sort(key=lambda p: sequence.index(p['id']) if p['id'] in sequence else -1)
+
+    return {
+        "plots_by_island": dict(sorted(plots_by_island.items(), key=lambda item: island_order.index(item[0]))),
+        "in_progress_plot_island": in_progress_plot_island,
+        "complete_plot_island": complete_plot_island
+    }

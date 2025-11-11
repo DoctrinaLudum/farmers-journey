@@ -179,7 +179,7 @@ def analyze_flower_beds(farm_data: dict) -> dict:
                     if boost.get("type") == "YIELD":
                         bed_specific_boosts.append({
                             **boost,
-                            "source_item": f"{hit_name} (Critical)",
+                            "source_item": f"{hit_name} (Critical Hit)",
                             "source_type": source_type,
                         })
 

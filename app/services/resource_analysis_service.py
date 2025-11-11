@@ -260,7 +260,7 @@ def filter_boosts_from_domains(resource_conditions: dict) -> dict:
 
     return boost_catalogue
 
-def _process_boost_modifiers(active_boosts: list, player_items: set) -> list:
+def _process_boost_modifiers(active_boosts: list, player_items: set, farm_data: dict) -> list:
     """
     Processa os bônus do tipo ITEM_MODIFICATION e COLLECTIBLE_EFFECT_MULTIPLIER.
     Esta função itera através de todos os modificadores potenciais que o jogador possui
@@ -270,12 +270,14 @@ def _process_boost_modifiers(active_boosts: list, player_items: set) -> list:
     Args:
         active_boosts (list): A lista de bônus que já estão ativos para o jogador.
         player_items (set): Um conjunto com os nomes de todos os itens que o jogador possui.
+        farm_data (dict): Os dados completos da fazenda, para validação de contexto (ex: estação).
 
     Returns:
         list: A lista de bônus, com os modificadores aplicados.
     """
     all_item_data = _get_all_item_data()
     potential_modifiers = []
+    current_season = farm_data.get("season", {}).get("season")
 
     # 1. Coleta todos os efeitos modificadores dos itens que o jogador possui.
     for item_name in player_items:
@@ -283,13 +285,10 @@ def _process_boost_modifiers(active_boosts: list, player_items: set) -> list:
         if not item_data:
             continue
         
-        # Combina 'effects' e 'boosts' para encontrar todos os potenciais modificadores.
         possible_effects = item_data.get("effects", []) + item_data.get("boosts", [])
         for effect in possible_effects:
             effect_type = effect.get("type")
-            # Filtra apenas os tipos de efeito que modificam outros itens/bônus.
             if effect_type in ["ITEM_MODIFICATION", "COLLECTIBLE_EFFECT_MULTIPLIER"]:
-                # Determina o tipo de origem do próprio modificador para fins de rastreamento.
                 source_type = "collectible"
                 if item_name in skills_domain.BUMPKIN_REVAMP_SKILLS:
                     source_type = "skill"
@@ -303,58 +302,62 @@ def _process_boost_modifiers(active_boosts: list, player_items: set) -> list:
                 })
 
     if not potential_modifiers:
-        return active_boosts # Retorna a lista original se não houver modificadores.
+        return active_boosts
 
-    # 2. Itera sobre os bônus ativos e aplica os modificadores relevantes.
-    # Cria uma nova lista para evitar problemas de modificação durante a iteração.
     final_boosts = list(active_boosts)
 
+    # 2. Itera sobre os bônus ativos e aplica os modificadores relevantes.
     for i, target_boost in enumerate(final_boosts):
-        # O nome do item que gera o bônus (ex: "Macaw", "Fruitful Blend").
         target_item_name = target_boost.get("source_item")
         if not target_item_name:
             continue
 
+        cumulative_value = Decimal(str(target_boost.get("value", 0)))
+
         for modifier in potential_modifiers:
-            # O nome do item que este modificador afeta (ex: "Macaw", "Fruitful Blend").
             modifier_target_name = modifier.get("target_item")
             if not modifier_target_name:
-                # Lida com casos onde o alvo do modificador está nas condições (ex: Loyal Macaw).
                 modifier_target_name = modifier.get("conditions", {}).get("resource")
 
-            # Se o modificador afeta o bônus atual.
-            if target_item_name == modifier_target_name:
-                # Encontrou uma correspondência! Aplica a modificação.
-                
-                # Verifica se a propriedade do bônus corresponde (ex: YIELD).
-                target_property = modifier.get("target_property")
-                if target_property and target_boost.get("type") != target_property:
-                    continue
+            # Pula se o modificador não for para o item alvo
+            if target_item_name != modifier_target_name:
+                continue
 
-                mod_operation = modifier.get("operation")
-                mod_value = Decimal(str(modifier.get("value", 1)))
-                original_value = Decimal(str(target_boost.get("value", 0)))
+            # VERIFICA AS CONDIÇÕES DO PRÓPRIO MODIFICADOR (EX: ESTAÇÃO)
+            mod_conditions = modifier.get("conditions", {})
+            required_season = mod_conditions.get("season")
+            if required_season and current_season and required_season.lower() != current_season.lower():
+                continue # Pula o modificador se não for da estação correta
 
-                new_value = original_value
-                if mod_operation == "multiply":
-                    new_value *= mod_value
-                elif mod_operation == "add":
-                    new_value += mod_value
-                
-                # Atualiza o bônus alvo com o novo valor calculado.
-                final_boosts[i]["value"] = float(new_value)
+            target_property = modifier.get("target_property")
+            if target_property and target_boost.get("type") != target_property:
+                continue
 
-                # Adiciona os detalhes do modificador para a interface do usuário (UI).
-                if "modifiers" not in final_boosts[i]:
-                    final_boosts[i]["modifiers"] = []
-                
-                display_value = f"x{mod_value}" if mod_operation == "multiply" else f"+{mod_value}"
-                final_boosts[i]["modifiers"].append({
-                    "source_item": modifier["modifier_source_item"],
-                    "value": display_value,
-                    "operation": "special",
-                    "source_type": modifier["modifier_source_type"]
-                })
+            # Se o modificador é válido, aplica a operação
+            mod_operation = modifier.get("operation")
+            mod_value = Decimal(str(modifier.get("value", 1)))
+            
+            if mod_operation == "multiply":
+                cumulative_value *= mod_value
+            elif mod_operation == "add":
+                cumulative_value += mod_value
+            elif mod_operation == "percentage":
+                cumulative_value = (Decimal('1') + cumulative_value) * (Decimal('1') + mod_value) - Decimal('1')
+            
+            # Adiciona os detalhes do modificador para a interface do usuário (UI).
+            if "modifiers" not in final_boosts[i]:
+                final_boosts[i]["modifiers"] = []
+            
+            display_value = f"x{mod_value}" if mod_operation == "multiply" else f"+{mod_value}"
+            final_boosts[i]["modifiers"].append({
+                "source_item": modifier["modifier_source_item"],
+                "value": display_value,
+                "operation": "special",
+                "source_type": modifier["modifier_source_type"]
+            })
+        
+        # Atualiza o valor do bônus uma vez no final com o valor acumulado
+        final_boosts[i]["value"] = float(cumulative_value)
 
     return final_boosts
 
@@ -569,7 +572,7 @@ def get_active_player_boosts(player_items: set, boost_catalogue: dict, non_cumul
 
     # 5. ETAPA FINAL: Processa todos os modificadores sobre a lista de bônus ativos.
     # Isso garante que bônus que alteram outros bônus sejam aplicados por último.
-    final_processed_boosts = _process_boost_modifiers(active_boosts, player_items)
+    final_processed_boosts = _process_boost_modifiers(active_boosts, player_items, farm_data)
 
     return final_processed_boosts
 
