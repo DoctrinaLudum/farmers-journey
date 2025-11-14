@@ -23,7 +23,8 @@ from .game_state import GAME_STATE
 from .services import (animation_service, bud_service, chop_service, chores_service,
                        crop_machine_service, crop_service, delivery_service,
                        exchange_service, expansion_service,
-                       farm_layout_service, flower_service, fruit_service,
+                       farm_layout_service, flower_service, fruit_service, crimstone_service,
+                       sunstone_service, oil_service, lava_service,
                        greenhouse_service, mining_service, mushrooms_service,
                        pricing_service, summary_service, treasure_dig_service, calendar_service)
 
@@ -34,7 +35,7 @@ from datetime import datetime
 
 
 @bp.app_template_filter()
-def datetimeformat(value, format='%Y-%m-%d %H:%M:%S'):
+def format_datetime(value, format='%Y-%m-%d %H:%M:%S'):
     if value is None:
         return ''
     return datetime.fromtimestamp(value / 1000).strftime(format)
@@ -453,18 +454,12 @@ def farm_dashboard(farm_id):
     context['wood_analysis'] = None
     wood_data = None
     try:
-        # Passa a variável 'active_bud_buffs' que acabamos de criar.
-        # Agora o serviço de madeira sempre receberá um dicionário, mesmo que vazio.
+        # O chop_service agora é autônomo e busca todos os seus próprios bônus.
         wood_data = chop_service.analyze_wood_resources(main_farm_data)
-    
-        # Acessa a chave 'view' que contém os dados formatados para o template.
-        wood_view_data = wood_data.get("view") if wood_data else None
-    
-        if wood_view_data and 'summary' in wood_view_data and 'tree_status' in wood_view_data:
-            # Passa apenas os dados da view para o contexto, para que o template não precise ser alterado.
-            context['wood_analysis'] = wood_view_data
-            resource_analyses.append({'name': 'Madeira', 'data': wood_view_data})
-            log.info(f"Análise de madeira (com buffs de Bud) processada com sucesso para a fazenda #{farm_id}.")
+        if wood_data and wood_data.get("view"):
+            context['wood_analysis'] = wood_data
+            resource_analyses.append({'name': 'Madeira', 'data': wood_data.get("view")})
+            log.info(f"Análise de madeira processada com sucesso para a fazenda #{farm_id}.")
         else:
             log.warning(f"Dados de análise de madeira ausentes ou incompletos para a fazenda #{farm_id}.")
     except Exception as e:
@@ -483,6 +478,55 @@ def farm_dashboard(farm_id):
             log.info(f"Análise de mineração processada com sucesso para a fazenda #{farm_id}.")
         else:
             log.warning(f"Dados de análise de mineração ausentes para a fazenda #{farm_id}.")
+    except Exception as e:
+        log.error(f"Falha ao analisar dados de mineração: {e}", exc_info=True)
+
+    # Chamadas para os novos serviços de minerais
+    try:
+        crimstone_data = crimstone_service.analyze_crimstone_resources(main_farm_data)
+        if crimstone_data and crimstone_data.get("view"):
+            mining_view_data.get("nodes_by_type", {}).update(crimstone_data["view"].get("nodes_by_type", {}))
+            # Garante que o summary_by_type exista antes de tentar atualizar
+            if "summary_by_type" not in mining_view_data:
+                mining_view_data["summary_by_type"] = {}
+            mining_view_data.get("summary_by_type", {}).update(crimstone_data["view"].get("summary_by_type", {}))
+            log.info(f"Análise de Crimstone integrada com sucesso.")
+    except Exception as e:
+        log.error(f"Falha ao analisar dados de crimstone: {e}", exc_info=True)
+
+    try:
+        sunstone_data = sunstone_service.analyze_sunstone_resources(main_farm_data)
+        if sunstone_data and sunstone_data.get("view"):
+            mining_view_data.get("nodes_by_type", {}).update(sunstone_data["view"].get("nodes_by_type", {}))
+            # Garante que o summary_by_type exista antes de tentar atualizar
+            if "summary_by_type" not in mining_view_data:
+                mining_view_data["summary_by_type"] = {}
+            mining_view_data.get("summary_by_type", {}).update(sunstone_data["view"].get("summary_by_type", {}))
+            log.info(f"Análise de Sunstone integrada com sucesso.")
+    except Exception as e:
+        log.error(f"Falha ao analisar dados de sunstone: {e}", exc_info=True)
+
+    try:
+        oil_data = oil_service.analyze_oil_resources(main_farm_data)
+        if oil_data and oil_data.get("view"):
+            mining_view_data.get("nodes_by_type", {}).update(oil_data["view"].get("nodes_by_type", {}))
+            # Garante que o summary_by_type exista antes de tentar atualizar
+            if "summary_by_type" not in mining_view_data:
+                mining_view_data["summary_by_type"] = {}
+            mining_view_data.get("summary_by_type", {}).update(oil_data["view"].get("summary_by_type", {}))
+            log.info(f"Análise de Oil integrada com sucesso.")
+    except Exception as e:
+        log.error(f"Falha ao analisar dados de oil: {e}", exc_info=True)
+    
+    try:
+        lava_data = lava_service.analyze_lava_resources(main_farm_data)
+        if lava_data and lava_data.get("view"):
+            mining_view_data.get("nodes_by_type", {}).update(lava_data["view"].get("nodes_by_type", {}))
+            # Garante que o summary_by_type exista antes de tentar atualizar
+            if "summary_by_type" not in mining_view_data:
+                mining_view_data["summary_by_type"] = {}
+            mining_view_data.get("summary_by_type", {}).update(lava_data["view"].get("summary_by_type", {}))
+            log.info(f"Análise de Lava (Obsidian) integrada com sucesso.")
     except Exception as e:
         log.error(f"Falha ao analisar dados de mineração: {e}", exc_info=True)
 

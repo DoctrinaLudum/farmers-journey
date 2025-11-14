@@ -154,7 +154,7 @@ WEARABLES_ITEM_BUFFS = {
                 "type": "YIELD",
                 "operation": "add",
                 "value": 0.10,
-                "conditions": {"resource": ["Apple", "Blueberry", "Banana", "Orange"]}
+                "conditions": {"resource": ["Apple", "Orange", "Blueberry", "Banana"]}
             }
         ],
         "enabled": True
@@ -411,14 +411,13 @@ WEARABLES_ITEM_BUFFS = {
     },
     "Bee Suit": {
         "id": 276,
-        "part": "Suit",
-        "boost_category": "Crop",
+        "part": "Coat",
+        "boost_category": "Honey",
         "boosts": [
             {
                 "type": "HONEY_YIELD",
                 "operation": "add",
-                "value": 0.1,
-                "conditions": {}
+                "value": 0.1
             }
         ],
         "enabled": True
@@ -426,7 +425,7 @@ WEARABLES_ITEM_BUFFS = {
     "Beekeeper Hat": {
         "id": 278,
         "part": "Hat",
-        "boost_category": "Animal",
+        "boost_category": "Honey",
         "boosts": [
             {
                 "type": "PRODUCTION_SPEED",
@@ -440,7 +439,7 @@ WEARABLES_ITEM_BUFFS = {
     "Crimstone Armor": {
         "id": 282,
         "part": "Shirt",
-        "boost_category": "Crop",
+        "boost_category": "Resource",
         "boosts": [
             {
                 "type": "YIELD",
@@ -454,14 +453,14 @@ WEARABLES_ITEM_BUFFS = {
     "Crimstone Hammer": {
         "id": 284,
         "part": "Tool",
-        "boost_category": "Crop",
+        "boost_category": "Resource",
         "boosts": [
             {
                 "type": "YIELD",
                 "operation": "add",
                 "value": 2,
                 "conditions": {
-                    "crop": "Crimstone", 
+                    "resource": "Crimstone", 
                     "minesLeft":1
                 }
             }
@@ -471,7 +470,7 @@ WEARABLES_ITEM_BUFFS = {
     "Crimstone Amulet": {
         "id": 285,
         "part": "Necklace",
-        "boost_category": "Crop",
+        "boost_category": "Resource",
         "boosts": [
             {
                 "type": "RECOVERY_TIME",
@@ -490,8 +489,7 @@ WEARABLES_ITEM_BUFFS = {
             {
                 "type": "HONEY_YIELD",
                 "operation": "add",
-                "value": 1,
-                "conditions": {}
+                "value": 1
             }
         ],
         "enabled": True
@@ -499,13 +497,12 @@ WEARABLES_ITEM_BUFFS = {
     "Hornet Mask": {
         "id": 292,
         "part": "Hat",
-        "boost_category": "Crop",
+        "boost_category": "Honey",
         "boosts": [
             {
                 "type": "BEE_SWARM_CHANCE",
                 "operation": "percentage",
-                "value": 1.00,
-                "conditions": {}
+                "value": 1.00
             }
         ],
         "enabled": True
@@ -513,7 +510,7 @@ WEARABLES_ITEM_BUFFS = {
     "Flower Crown": {
         "id": 293,
         "part": "Hat",
-        "boost_category": "Flower",
+        "boost_category": "Flowers",
         "boosts": [
             {
                 "type": "GROWTH_TIME",
@@ -541,7 +538,7 @@ WEARABLES_ITEM_BUFFS = {
     "Oil Can": {
         "id": 308,
         "part": "Tool",
-        "boost_category": "Crop",
+        "boost_category": "Resource",
         "boosts": [
             {
                 "type": "YIELD",
@@ -918,7 +915,7 @@ WEARABLES_ITEM_BUFFS = {
                 "operation": "add",
                 "value": 0.10,
                 "conditions": {
-                    "resource": "Fruit", 
+                    "category": "Fruit", 
                     "planting_spot": "Fruit Patch",
                 }
             }
@@ -942,7 +939,7 @@ WEARABLES_ITEM_BUFFS = {
     "Oil Overalls": {
         "id": 360,
         "part": "Pants",
-        "boost_category": "Crop",
+        "boost_category": "Resource",
         "boosts": [
             {
                 "type": "YIELD",
@@ -1548,18 +1545,35 @@ WEARABLES_ITEM_BUFFS = {
         ],
         "enabled": True
     },
-    "Obsidian Necklace": {
-        "id": 457,
-        "part": "Necklace",
-        "description": "A shard of molten earth turned elegant charm, pulsing softly with ancient, dormant power.",
-        "boost_category": "Crop",
+    "Lava Swimwear": {
+        "id": 455,
+        "part": "Suit",
+        "description": "Ready for a hot dip? This swimwear protects you from the heat of the lava.",
+        "boost_category": "Resource",
         "boosts": [
             {
-                "type": "COOLDOWN",
+                "type": "RESOURCE_COST",
                 "operation": "percentage",
                 "value": -0.50,
                 "conditions": {
-                    "crop": "Obsidian"
+                    "resource": "Lava Pit"
+                }
+            }
+        ],
+        "enabled": True
+    },
+     "Obsidian Necklace": {
+        "id": 457,
+        "part": "Necklace",
+        "description": "A shard of molten earth turned elegant charm, pulsing softly with ancient, dormant power.",
+        "boost_category": "Resource",
+        "boosts": [
+            {
+                "type": "RECOVERY_TIME",
+                "operation": "percentage",
+                "value": -0.50,
+                "conditions": {
+                    "resource": "Lava Pit"
                 }
             }
         ],
@@ -1614,4 +1628,34 @@ WEARABLES_ITEM_BUFFS = {
         ],
         "enabled": True
     },
+    "Pickaxe Shark": {
+        "id": 257,
+        "part": "Tool",
+        "boost_category": "Resource",
+        "boosts": [
+            {
+                "type": "RECOVERY_TIME",
+                "operation": "multiply",
+                "value": 0.85,
+                "conditions": {
+                    "resource": "Gold Rock"
+                }
+            }
+        ],
+        "enabled": True
+    },
+    "Oil Gallon": {
+        "id": 479,
+        "part": "Tool",
+        "boost_category": "Resource",
+        "boosts": [
+            {
+                "type": "YIELD",
+                "operation": "add",
+                "value": 5,
+                "conditions": {"resource": "Oil"}
+            }
+        ],
+        "enabled": True
+    }
 }

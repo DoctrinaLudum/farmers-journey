@@ -20,6 +20,11 @@
             </button>
         </li>
         <li class="nav-item" role="presentation">
+            <button class="nav-link" id="wood-tab" data-bs-toggle="tab" data-bs-target="#wood-pane" type="button" role="tab" aria-controls="wood-pane" aria-selected="false">
+                <i class="bi bi-tree-fill me-1"></i> Madeira
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
             <button class="nav-link" id="inventory-tab" data-bs-toggle="tab" data-bs-target="#inventory-pane" type="button" role="tab" aria-controls="inventory-pane" aria-selected="false">
                 <i class="bi bi-box-seam-fill me-1"></i> Inventario
             </button>
@@ -75,6 +80,10 @@
     <div class="tab-content" id="dashboardTabsContent">
         <div class="tab-pane fade show active" id="overview-pane" role="tabpanel" aria-labelledby="overview-tab">
             {% include 'partials/_geral_panel.html' %}
+        </div>
+
+        <div class="tab-pane fade" id="wood-pane" role="tabpanel" aria-labelledby="wood-tab">
+            {% include 'partials/_wood_panel.html' %}
         </div>
 
         <div class="tab-pane fade" id="expansion-pane" role="tabpanel" aria-labelledby="expansion-tab">

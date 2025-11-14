@@ -4,14 +4,29 @@ import logging
 from collections import defaultdict
 from decimal import Decimal
 
-from ..domain import budItemBuffs as bud_domain
+from ..domain import bud_rules
 
 log = logging.getLogger(__name__)
 
 def _get_buff_key(buff: dict) -> str:
     """Cria uma chave de identificação única para um tipo de bônus."""
-    # Usamos o 'name' padronizado para a chave, que é mais confiável
-    return buff.get("name", buff.get("type", "UNKNOWN"))
+    # Usa o 'name' se estiver definido (ex: para auras)
+    if "name" in buff:
+        return buff["name"]
+
+    buff_type = buff.get("type", "UNKNOWN")
+    conditions = buff.get("conditions", {})
+    
+    # Cria chaves mais específicas com base nas condições
+    resource = conditions.get("resource")
+    category = conditions.get("category")
+
+    if resource and isinstance(resource, str):
+        return f"{resource.upper()}_{buff_type}" # Ex: WOOD_YIELD, IRON_YIELD
+    if category and isinstance(category, str):
+        return f"{category.upper()}_{buff_type}" # Ex: CROP_YIELD, MINERAL_YIELD
+
+    return buff_type # Fallback para bônus genéricos
 
 def analyze_bud_buffs(farm_data: dict) -> dict:
     """
@@ -24,26 +39,30 @@ def analyze_bud_buffs(farm_data: dict) -> dict:
 
     # --- ETAPA 1: Calcular o "Poder Final" de cada Bud individualmente ---
     processed_buds = {}
-    for bud_id, details in buds_api_data.items():
+    for bud_id, bud_traits in buds_api_data.items():
+        # Pula Buds que não estão colocados na fazenda
+        if not bud_traits.get("coordinates"):
+            continue
+
         # 1a. Soma dos bônus base (Type + Stem) para este Bud
         base_buffs = defaultdict(Decimal)
         
         # Função auxiliar para somar bônus do Type e Stem
-        def add_buffs_from_source(source_name):
-            source_info = bud_domain.BUD_BUFFS.get(source_name)
+        def add_buffs_from_source(source_name, domain_dict):
+            source_info = domain_dict.get(source_name)
             if source_info:
                 for buff in source_info.get("boosts", []):
                     key = _get_buff_key(buff)
                     base_buffs[key] += Decimal(str(buff.get("value", 0)))
 
-        add_buffs_from_source(details.get("type"))
-        add_buffs_from_source(details.get("stem"))
+        add_buffs_from_source(bud_traits.get("type"), bud_rules.BUD_TYPE_BUFFS)
+        add_buffs_from_source(bud_traits.get("stem"), bud_rules.BUD_STEM_BUFFS)
 
         # 1b. Obter o multiplicador da Aura deste Bud
-        aura_name = details.get("aura", "No Aura")
+        aura_name = bud_traits.get("aura") or "No Aura"
         aura_multiplier = Decimal('1.0') # Padrão é 1x
         if aura_name and aura_name != "No Aura":
-            aura_info = bud_domain.BUD_BUFFS.get(aura_name)
+            aura_info = bud_rules.BUD_AURA_BUFFS.get(aura_name)
             if aura_info and aura_info.get("boosts"):
                 aura_multiplier = Decimal(str(aura_info["boosts"][0]["value"]))
 
@@ -54,8 +73,8 @@ def analyze_bud_buffs(farm_data: dict) -> dict:
 
         processed_buds[bud_id] = {
             "id": bud_id,
-            "type": details.get("type"),
-            "stem": details.get("stem"),
+            "type": bud_traits.get("type"),
+            "stem": bud_traits.get("stem"),
             "aura": aura_name,
             "aura_multiplier": float(aura_multiplier),
             "final_buffs": {k: float(v) for k, v in final_buffs.items()}
@@ -149,15 +168,39 @@ def get_detailed_bud_boosts(farm_data: dict) -> list:
     for buff_key, buff_value_float in final_farm_buffs.items():
         # Find the original buff details from bud_domain.BUD_BUFFS
         original_buff_found = False
-        original_details = {}
-        for bud_type_name, bud_type_data in bud_domain.BUD_BUFFS.items():
-            for buff in bud_type_data.get("boosts", []):
-                if _get_buff_key(buff) == buff_key:
-                    original_details = buff
-                    original_buff_found = True
+        original_details = {}        
+        
+        # Search in all three rule dictionaries
+        search_domains = [
+            bud_rules.BUD_TYPE_BUFFS, 
+            bud_rules.BUD_STEM_BUFFS, 
+            bud_rules.BUD_AURA_BUFFS
+        ]
+
+        for domain in search_domains:
+            for bud_type_name, bud_type_data in domain.items():
+                for buff in bud_type_data.get("boosts", []):
+                    # We need a more specific key for lookup, combining type and conditions
+                    # For now, let's stick to the buff type for simplicity, but this could be improved
+                    if _get_buff_key(buff) == buff_key:
+                        original_details = buff
+                        original_buff_found = True
+                        break
+                if original_buff_found:
                     break
             if original_buff_found:
                 break
+
+        # Fallback for Auras which have a different structure
+        if not original_buff_found and "MULTIPLIER" in buff_key:
+             for bud_type_name, bud_type_data in bud_rules.BUD_AURA_BUFFS.items():
+                for buff in bud_type_data.get("boosts", []):
+                    if _get_buff_key(buff) == buff_key:
+                        original_details = buff
+                        original_buff_found = True
+                        break
+                if original_buff_found:
+                    break
 
         if original_buff_found:
             source_bud = winning_bud_info.get(buff_key)

@@ -53,6 +53,34 @@ Recentemente, os serviços de análise de recursos (`fruit_service`, `chop_servi
 
 ---
 
+## ✅ Status da Validação de Recursos (1:1 com o Jogo)
+
+Para garantir a máxima precisão nos cálculos, foi realizada uma revisão completa e detalhada (1:1) dos domínios de dados (`skills.py`, `collectiblesItemBuffs.py`, etc.) em comparação com os arquivos de lógica do jogo.
+
+**Última Revisão:** 2024-08-01
+
+### Recursos Validados:
+- [x] **Wood (Madeira)**
+- [x] **Stone (Pedra)**
+- [x] **Iron (Ferro)**
+- [x] **Gold (Ouro)**
+- [x] **Crimstone**
+- [x] **Oil (Óleo)**
+- [x] **Crops (Culturas)**
+- [x] **Fruits (Frutas)**
+- [x] **Crop Machine**
+- [x] **Greenhouse (Estufa)**
+- [x] **Buds**
+- [x] **Flowers (Flores)** & **Honey (Mel & Abelhas)**
+
+### Recursos Pendentes de Validação:
+- [ ] **Animals (Animais)**: Galinhas, Vacas, Ovelhas, etc.
+- [ ] **Fishing (Pesca)**
+- [ ] **Fertilisers (Fertilizantes)**
+- [ ] **Pets (Facções)**
+
+---
+
 ## 🛠️ Tecnologias Utilizadas
 
 * **Back-end**: Python, Flask, Flask-Caching

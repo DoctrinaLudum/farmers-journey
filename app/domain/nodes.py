@@ -14,8 +14,32 @@ RESOURCE_NODES = {
         "dimensions": {"width": 2, "height": 2},
         "respawn_time_seconds": 7200,
     },
+    "Ancient Tree": {
+        "name": "Ancient Tree",
+        "yields": "Wood",
+        "dimensions": {"width": 2, "height": 2},
+        "respawn_time_seconds": 7200, # Mesmo tempo de respawn
+    },
+    "Sacred Tree": {
+        "name": "Sacred Tree",
+        "yields": "Wood",
+        "dimensions": {"width": 2, "height": 2},
+        "respawn_time_seconds": 7200, # Mesmo tempo de respawn
+    },
     "Stone Rock": {
         "name": "Stone Rock",
+        "yields": "Stone",
+        "dimensions": {"width": 1, "height": 1},
+        "respawn_time_seconds": 14400,
+    },
+    "Fused Stone Rock": {
+        "name": "Fused Stone Rock",
+        "yields": "Stone",
+        "dimensions": {"width": 1, "height": 1},
+        "respawn_time_seconds": 14400,
+    },
+    "Reinforced Stone Rock": {
+        "name": "Reinforced Stone Rock",
         "yields": "Stone",
         "dimensions": {"width": 1, "height": 1},
         "respawn_time_seconds": 14400,
@@ -26,11 +50,23 @@ RESOURCE_NODES = {
         "dimensions": {"width": 1, "height": 1},
         "respawn_time_seconds": 28800,
     },
+    "Refined Iron Rock": {
+        "name": "Refined Iron Rock",
+        "yields": "Iron",
+        "dimensions": {"width": 1, "height": 1},
+        "respawn_time_seconds": 28800,
+    },
+    "Tempered Iron Rock": {
+        "name": "Tempered Iron Rock",
+        "yields": "Iron",
+        "dimensions": {"width": 1, "height": 1},
+        "respawn_time_seconds": 28800,
+    },
     "Gold Rock": {
         "name": "Gold Rock",
         "yields": "Gold",
         "dimensions": {"width": 1, "height": 1},
-        "respawn_time_seconds": 43200,
+        "respawn_time_seconds": 86400, # Corrigido de 12h para 24h
     },
     "Crimstone Rock": {
         "name": "Crimstone Rock",
@@ -42,7 +78,19 @@ RESOURCE_NODES = {
         "name": "Sunstone Rock",
         "yields": "Sunstone",
         "dimensions": {"width": 2, "height": 2},
-        "respawn_time_seconds": 172800,
+        "respawn_time_seconds": 172800, # 48h
+    },
+    "Pure Gold Rock": {
+        "name": "Pure Gold Rock",
+        "yields": "Gold",
+        "dimensions": {"width": 1, "height": 1},
+        "respawn_time_seconds": 86400,
+    },
+    "Prime Gold Rock": {
+        "name": "Prime Gold Rock",
+        "yields": "Gold",
+        "dimensions": {"width": 1, "height": 1},
+        "respawn_time_seconds": 86400,
     },
     "Oil Reserve": {
         "name": "Oil Reserve",

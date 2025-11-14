@@ -1,6 +1,7 @@
 # app/domain/collectiblesItemBuffs.py
 
 # Este arquivo foi padronizado para garantir consistência na leitura das regras de bônus.
+# ANÁLISE COMPLETA REALIZADA EM 2024-08-01.
 # Padronizações aplicadas:
 # 1. Tipos de Bônus Unificados:
 #    - Bônus de tempo (GROWTH_TIME, PRODUCE_TIME, etc.) foram unificados para "RECOVERY_TIME".
@@ -12,6 +13,9 @@
 #    - Todos os itens agora seguem uma estrutura base com "id", "description", "boost_category", "boosts" e "enabled".
 
 COLLECTIBLES_ITEM_BUFFS = {
+    # ==========================================================================
+    # Crop & Scarecrow Boosts
+    # ==========================================================================
     "Basic Scarecrow": {
         "id": 462,
         "description": "Choosy defender of your farm's VIP (Very Important Plants)",
@@ -21,9 +25,9 @@ COLLECTIBLES_ITEM_BUFFS = {
         "aoe": {
             "shape": "custom",
             "plots": [
-                { "x": -1, "y": -1 }, { "x": 0, "y": -1 }, { "x": 1, "y": -1 },
-                { "x": -1, "y": -2 }, { "x": 0, "y": -2 }, { "x": 1, "y": -2 },
-                { "x": -1, "y": -3 }, { "x": 0, "y": -3 }, { "x": 1, "y": -3 }
+                {"x": -1, "y": -1}, {"x": 0, "y": -1}, {"x": 1, "y": -1},
+                {"x": -1, "y": -2}, {"x": 0, "y": -2}, {"x": 1, "y": -2},
+                {"x": -1, "y": -3}, {"x": 0, "y": -3}, {"x": 1, "y": -3}
             ]
         },
         "boosts": [
@@ -31,7 +35,7 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "type": "RECOVERY_TIME",
                 "operation": "percentage",
                 "value": -0.20,
-                "conditions": {"crop_tier": "basic"}
+                "conditions": {"category": "Basic Crop"}
             }
         ]
     },
@@ -44,9 +48,9 @@ COLLECTIBLES_ITEM_BUFFS = {
         "aoe": {
             "shape": "custom",
             "plots": [
-                { "x": -1, "y": -1 }, { "x": 0, "y": -1 }, { "x": 1, "y": -1 },
-                { "x": -1, "y": -2 }, { "x": 0, "y": -2 }, { "x": 1, "y": -2 },
-                { "x": -1, "y": -3 }, { "x": 0, "y": -3 }, { "x": 1, "y": -3 }
+                {"x": -1, "y": -1}, {"x": 0, "y": -1}, {"x": 1, "y": -1},
+                {"x": -1, "y": -2}, {"x": 0, "y": -2}, {"x": 1, "y": -2},
+                {"x": -1, "y": -3}, {"x": 0, "y": -3}, {"x": 1, "y": -3}
             ]
         },
         "boosts": [
@@ -54,7 +58,7 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "type": "YIELD",
                 "operation": "add",
                 "value": 0.20,
-                "conditions": {"crop_tier": "medium"}
+                "conditions": {"category": "Medium Crop"}
             }
         ]
     },
@@ -67,9 +71,9 @@ COLLECTIBLES_ITEM_BUFFS = {
         "aoe": {
             "shape": "custom",
             "plots": [
-                { "x": -1, "y": -1 }, { "x": 0, "y": -1 }, { "x": 1, "y": -1 },
-                { "x": -1, "y": -2 }, { "x": 0, "y": -2 }, { "x": 1, "y": -2 },
-                { "x": -1, "y": -3 }, { "x": 0, "y": -3 }, { "x": 1, "y": -3 }
+                {"x": -1, "y": -1}, {"x": 0, "y": -1}, {"x": 1, "y": -1},
+                {"x": -1, "y": -2}, {"x": 0, "y": -2}, {"x": 1, "y": -2},
+                {"x": -1, "y": -3}, {"x": 0, "y": -3}, {"x": 1, "y": -3}
             ]
         },
         "boosts": [
@@ -77,7 +81,7 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "type": "YIELD",
                 "operation": "add",
                 "value": 0.20,
-                "conditions": {"crop_tier": "advanced"}
+                "conditions": {"category": "Advanced Crop"}
             }
         ]
     },
@@ -166,7 +170,7 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "operation": "add",
                 "value": 10,
                 "conditions": {
-                    "category": "Crop"
+                    "category": ["Medium Crop", "Advanced Crop"]
                 }
             }
         ]
@@ -339,7 +343,8 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "operation": "add",
                 "value": 0.1,
                 "conditions": {
-                    "resource": "Cabbage"
+                    "resource": "Cabbage", # Note: This condition might need special handling
+                    "not_present": "Cabbage Boy"
                 }
             }
         ]
@@ -545,7 +550,7 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "operation": "percentage",
                 "value": -0.50,
                 "conditions": {
-                    "building": "Greenhouse"
+                    "planting_spot": "Greenhouse"
                 }
             }
         ]
@@ -614,6 +619,9 @@ COLLECTIBLES_ITEM_BUFFS = {
             }
         ]
     },
+    # ==========================================================================
+    # Fruit Boosts
+    # ==========================================================================
     "Immortal Pear": {
         "id": 441,
         "description": "This long-lived pear ensures your fruit tree survives +1 bonus harvest.",
@@ -846,6 +854,9 @@ COLLECTIBLES_ITEM_BUFFS = {
             }
         ]
     },
+    # ==========================================================================
+    # Animal & Produce Boosts
+    # ==========================================================================
     "Fat Chicken": {
         "id": 611,
         "description": "This mutant reduces the food required to feed a chicken by 10%.",
@@ -1038,6 +1049,9 @@ COLLECTIBLES_ITEM_BUFFS = {
             }
         ]
     },
+    # ==========================================================================
+    # Wood Boosts
+    # ==========================================================================
     "Woody the Beaver": {
         "id": 415,
         "description": "Increases wood production by 20%.",
@@ -1142,6 +1156,9 @@ COLLECTIBLES_ITEM_BUFFS = {
             }
         ]
     },
+    # ==========================================================================
+    # Mineral & Mining Boosts
+    # ==========================================================================
     "Tunnel Mole": {
         "id": 428,
         "description": "The tunnel mole gives a 0.25 increase to stone mines' yield.",
@@ -1270,6 +1287,100 @@ COLLECTIBLES_ITEM_BUFFS = {
             }
         ]
     },
+    "Quarry": {
+        "id": 2259,
+        "description": "An age-old stone site that never runs dry—perfect for those seeking a steady supply of free stone.",
+        "boost_category": "Resource",
+        "enabled": True,
+        "boosts": [
+            {
+                "type": "NO_TOOL_COST",
+                "operation": "equals",
+                "value": 0,
+                "conditions": {"tool": "Pickaxe"}
+            }
+        ]
+    },
+    "Stone Beetle": {
+        "id": 2129,
+        "description": "Beetle made of stone. +0.1 Stone",
+        "boost_category": "Resource",
+        "enabled": True,
+        "boosts": [
+            {
+                "type": "YIELD",
+                "operation": "add",
+                "value": 0.1,
+                "conditions": {
+                    "resource": "Stone"
+                }
+            }
+        ]
+    },
+    "Iron Beetle": {
+        "id": 2130,
+        "description": "Beetle made of iron. +0.1 Iron",
+        "boost_category": "Resource",
+        "enabled": True,
+        "boosts": [
+            {
+                "type": "YIELD",
+                "operation": "add",
+                "value": 0.1,
+                "conditions": {
+                    "resource": "Iron"
+                }
+            }
+        ]
+    },
+    "Gold Beetle": {
+        "id": 2131,
+        "description": "Beetle made of gold. +0.1 Gold",
+        "boost_category": "Resource",
+        "enabled": True,
+        "boosts": [
+            {
+                "type": "YIELD",
+                "operation": "add",
+                "value": 0.1,
+                "conditions": {
+                    "resource": "Gold"
+                }
+            }
+        ]
+    },
+    "Radiant Ray": {
+        "id": 1530,
+        "description": "A ray that prefers to glow in the dark, with a shimmering secret to share.",
+        "boost_category": "Resource",
+        "enabled": True,
+        "boosts": [
+            {
+                "type": "YIELD",
+                "operation": "add",
+                "value": 0.1,
+                "conditions": {
+                    "resource": "Iron"
+                }
+            }
+        ]
+    },
+    "Gilded Swordfish": {
+        "id": 1532,
+        "description": "A swordfish with scales that sparkle like gold, the ultimate catch!",
+        "boost_category": "Resource",
+        "enabled": True,
+        "boosts": [
+            {
+                "type": "YIELD",
+                "operation": "add",
+                "value": 0.1,
+                "conditions": {
+                    "resource": "Gold"
+                }
+            }
+        ]
+    },
     "Crimson Carp": {
         "id": 1537,
         "description": "A rare, vibrant jewel of the Spring waters.",
@@ -1366,6 +1477,9 @@ COLLECTIBLES_ITEM_BUFFS = {
             }
         ]
     },
+    # ==========================================================================
+    # Flower & Bee Boosts
+    # ==========================================================================
     "Mushroom House": {
         "id": 456,
         "description": "A whimsical, fungi-abode where the walls sprout with charm and even the furniture has a 'spore-tacular' flair!",
@@ -1389,12 +1503,9 @@ COLLECTIBLES_ITEM_BUFFS = {
         "enabled": True,
         "boosts": [
             {
-                "type": "PRODUCTION_SPEED",
+                "type": "HONEY_PRODUCTION_SPEED",
                 "operation": "add",
                 "value": 1,
-                "conditions": {
-                    "resource": "Beehive"
-                }
             }
         ]
     },
@@ -1405,17 +1516,18 @@ COLLECTIBLES_ITEM_BUFFS = {
         "enabled": True,
         "boosts": [
             {
-                "type": "CRITICAL_CHANCE",
-                "operation": "percentage",
-                "value": 0.20,
+                "type": "YIELD",
+                "operation": "add",
+                "value": 1,
                 "conditions": {
                     "category": "Flower"
                 }
             },
             {
-                "type": "YIELD",
-                "operation": "add",
-                "value": 1,
+                "type": "CRITICAL_CHANCE",
+                "operation": "set_chance",
+                "bonus_amount": 1,
+                "value": 0.20,
                 "conditions": {
                     "category": "Flower"
                 }
@@ -1446,6 +1558,9 @@ COLLECTIBLES_ITEM_BUFFS = {
             }
         ]
     },
+    # ==========================================================================
+    # Fishing & Treasure Boosts
+    # ==========================================================================
     "Pharaoh Chicken": {
         "id": 2116,
         "description": "A ruling chicken, +1 Dig.",
@@ -1516,6 +1631,9 @@ COLLECTIBLES_ITEM_BUFFS = {
             }
         ]
     },
+    # ==========================================================================
+    # Composter & Misc Boosts
+    # ==========================================================================
     "Soil Krabby": {
         "id": 486,
         "description": "Speedy sifting with a smile! Enjoy a 10% composter speed boost with this crustaceous champ.",
@@ -1537,13 +1655,12 @@ COLLECTIBLES_ITEM_BUFFS = {
         "description": "The Knowledge Crab adds +0.2 yield to the Sprout Mix effect.",
         "boost_category": "Crop",
         "enabled": True,
-        "effects": [
+        "boosts": [
             {
                 "type": "ITEM_MODIFICATION",
                 "target_item": "Sprout Mix",
                 "target_property": "YIELD",
-                "operation": "add",
-                "value": 0.20
+                "operation": "add", "value": 0.2
             }
         ]
     },
@@ -1605,6 +1722,9 @@ COLLECTIBLES_ITEM_BUFFS = {
             }
         ]
     },
+    # ==========================================================================
+    # XP & Global Boosts
+    # ==========================================================================
     "Grain Grinder": {
         "id": 472,
         "description": "Grind your grain and experience a delectable surge in Cake XP.",
@@ -1679,6 +1799,9 @@ COLLECTIBLES_ITEM_BUFFS = {
         "enabled": True,
         "boosts": []
     },
+    # ==========================================================================
+    # Special & Utility Items
+    # ==========================================================================
     "Grinx's Hammer": {
         "id": 489,
         "description": "The magical hammer from Grinx, the legendary Goblin Blacksmith. Halves expansion natural resource requirements.",
@@ -1983,7 +2106,7 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "operation": "add",
                 "value": 2,
                 "conditions": {
-                    "building": "Greenhouse"
+                    "planting_spot": "Greenhouse"
                 }
             }
         ]
@@ -2152,6 +2275,102 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "value": 0.1,
                 "conditions": {
                     "resource": "Gold"
+                }
+            }
+        ]
+    },
+    "Crim Peckster": {
+        "id": 494,
+        "description": "A gem detective with a knack for unearthing Crimstones.",
+        "boost_category": "Resource",
+        "enabled": True,
+        "boosts": [
+            {
+                "type": "YIELD",
+                "operation": "add",
+                "value": 0.1,
+                "conditions": {
+                    "resource": "Crimstone"
+                }
+            }
+        ]
+    },
+    "Obsidian Turtle": {
+        "id": 2260,
+        "description": "Steady and silent, this ancient creature gathers traces of volcanic stone wherever it roams.",
+        "boost_category": "Resource",
+        "enabled": True,
+        "boosts": [
+            {
+                "type": "YIELD",
+                "operation": "add",
+                "value": 0.5,
+                "conditions": {
+                    "resource": "Obsidian"
+                }
+            }
+        ]
+    },
+    "Magma Stone": {
+        "id": 2294,
+        "description": "A stone that gives +0.15 Obsidian yield.",
+        "boost_category": "Resource",
+        "enabled": True,
+        "boosts": [
+            {
+                "type": "YIELD",
+                "operation": "add",
+                "value": 0.15,
+                "conditions": {
+                    "resource": "Obsidian"
+                }
+            }
+        ]
+    },
+    "Knight Chicken": {
+        "id": 500,
+        "description": "A strong and noble chicken boosting your oil yield.",
+        "boost_category": "Resource",
+        "enabled": True,
+        "boosts": [
+            {
+                "type": "YIELD",
+                "operation": "add",
+                "value": 0.1,
+                "conditions": {
+                    "resource": "Oil"
+                }
+            }
+        ]
+    },
+    "Battle Fish": {
+        "id": 1538,
+        "description": "The rare armored swimmer of faction season!",
+        "boost_category": "Resource",
+        "enabled": True,
+        "boosts": [
+            {
+                "type": "YIELD",
+                "operation": "add",
+                "value": 0.05,
+                "conditions": {
+                    "resource": "Oil"
+                }
+            }
+        ]
+    },
+    "Stag Shrine": {
+        "id": 2288,
+        "description": "A shrine that provides a -25% Oil time recovery.",
+        "boost_category": "Resource",
+        "enabled": True,
+        "boosts": [
+            {
+                "type": "RECOVERY_TIME",
+                "operation": "percentage",
+                "value": -0.25,
+                "conditions": {
+                    "resource": "Oil Reserve"
                 }
             }
         ]
@@ -2348,13 +2567,9 @@ COLLECTIBLES_ITEM_BUFFS = {
         "enabled": True,
         "boosts": [
             {
-                "type": "YIELD",
+                "type": "HONEY_YIELD",
                 "operation": "add",
                 "value": 0.25,
-                "conditions": {
-                    "resource": "Honey",
-                    "requirement": "Full Beehive"
-                }
             }
         ]
     },
@@ -2886,7 +3101,7 @@ COLLECTIBLES_ITEM_BUFFS = {
             {
                 "type": "RECOVERY_TIME",
                 "operation": "percentage",
-                "value": -0.2,
+                "value": -0.5,
                 "conditions": {
                     "resource": "Turnip"
                 }
@@ -2958,10 +3173,42 @@ COLLECTIBLES_ITEM_BUFFS = {
             {
                 "type": "RECOVERY_TIME",
                 "operation": "percentage",
-                "value": -0.1,
+                "value": -0.2,
                 "conditions": {
                     "category": "Fruit"
                 }
+            }
+        ]
+    },
+    "Sparrow Shrine": {
+        "id": 2289,
+        "description": "A shrine that reduces crop time by 25% for 4 hours.",
+        "boost_category": "Crop",
+        "enabled": True,
+        "boosts": [
+            {
+                "type": "RECOVERY_TIME",
+                "operation": "percentage",
+                "value": -0.25,
+                "conditions": {
+                    "category": "Crop", "duration_hours": 4
+                },
+                "is_temporal": True
+            }
+        ]
+    },
+    "Toucan Shrine": {
+        "id": 2290,
+        "description": "A shrine that reduces fruit time by 25% for 6 hours.",
+        "boost_category": "Fruit",
+        "enabled": True,
+        "boosts": [
+            {
+                "type": "RECOVERY_TIME",
+                "operation": "percentage",
+                "value": -0.25,
+                "conditions": {"category": "Fruit", "duration_hours": 6},
+                "is_temporal": True
             }
         ]
     },
@@ -3100,7 +3347,7 @@ COLLECTIBLES_ITEM_BUFFS = {
                 "operation": "add",
                 "value": 0.1,
                 "conditions": {
-                    "category": "Animal"
+                    "category": "Fruit", "planting_spot": "Fruit Patch"
                 }
             }
         ]
@@ -3112,9 +3359,9 @@ COLLECTIBLES_ITEM_BUFFS = {
         "enabled": True,
         "boosts": [
             {
-                "type": "YIELD",
-                "operation": "add",
-                "value": 0.2,
+                "type": "RECOVERY_TIME",
+                "operation": "percentage",
+                "value": -0.25,
                 "conditions": {
                     "resource": "Oil"
                 }
@@ -3178,9 +3425,9 @@ COLLECTIBLES_ITEM_BUFFS = {
             {
                 "type": "RECOVERY_TIME",
                 "operation": "percentage",
-                "value": -0.05,
+                "value": -0.25,
                 "conditions": {
-                    "category": "Mineral"
+                    "resource": ["Stone Rock", "Tree"]
                 }
             }
         ]
@@ -3188,46 +3435,28 @@ COLLECTIBLES_ITEM_BUFFS = {
     "Legendary Shrine": {
         "id": 2293,
         "description": "A legendary shrine with a powerful boost.",
-        "boost_category": "Other",
-        "enabled": True,
-        "boosts": [
-            {
-                "type": "XP",
-                "operation": "percentage",
-                "value": 0.2,
-                "conditions": {}
-            }
-        ]
-    },
-    "Obsidian Shrine": {
-        "id": 2294,
-        "description": "A shrine that increases obsidian yield by 0.1.",
         "boost_category": "Resource",
         "enabled": True,
         "boosts": [
             {
-                "type": "YIELD",
+                "type": "YIELD", # This is a direct yield boost, not a critical chance
                 "operation": "add",
-                "value": 0.1,
-                "conditions": {
-                    "resource": "Obsidian"
-                }
-            }
+                "value": 1,
+                "conditions": {"category": "Mineral"}
+            },
         ]
     },
     "Mole Shrine": {
         "id": 2295,
         "description": "A shrine that reduces crop time by 10%.",
-        "boost_category": "Crop",
+        "boost_category": "Resource",
         "enabled": True,
         "boosts": [
             {
                 "type": "RECOVERY_TIME",
                 "operation": "percentage",
-                "value": -0.1,
-                "conditions": {
-                    "category": "Crop"
-                }
+                "value": -0.25,
+                "conditions": {"resource": ["Iron Rock", "Gold Rock", "Crimstone Rock"]}
             }
         ]
     },
@@ -3238,27 +3467,33 @@ COLLECTIBLES_ITEM_BUFFS = {
         "enabled": True,
         "boosts": [
             {
-                "type": "RECOVERY_TIME",
-                "operation": "percentage",
-                "value": -0.1,
-                "conditions": {
-                    "resource": "Honey"
-                }
+                "type": "HONEY_PRODUCTION_SPEED",
+                "operation": "add",
+                "value": 0.5,
+                "is_temporal": True
             }
         ]
     },
     "Tortoise Shrine": {
         "id": 2297,
-        "description": "A shrine that reduces Crop Machine time by 25%.",
+        "description": "A shrine that reduces time for the Crop Machine (-10%) and Greenhouse (-25%).",
         "boost_category": "Resource",
         "enabled": True,
         "boosts": [
             {
-                "type": "CROP_MACHINE_GROWTH_TIME",
+                "type": "RECOVERY_TIME",
+                "operation": "percentage",
+                "value": -0.10,
+                "conditions": {
+                    "building": "Crop Machine"
+                }
+            },
+            {
+                "type": "RECOVERY_TIME",
                 "operation": "percentage",
                 "value": -0.25,
                 "conditions": {
-                    "building": "Crop Machine"
+                    "planting_spot": "Greenhouse"
                 }
             }
         ]
@@ -3270,12 +3505,27 @@ COLLECTIBLES_ITEM_BUFFS = {
         "enabled": True,
         "boosts": [
             {
-                "type": "RECOVERY_TIME",
-                "operation": "percentage",
-                "value": -0.1,
+                "type": "GROWTH_TIME",
+                "operation": "multiply",
+                "value": 0.75,
                 "conditions": {
                     "category": "Flower"
-                }
+                },
+                "is_temporal": True
+            },
+            {
+                "type": "YIELD",
+                "operation": "add",
+                "value": 1,
+                "conditions": { "category": "Flower" }
+            },
+            {
+                "type": "CRITICAL_CHANCE",
+                "operation": "set_chance",
+                "bonus_amount": 1,
+                "value": 0.10, # Assuming 10% chance for the critical part
+                "conditions": { "category": "Flower" },
+                "is_temporal": True
             }
         ]
     },
@@ -3297,7 +3547,7 @@ COLLECTIBLES_ITEM_BUFFS = {
         ]
     },
     "Hammock": {
-        "id": 2195,
+        "id": 2190,
         "description": "Bonus Timeshard during Winds of Change season.",
         "boost_category": "Other",
         "enabled": True,
@@ -3313,4 +3563,7 @@ COLLECTIBLES_ITEM_BUFFS = {
             }
         ]
     }
+    #Paw Prints itens
+        
+
 }

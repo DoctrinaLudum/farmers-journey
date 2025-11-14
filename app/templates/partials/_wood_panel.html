@@ -1,0 +1,136 @@
+{% if wood_analysis and wood_analysis.view %}
+    {% set summary = wood_analysis.view.summary %}
+    {% set summary_analysis = wood_analysis.view.summary_analysis %}
+    {% set tree_status = wood_analysis.view.tree_status %}
+    {% set active_boost_items = wood_analysis.view.active_boost_items %}
+
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="bi bi-bar-chart-line-fill me-2"></i>Análise do Recurso: Madeira
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <!-- Coluna de Resumo Teórico -->
+                <div class="col-md-6">
+                    <h6>Potencial da Fazenda</h6>
+                    <ul class="list-group">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Rendimento (Min/Méd/Máx)
+                            <span class="badge bg-secondary rounded-pill">
+                                {{ summary_analysis.yield.min | round(2) }} / {{ summary_analysis.yield.avg | round(2) }} / {{ summary_analysis.yield.max | round(2) }}
+                            </span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Tempo de Recuperação
+                            <span class="badge bg-info text-dark rounded-pill">
+                                {{ summary_analysis.cycle_time_seconds | format_seconds_to_hms }}
+                            </span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Custo por Machado (Coins)
+                            <span class="badge bg-warning text-dark rounded-pill">
+                                {{ "%.2f"|format(summary_analysis.cost.coins_per_axe) }}
+                            </span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Rendimento por Ciclo ({{ summary.total }} árvores)
+                            <span class="badge bg-primary rounded-pill">
+                                {{ summary_analysis.efficiency.yield_per_cycle | round(2) }}
+                            </span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Custo por Madeira (Coins)
+                            <span class="badge bg-dark rounded-pill">{{ "%.3f"|format(summary_analysis.efficiency.cost_per_wood) }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Machados por Ciclo
+                            <span class="badge bg-secondary rounded-pill">
+                                {{ summary_analysis.efficiency.axes_per_cycle | round(1) }}
+                            </span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Custo por Ciclo (Coins)
+                            <span class="badge bg-danger rounded-pill">{{ "%.2f"|format(summary_analysis.efficiency.cost_per_cycle) }}</span>
+                        </li>
+                    </ul>
+                </div>
+                <!-- Coluna de Status Atual -->
+                <div class="col-md-6">
+                    <h6>Status Atual das Árvores</h6>
+                    <ul class="list-group">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Total de Árvores
+                            <span class="badge bg-primary rounded-pill">{{ summary.total }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Prontas para Cortar
+                            <span class="badge bg-success rounded-pill">{{ summary.ready }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Recuperando
+                            <span class="badge bg-danger rounded-pill">{{ summary.recovering }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <hr>
+            <h6><i class="bi bi-magic me-2"></i>Itens de Bônus Ativos</h6>
+            <p class="small text-muted">
+                {% if active_boost_items %}
+                    {{ active_boost_items | join(', ') }}
+                {% else %}
+                    Nenhum bônus ativo para madeira.
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="bi bi-tree me-2"></i>Status Individual das Árvores
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID da Árvore</th>
+                            <th>Tipo</th>
+                            <th>Status</th>
+                            <th>Pronta Em</th>
+                            <th>Rendimento (Yield)</th>
+                            <th>Acertos Críticos</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tree_id, tree in tree_status.items() %}
+                        <tr>
+                            <td><small>{{ tree_id }}</small></td>
+                            <td>{{ tree.name }}</td>
+                            <td>
+                                <span class="badge {{ 'bg-success' if tree.state_name == 'Pronta' else 'bg-secondary' }}">
+                                    {{ tree.state_name }}
+                                </span>
+                            </td>
+                            <td data-timestamp="{{ tree.ready_at_timestamp_ms }}" class="countdown-timer">
+                                {{ tree.ready_at_timestamp_ms | format_datetime }}
+                            </td>
+                            <td>{{ "%.2f"|format(tree.calculations.yield.final_deterministic) }}</td>
+                            <td>
+                                {% set crit_hits = tree.critical_hits.items() | selectattr('1', '>', 0) | list %}
+                                {{ crit_hits | map(attribute=0) | join(', ') if crit_hits else 'Nenhum' }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% else %}
+    <div class="alert alert-info mt-4">A análise de madeira ainda não foi executada ou não retornou dados.</div>
+{% endif %}

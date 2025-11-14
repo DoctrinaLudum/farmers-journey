@@ -2,7 +2,8 @@
 import logging
 
 from . import (buildings, collectiblesItemBuffs, crops, fishing, flowers,
-               foods, fruits, nodes, resources, seeds, tools, treasure_dig)
+               foods, fruits, nodes, resources, seeds, tools, treasure_dig,
+               upgradables)
 
 log = logging.getLogger(__name__)
 
@@ -20,6 +21,7 @@ FIXED_CATEGORY_DOMAINS = [
     (tools.TOOLS_DATA, "Tool"),
     (treasure_dig.DIGGING_TOOLS, "Tool"),
     (buildings.BUILDING_REQUIREMENTS, "Building"),
+    (upgradables.ALL_UPGRADABLES, "Upgradable"),
     (treasure_dig.TREASURES, "Treasure"),
     (collectiblesItemBuffs.COLLECTIBLES_ITEM_BUFFS, "Collectibles"),
 ]

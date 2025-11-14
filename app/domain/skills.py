@@ -25,6 +25,7 @@ BUMPKIN_REVAMP_SKILLS = {
                 "type": "GROWTH_TIME",
                 "operation": "multiply",
                 "value": 0.95,
+                "conditions": {"planting_spot": "Crop Plot"}
             },
         ],
     },
@@ -135,29 +136,24 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "Increases Basic Scarecrow's area of effect (AOE) to a 7x7 area; Additional -10% basic crop growth time",
         "effects": [
             {
-                "name": "MODIFY_ITEM_AOE",
                 "type": "ITEM_MODIFICATION",
-                "operation": "override",
-                "target_item": "Laurie the Chuckle Crow",
-                "new_aoe": {
-                    # A nova AOE é uma área de 7x7, mas ainda direcional (abaixo)
+                "target_item": "Basic Scarecrow",
+                "target_property": "RECOVERY_TIME",
+                "operation": "set",
+                "value": -0.30
+            },
+            {
+                "type": "ITEM_MODIFICATION",
+                "target_item": "Basic Scarecrow",
+                "target_property": "AOE",
+                "operation": "set",
+                "value": {
                     "shape": "custom",
                     "plots": [
-                        # Lista de 49 células para uma área 7x7,
-                        # começando na linha imediatamente abaixo do item (Y-1).
-                        # Coordenadas relativas à posição (X, Y) do espantalho.
-                        
-                        # Gera as 49 coordenadas (de x=-3 a x=3 e de y=-1 a y=-7)
                         *[{ "x": dx, "y": dy } for dy in range(-1, -8, -1) for dx in range(-3, 4)]
                     ]
                 }
-            },
-            {
-                "type": "GROWTH_TIME",
-                "operation": "multiply",
-                "value": 0.90,
-                "conditions": {"target_category": "Basic Crops"},
-            },
+            }
         ],
     },
     "Horror Mike": {
@@ -167,29 +163,24 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "Increases Scary Mike's area of effect (AOE) to a 7x7 area; Additional +0.1 medium crop yield",
         "effects": [
             {
-                "name": "MODIFY_ITEM_AOE",
                 "type": "ITEM_MODIFICATION",
-                "operation": "override",
                 "target_item": "Scary Mike",
-                "new_aoe": {
-                    # A nova AOE é uma área de 7x7, mas ainda direcional (abaixo)
+                "target_property": "YIELD",
+                "operation": "set",
+                "value": 0.30
+            },
+            {
+                "type": "ITEM_MODIFICATION",
+                "target_item": "Scary Mike",
+                "target_property": "AOE",
+                "operation": "set",
+                "value": {
                     "shape": "custom",
                     "plots": [
-                        # Lista de 49 células para uma área 7x7,
-                        # começando na linha imediatamente abaixo do item (Y-1).
-                        # Coordenadas relativas à posição (X, Y) do espantalho.
-                        
-                        # Gera as 49 coordenadas (de x=-3 a x=3 e de y=-1 a y=-7)
                         *[{ "x": dx, "y": dy } for dy in range(-1, -8, -1) for dx in range(-3, 4)]
                     ]
                 }
-            },
-            {
-                "type": "YIELD",
-                "operation": "add",
-                "value": 0.1,
-                "conditions": {"target_category": "Medium Crops"},
-            },
+            }
         ],
     },
     "Laurie's Gains": {
@@ -199,29 +190,24 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "Increases Laurie the Chuckle Crow's area of effect (AOE) to a 7x7 area; Additional +0.1 advanced crop yield",
         "effects": [
             {
-                "name": "MODIFY_ITEM_AOE",
                 "type": "ITEM_MODIFICATION",
-                "operation": "override",
                 "target_item": "Laurie the Chuckle Crow",
-                "new_aoe": {
-                    # A nova AOE é uma área de 7x7, mas ainda direcional (abaixo)
+                "target_property": "YIELD",
+                "operation": "set",
+                "value": 0.30
+            },
+            {
+                "type": "ITEM_MODIFICATION",
+                "target_item": "Laurie the Chuckle Crow",
+                "target_property": "AOE",
+                "operation": "set",
+                "value": {
                     "shape": "custom",
                     "plots": [
-                        # Lista de 49 células para uma área 7x7,
-                        # começando na linha imediatamente abaixo do item (Y-1).
-                        # Coordenadas relativas à posição (X, Y) do espantalho.
-                        
-                        # Gera as 49 coordenadas (de x=-3 a x=3 e de y=-1 a y=-7)
                         *[{ "x": dx, "y": dy } for dy in range(-1, -8, -1) for dx in range(-3, 4)]
                     ]
                 }
-            },
-            {
-                "type": "YIELD",
-                "operation": "add",
-                "value": 0.1,
-                "conditions": {"target_category": "Advanced Crops"},
-            },
+            }
         ],
     },
     "Instant Growth": {
@@ -303,7 +289,7 @@ BUMPKIN_REVAMP_SKILLS = {
                 "type": "COST",
                 "operation": "multiply",
                 "value": 0.90,
-                "conditions": {"target_category": "FruitSeed"},
+                "conditions": {"category": "FruitSeed"},
             },
         ],
     },
@@ -363,7 +349,7 @@ BUMPKIN_REVAMP_SKILLS = {
                 "type": "YIELD",
                 "operation": "add",
                 "value": -1,
-                "conditions": {"resource": "Wood", "source": "FruitTree"},
+                "conditions": {"category": "FruitTreeWood"},
             },
         ],
     },
@@ -377,7 +363,7 @@ BUMPKIN_REVAMP_SKILLS = {
                 "type": "YIELD",
                 "operation": "add",
                 "value": 1,
-                "conditions": {"resource": "Wood", "source": "FruitTree"},
+                "conditions": {"category": "FruitTreeWood"},
             },
         ],
     },
@@ -419,13 +405,13 @@ BUMPKIN_REVAMP_SKILLS = {
                 "type": "YIELD",
                 "operation": "add",
                 "value": 1.0,
-                "conditions": {"resource": "Fruit"},
+                "conditions": {"category": "Fruit", "planting_spot": "Fruit Patch"},
             },
             {
                 "type": "CRITICAL_CHANCE",
                 "operation": "set_chance",
                 "value": 0.20,
-                "conditions": {"resource": "Fruit"},
+                "conditions": {"category": "Fruit", "planting_spot": "Fruit Patch"},
             }
         ],
     },
@@ -496,7 +482,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "tier": 1,
         "island": "basic",
         "description": "+0.1 wood yield",
-        "boosts": [
+        "effects": [
             {
                 "type": "YIELD",
                 "operation": "add",
@@ -510,7 +496,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "tier": 1,
         "island": "basic",
         "description": "-10% tree growth time",
-        "boosts": [
+        "effects": [
             {
                 "type": "GROWTH_TIME",
                 "operation": "percentage",
@@ -1128,7 +1114,9 @@ BUMPKIN_REVAMP_SKILLS = {
             {
                 "type": "YIELD",
                 "operation": "add",
-                "value": 0.1,
+                "value": 0.1, "conditions": {
+                    "building": "Greenhouse"
+                }
             },
         ],
     },
@@ -1197,7 +1185,7 @@ BUMPKIN_REVAMP_SKILLS = {
                 "type": "GROWTH_TIME",
                 "operation": "multiply",
                 "value": 0.90,
-                "conditions": {"resource": "Grape"},
+                "conditions": {"resource": "Grape"}
             },
         ],
     },
@@ -1328,7 +1316,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-20% Stone recovery time",
         "effects": [
             {
-                "type": "GROWTH_TIME",
+                "type": "RECOVERY_TIME",
                 "operation": "percentage",
                 "value": -0.20,
                 "conditions": {"resource": "Stone Rock"},
@@ -1370,7 +1358,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-30% Iron recovery time",
         "effects": [
             {
-                "type": "GROWTH_TIME",
+                "type": "RECOVERY_TIME",
                 "operation": "percentage",
                 "value": -0.30,
                 "conditions": {"resource": "Iron Rock"},
@@ -1438,7 +1426,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-10% Gold recovery time",
         "effects": [
             {
-                "type": "GROWTH_TIME",
+                "type": "RECOVERY_TIME",
                 "operation": "percentage",
                 "value": -0.10,
                 "conditions": {"resource": "Gold Rock"},
@@ -1452,7 +1440,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-20% Gold recovery time",
         "effects": [
             {
-                "type": "GROWTH_TIME",
+                "type": "RECOVERY_TIME",
                 "operation": "percentage",
                 "value": -0.20,
                 "conditions": {"resource": "Gold Rock"},
@@ -1509,7 +1497,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-15% Crimstone recovery time",
         "effects": [
             {
-                "type": "GROWTH_TIME",
+                "type": "RECOVERY_TIME",
                 "operation": "percentage",
                 "value": -0.15,
                 "conditions": {"resource": "Crimstone Rock"},
@@ -1699,14 +1687,12 @@ BUMPKIN_REVAMP_SKILLS = {
         "tier": 1,
         "island": "spring",
         "description": "+0.1 Honey per hive",
-        "effects": [
-            {
-                "type": "YIELD",
-                "operation": "add",
-                "value": 0.1,
-                "conditions": {"resource": "Honey"},
-            },
-        ],
+        "effects": [{
+            "type": "HONEY_YIELD",
+            "operation": "add",
+            "value": 0.1,
+            "conditions": {"resource": "Honey"}
+        }],
     },
     "Hyper Bees": {
         "tree": "Bees & Flowers",
@@ -1714,12 +1700,11 @@ BUMPKIN_REVAMP_SKILLS = {
         "island": "spring",
         "description": "+0.1 Honey production speed",
         "effects": [
-            {
-                "type": "RECOVERY_TIME",
-                "operation": "percentage",
-                "value": -0.10,
-                "conditions": {"resource": "Beehive"}
-            }
+            {   
+                "type": "HONEY_PRODUCTION_SPEED",
+                "operation": "add",
+                "value": 0.1
+            },
         ],
     },
     "Blooming Boost": {
@@ -1728,10 +1713,11 @@ BUMPKIN_REVAMP_SKILLS = {
         "island": "spring",
         "description": "-10% Flower growth time",
         "effects": [
-            {
+            {   
                 "type": "GROWTH_TIME",
-                "operation": "percentage",
-                "value": -0.10,
+                "operation": "multiply",
+                "value": 0.9,
+                "conditions": {"category": "Flower"}
             },
         ],
     },
@@ -1783,12 +1769,11 @@ BUMPKIN_REVAMP_SKILLS = {
         "island": "spring",
         "description": "Additional +0.1 crop yield after pollination (total +0.3)",
         "effects": [
-            {   
-                "type": "ITEM_MODIFICATION",
+            {
                 "type": "YIELD",
                 "operation": "add",
                 "value": 0.10,
-                "conditions": {"category": "Crop", "source": "Pollination"},
+                "conditions": {"source": "Bee Swarm"},
             },
         ],
     },
@@ -1798,17 +1783,11 @@ BUMPKIN_REVAMP_SKILLS = {
         "island": "spring",
         "description": "10% chance of +1 Flower",
         "effects": [
-            {
+            {   
                 "type": "YIELD",
-                "operation": "add",
-                "value": 1,
-                "conditions": {
-                    "category": "Flower"
-                }
-            },
-            {
                 "type": "CRITICAL_CHANCE",
-                "operation": "percentage",
+                "operation": "set_chance",
+                "bonus_amount": 1,
                 "value": 0.10,
                 "conditions": {
                     "category": "Flower"
@@ -1835,10 +1814,11 @@ BUMPKIN_REVAMP_SKILLS = {
         "island": "spring",
         "description": "-20% Flower growth time",
         "effects": [
-            {
+            {   
                 "type": "GROWTH_TIME",
-                "operation": "percentage",
-                "value": -0.20,
+                "operation": "multiply",
+                "value": 0.8,
+                "conditions": {"category": "Flower"}
             },
         ],
     },
@@ -1849,10 +1829,9 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+0.5 Honey production speed; +50% Flower growth time",
         "effects": [
             {
-                "type": "PRODUCTION_SPEED",
+                "type": "HONEY_PRODUCTION_SPEED",
                 "operation": "add",
                 "value": 0.5,
-                "conditions": {"resource": "Beehive"}
             },
             {
                 "type": "GROWTH_TIME",
@@ -1885,7 +1864,7 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-5% Crop Machine growth time; +10% Oil consumption in Crop Machine",
         "effects": [
             {
-                "type": "CROP_MACHINE_GROWTH_TIME",
+                "type": "RECOVERY_TIME",
                 "operation": "multiply",
                 "value": 0.95,
                 "conditions": {"building": "Crop Machine"},
@@ -1893,8 +1872,8 @@ BUMPKIN_REVAMP_SKILLS = {
             {
                 "type": "OIL_COST",
                 "operation": "factor_add",
-                "value": 0.10,
-                "conditions": {"building": "Crop Machine"},
+                "value": 1.10,
+                "conditions": {"building": "Crop Machine"}
 
             },
         ],
@@ -1907,9 +1886,9 @@ BUMPKIN_REVAMP_SKILLS = {
         "effects": [
             {
                 "type": "OIL_COST",
-                "operation": "factor_sub",
-                "value": 0.10,
-                "conditions": {"building": "Crop Machine"},
+                "operation": "multiply",
+                "value": 0.90,
+                "conditions": {"building": "Crop Machine"}
 
             },
         ],
@@ -1987,15 +1966,15 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "-20% Crop Machine growth time; +40% Oil consumption in Crop Machine",
         "effects": [
             {
-                "type": "CROP_MACHINE_GROWTH_TIME",
+                "type": "RECOVERY_TIME",
                 "operation": "multiply",
                 "value": 0.80,
                 "conditions": {"building": "Crop Machine"},
             },
             {
                 "type": "OIL_COST",
-                "operation": "factor_add",
-                "value": 0.40,
+                "operation": "multiply",
+                "value": 1.40,
             },
         ],
     },
@@ -2036,9 +2015,10 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+5 packs added to machine queue system",
         "effects": [
             {
-                "type": "CROP_MACHINE_QUEUE",
-                "operation": "add",
+                "type": "CAPACITY",
+                "operation": "set",
                 "value": 5,
+                "conditions": {"target": "Crop Machine Queue"}
             },
         ],
     },
@@ -2049,9 +2029,10 @@ BUMPKIN_REVAMP_SKILLS = {
         "description": "+5 plots added to machine",
         "effects": [
             {
-                "type": "CROP_MACHINE_PLOT_COUNT",
-                "operation": "add",
+                "type": "CAPACITY",
+                "operation": "set",
                 "value": 5,
+                "conditions": {"target": "Crop Machine Plots"}
             },
         ],
     },
@@ -2063,8 +2044,9 @@ BUMPKIN_REVAMP_SKILLS = {
         "effects": [
             {
                 "type": "OIL_COST",
-                "operation": "factor_sub",
-                "value": 0.30,
+                "operation": "multiply",
+                "value": 0.70,
+                "conditions": {"building": "Crop Machine"}
             },
         ],
     },
@@ -2194,17 +2176,15 @@ BUMPKIN_REVAMP_SKILLS = {
     "Fruitful Bounty": {
         "tree": "Compost",
         "tier": 2,
-        "island": "basic",
+        "island": "spring",
         "description": "Doubles the yield bonus of Fruitful Blend",
-        "effects": [
-            {
-                "type": "ITEM_MODIFICATION",
-                "target_item": "Fruitful Blend",
-                "target_property": "YIELD",
-                "operation": "multiply",
-                "value": 2
-            }
-        ]
+        "effects": [{
+            "type": "ITEM_MODIFICATION",
+            "target_item": "Fruitful Blend",
+            "target_property": "YIELD",
+            "operation": "multiply",
+            "value": 2
+        }]
     },
     "Composting Overhaul": {
         "tree": "Compost",
@@ -2396,9 +2376,9 @@ LEGACY_BADGES = {
         "description": "Increase stone drops by 20%.",
         "effects": [
             {
-                "type": "RESOURCE_YIELD",
-                "operation": "multiply",
-                "value": 1.20,
+                "type": "YIELD",
+                "operation": "add",
+                "value": 0.2,
                 "conditions": {"resource": "Stone"},
             },
         ],
@@ -2427,8 +2407,8 @@ LEGACY_BADGES = {
         "effects": [
             {
                 "type": "YIELD",
-                "operation": "multiply",
-                "value": 1.50,
+                "operation": "add",
+                "value": 0.5,
                 "conditions": {"resource": "Gold"},
             },
         ],
